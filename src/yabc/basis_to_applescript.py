@@ -1,12 +1,13 @@
 """
-
-
-
 Usage: python3 basis_to_applescript.py --coinbase cb.csv --gemini gems.csv
 
 Used to generate applescript, which generates form 8949.
 
 Each 8949 form holds 14 entries only.
+
+YMMV with use as this is clumsy with many transactions and requires OS X.
+
+TODO: Generate the 8949 content programmatically and emit a PDF.
 
 """
 
@@ -83,6 +84,7 @@ def get_suffix():
 
 
 NUM_ENTRIES_IN_8949 = 14
+TAX_YEAR = "2017"
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
@@ -91,7 +93,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     txs = basis.process_all(basis.get_all_transactions(args))
-    txs = list(filter(lambda x: "2017" in x.date_sold, txs))
+    txs = list(filter(lambda x: TAX_YEAR in x.date_sold, txs))
 
     i = 0
     batch = []

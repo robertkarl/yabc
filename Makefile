@@ -5,12 +5,12 @@ run:
 	docker run -it --publish 127.0.0.1:5000:5000 yabc
 
 test_local:
-	curl --data-binary @../testdata/synthetic_coinbase_csv.csv -X POST localhost:5000/add_document/coinbase/rk
-	curl --data-binary @../testdata/synthetic_gemini_csv.csv -X POST localhost:5000/add_document/gemini/rk
+	curl --data-binary @testdata/synthetic_coinbase_csv.csv -X POST localhost:5000/add_document/coinbase/rk
+	curl --data-binary @testdata/synthetic_gemini_csv.csv -X POST localhost:5000/add_document/gemini/rk
 	curl -X POST localhost:5000/run_basis/rk
 
 test_buyone_sellone:
-	curl --data-binary @../testdata/synthetic_buyone_sellone_coinbase.csv -X POST localhost:5000/add_document/coinbase/testuser
+	curl --data-binary @testdata/synthetic_buyone_sellone_coinbase.csv -X POST localhost:5000/add_document/coinbase/testuser
 	curl -X POST localhost:5000/run_basis/testuser
 
 test_adhoc:
