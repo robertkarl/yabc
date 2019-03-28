@@ -1,0 +1,8 @@
+language: python
+python:
+- 3.6
+install:
+- pip install --upgrade --force-reinstall setuptools
+- pip uninstall --yes yabc || true
+- pip install --upgrade --force-reinstall --ignore-installed -e .
+- python setup.py test
