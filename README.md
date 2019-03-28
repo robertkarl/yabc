@@ -1,4 +1,4 @@
-[![yabc on PyPI](https://img.shields.io/pypi/v/yabc.svg)](https://pypi.org/project/yabc/) ![MIT License badge](https://img.shields.io/badge/license-MIT-green.svg)
+[![yabc on PyPI](https://img.shields.io/pypi/v/yabc.svg)](https://pypi.org/project/yabc/) ![MIT License badge](https://img.shields.io/badge/license-MIT-green.svg) [![yabc on TravisCI](https://travis-ci.org/robertkarl/yabc.svg?branch=master)](https://travis-ci.org/robertkarl/yabc)
 
 # What's this?
 Cost basis calculation library and HTTP API. Most useful for blockchain-backed
