@@ -5,4 +5,5 @@ install:
 - pip install --upgrade --force-reinstall setuptools
 - pip uninstall --yes yabc || true
 - pip install --upgrade --force-reinstall --ignore-installed -e .
+script:
 - python setup.py test
