@@ -11,6 +11,7 @@ setuptools.setup(
     test_suite="tests",
     description="Cost basis calculator for blockchain assets.",
     long_description=open("README.md").read(),
+    long_description_content_type="text/markdown",
     classifiers=[
         "Programming Language :: Python :: 3",
         "License :: OSI Approved :: MIT License",
