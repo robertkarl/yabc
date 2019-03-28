@@ -1,4 +1,6 @@
 build/
+*.swp
 dist/
 *.egg-info/
 venv
+__pycache__
