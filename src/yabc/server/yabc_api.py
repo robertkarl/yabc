@@ -10,7 +10,7 @@ import tempfile
 import flask
 
 from yabc import basis
-from yabc_api import inmemory_backend
+from yabc.server import inmemory_backend
 
 application = flask.Flask(__name__)
 
