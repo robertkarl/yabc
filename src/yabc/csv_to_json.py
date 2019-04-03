@@ -63,19 +63,23 @@ def gemini_to_dict(fname):
 
 def coinbase_to_dict(fname):
     filename = fname
-    f = open(filename)
-    rawcsv = [i for i in csv.reader(f)]
+    with open(filename) as f:  # TODO don't open and read this file twice
+        rawcsv = [i for i in csv.reader(f)]
 
-    fieldnames = rawcsv[4]
-    assert fieldnames[-2].count("Coinbase") > 0
-    fieldnames[-1] = "Bitcoin Hash"
-    fieldnames[-2] = "Coinbase ID"
+        fieldnames = rawcsv[4]
+        assert fieldnames[-2].count("Coinbase") > 0
+        fieldnames[-1] = "Bitcoin Hash"
+        fieldnames[-2] = "Coinbase ID"
 
     with open(filename) as f:
         transactions = [i for i in csv.DictReader(f, fieldnames)]
-        assert transactions[4]["Timestamp"] == "Timestamp"
-        transactions = transactions[5:]
+        # Previously, coinbase column 4 had timestamp.  Documents generated as
+        # of April 2019 have it as the first column.
+        # First meaningful row is 4; 3 has headers so we can check that.
+        assert transactions[3]["Timestamp"] == "Timestamp"
+        transactions = transactions[4:]
         for i in transactions:
+            assert "Coinbase ID" in i
             i["Site"] = "Coinbase"
         USD_and_back = [
             i

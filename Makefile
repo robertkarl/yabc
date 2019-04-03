@@ -18,4 +18,6 @@ test_adhoc:
 	curl -X POST --data '{"Transfer Total": "1299", "Transfer Fee": "12", "Amount": "-1", "Timestamp": "5/6/07 1:12"}' localhost:5000/add_tx/newuser
 	curl -X POST localhost:5000/run_basis/newuser
 
-.PHONY: build
+test_all: test_adhoc test_local test_buyone_sellone
+
+.PHONY: build test_all test_adhoc test_local test_buyone_sellone
