@@ -13,8 +13,9 @@ TODO: Generate the 8949 content programmatically and emit a PDF.
 
 __author__ = "Robert Karl <robertkarljr@gmail.com>"
 
-from yabc import basis
 import argparse
+
+from yabc import basis
 
 
 def append_tab(strokes):
@@ -84,7 +85,7 @@ def get_suffix():
 
 
 NUM_ENTRIES_IN_8949 = 14
-TAX_YEAR = "2017"
+TAX_YEAR = "2018"
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
@@ -92,7 +93,7 @@ if __name__ == "__main__":
     parser.add_argument("--gemini", type=str, required=True)
     args = parser.parse_args()
 
-    txs = basis.process_all(basis.get_all_transactions(args))
+    txs = basis.process_all(basis.get_all_transactions(args.coinbase, args.gemini))
     txs = list(filter(lambda x: TAX_YEAR in x.date_sold, txs))
 
     i = 0
