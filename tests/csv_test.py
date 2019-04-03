@@ -10,6 +10,6 @@ import unittest
 from yabc import transaction
 from  yabc import csv_to_json
 
-class TransactionTest(unittest.TestCase):
-    def test_from_coinbase_buy(self):
+class CsvTest(unittest.TestCase):
+    def test_load_coinbase_csv(self):
         csv_to_json.coinbase_to_dict('testdata/synthetic_coinbase_csv.csv')
