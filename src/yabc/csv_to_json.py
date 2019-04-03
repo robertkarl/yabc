@@ -15,7 +15,6 @@ from dateutil import parser
 
 """
 
-
 def round_to_int(somefloat):
     assert type(somefloat) is float
     if somefloat % 1 > 0.5:

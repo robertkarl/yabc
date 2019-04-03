@@ -33,9 +33,6 @@ CostBasisReport = collections.namedtuple(
 def make_cost_basis_report(buy_price, quantity, date_purchased, sale_price, date_sold):
     """
     Should be in the format needed by 8949; dollar amounts are rounded
-
-    proceeds:
-
     """
     descr = "{:.6f} BTC".format(quantity)
     acquired = date_purchased.strftime("%m-%d-%Y")
@@ -154,8 +151,8 @@ def get_all_transactions(coinbase, gemini):
 
 def process_all(txs):
     """
-    Process a list of transactions (which may have
-    been read from coinbase or gemini files).
+    Process a list of transactions (which may have been read from coinbase or
+    gemini files).
 
     @return a list of asset sales, each of which has all information necessary
     to report the cost basis to the IRS.
