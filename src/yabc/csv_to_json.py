@@ -62,17 +62,14 @@ def gemini_to_dict(fname):
 
 
 def coinbase_to_dict(fname):
-    """
-    TODO: Add a test for this.
-    """
     filename = fname
-    f = open(filename)  # TODO don't open and read this file twice
-    rawcsv = [i for i in csv.reader(f)]
+    with open(filename) as f:  # TODO don't open and read this file twice
+        rawcsv = [i for i in csv.reader(f)]
 
-    fieldnames = rawcsv[4]
-    assert fieldnames[-2].count("Coinbase") > 0
-    fieldnames[-1] = "Bitcoin Hash"
-    fieldnames[-2] = "Coinbase ID"
+        fieldnames = rawcsv[4]
+        assert fieldnames[-2].count("Coinbase") > 0
+        fieldnames[-1] = "Bitcoin Hash"
+        fieldnames[-2] = "Coinbase ID"
 
     with open(filename) as f:
         transactions = [i for i in csv.DictReader(f, fieldnames)]
