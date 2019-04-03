@@ -1,14 +1,41 @@
 """
-Usage: python3 basis_to_applescript.py --coinbase cb.csv --gemini gems.csv
+Given coinbase and gemini transaction histories, fill out IRS form 8949.
 
-Used to generate applescript, which generates form 8949.
-
-Each 8949 form holds 14 entries only.
-
-YMMV with use as this is clumsy with many transactions and requires OS X.
+Warning: instead of programmatically generating PDFs, this script uses
+applescript to populate PDFs from Preview.app in OS X. Your mileage may vary.
 
 TODO: Generate the 8949 content programmatically and emit a PDF.
 
+Requirements:
+    - Coinbase tx history in CSV form
+    - Gemini tx history in CSV form
+    - OS X
+    - Python and yabc library 0.0.2+
+
+Usage / workflow:
+    - Create and activate a virtualenv. Install yabc.
+
+            virtualenv -p python3.5 venv
+            source venv/bin/activate
+            python setup.py install
+
+    - Run this script, passing in the locations of cb and gemini files
+
+        python3 basis_to_applescript.py --coinbase cb.csv --gemini gems.csv
+
+    - This script emits applescript to the current directory.
+    - For each applescript file emitted
+        - open a fresh copy of form 8949 in Preview.app
+        - Run the generated applescript file with osascript
+
+            osascript 'populate_8949-1.script'
+
+        - Watch as applescript populates the PDF with your cost basis info.
+
+Each 8949 form holds 14 entries only. This python script emits multiple
+applescripts, each of which can fill a PDF with 14 transactions.
+
+TODO: Don't require both a coinbase and a gemini file.
 """
 
 __author__ = "Robert Karl <robertkarljr@gmail.com>"
@@ -16,6 +43,11 @@ __author__ = "Robert Karl <robertkarljr@gmail.com>"
 import argparse
 
 from yabc import basis
+
+
+NUM_ENTRIES_IN_8949 = 14
+TAX_YEAR = "2018"
+GENERATED_FNAME_FMT = "populate_8949-{}.script"
 
 
 def append_tab(strokes):
@@ -84,9 +116,6 @@ def get_suffix():
     return ["end tell"]
 
 
-NUM_ENTRIES_IN_8949 = 14
-TAX_YEAR = "2018"
-
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--coinbase", type=str, required=True)
@@ -95,6 +124,9 @@ if __name__ == "__main__":
 
     txs = basis.process_all(basis.get_all_transactions(args.coinbase, args.gemini))
     txs = list(filter(lambda x: TAX_YEAR in x.date_sold, txs))
+    print("Found {} matching transactions for tax year {}".format(len(txs), TAX_YEAR))
+    for i in txs:
+        print(i)
 
     i = 0
     batch = []
@@ -102,7 +134,7 @@ if __name__ == "__main__":
         batch = []
         while txs and len(batch) < NUM_ENTRIES_IN_8949:
             batch.append(txs.pop(0))
-        with open("populate_8949-{}.script".format(i), "w") as of:
+        with open(GENERATED_FNAME_FMT.format(i), "w") as of:
             of.writelines([i + "\n" for i in get_preamble()])
             of.writelines([i + "\n" for i in get_strokes(batch)])
             of.writelines([i + "\n" for i in get_suffix()])
