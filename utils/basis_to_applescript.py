@@ -86,6 +86,7 @@ def get_strokes(txs):
         append_tab(applescript_keystroke_lines)
         append_string_as_keystroke(applescript_keystroke_lines, tx.gain_or_loss)
         append_tab(applescript_keystroke_lines)
+    applescript_keystroke_lines.append("-- Starting totals section")
     append_string_as_keystroke(applescript_keystroke_lines, total_proceeds)
     append_tab(applescript_keystroke_lines)
     append_string_as_keystroke(applescript_keystroke_lines, total_basis)
@@ -135,6 +136,8 @@ if __name__ == "__main__":
         while txs and len(batch) < NUM_ENTRIES_IN_8949:
             batch.append(txs.pop(0))
         with open(GENERATED_FNAME_FMT.format(i), "w") as of:
+            of.write("-- Applescript for filling form 8949\n")
+            of.write("-- usage: osascript {} \n".format(GENERATED_FNAME_FMT.format(i)))
             of.writelines([i + "\n" for i in get_preamble()])
             of.writelines([i + "\n" for i in get_strokes(batch)])
             of.writelines([i + "\n" for i in get_suffix()])
