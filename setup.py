@@ -3,11 +3,11 @@
 import setuptools
 
 setuptools.setup(
-    version="0.0.2",
+    version="0.0.3",
     name="yabc",
     python_requires="~=3.5",
     author="Robert Karl",
-    install_requires=["flask", "dateutils"],
+    install_requires=["flask", "dateutils", "sqlalchemy"],
     test_suite="tests",
     description="Cost basis calculator for blockchain assets.",
     long_description=open("README.md").read(),

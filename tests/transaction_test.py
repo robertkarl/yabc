@@ -3,6 +3,12 @@ import math
 import unittest
 
 from yabc import transaction
+from yabc import Base
+
+import sqlalchemy
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy import Column, Integer, String, DateTime
+from sqlalchemy.orm import sessionmaker
 
 class TransactionTest(unittest.TestCase):
     def test_from_coinbase_buy(self):
@@ -79,6 +85,26 @@ class TransactionTest(unittest.TestCase):
         self.assertEqual(trans.usd_btc_price, 0.5)
         self.assertEqual(trans.source, "gemini")
         self.assertEqual(trans.asset_name, "BTC")
+
+    def test_sql_create(self):
+        gemini_json_sell = {
+            "Type": "Sell",
+            "BTC Amount": 2,
+            "USD Amount": 1,
+            "USD Fee": 0.05,
+            "Date": "2015-2-5",
+            # TODO (robertkarl) fix this. Gemini currently ignores the time of day.
+            # "Time": "06:27:56.373",
+        }
+
+        trans = transaction.Transaction.FromGeminiJSON(gemini_json_sell)
+        engine = sqlalchemy.create_engine("sqlite:///:memory:", echo=True)
+        Session = sessionmaker(bind=engine)
+        session = Session()
+        Base.metadata.create_all(engine)
+        session.add(trans)
+        session.commit()
+
 
 
 if __name__ == "__main__":

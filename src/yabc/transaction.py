@@ -4,13 +4,45 @@ Definition of a Transaction, the in-memory version of an asset buy/sell
 
 __author__ = "Robert Karl <robertkarljr@gmail.com>"
 
+import datetime
+
+import sqlalchemy
 from dateutil import parser as dateutil_parser
+from sqlalchemy import Column, DateTime, Float, Integer, String
+from sqlalchemy.orm import sessionmaker
+
+import yabc
 
 
-class Transaction:
+class Transaction(yabc.Base):
     """
     Exchange-independent representation of a transaction (buy or sell)
     """
+
+    __tablename__ = "transaction"
+    id = Column(Integer, primary_key=True)
+    date = Column(DateTime)
+    source = Column(String)
+    usd_btc_price =  Column(Float)
+    operation = Column(String)
+    source = Column(String)
+    asset_name = Column(String)
+    btc_quantity = Column(Float)
+
+    def __init__(
+        self, operation=None, btc_quantity=0, date=None, usd_bitcoin_price=0, source=None
+    ):
+        assert operation in ["Buy", "Sell"]
+        assert date is not None
+        assert type(btc_quantity) is float
+        assert btc_quantity > 0
+
+        self.operation = operation
+        self.btc_quantity = btc_quantity
+        self.date = date.replace(tzinfo=None)
+        self.usd_btc_price = usd_bitcoin_price
+        self.source = source
+        self.asset_name = "BTC"
 
     @staticmethod
     def FromCoinbaseJSON(json):
@@ -71,21 +103,6 @@ class Transaction:
             source="gemini",
             usd_bitcoin_price=unit_price,
         )
-
-    def __init__(
-        self, operation, btc_quantity=0, date=None, usd_bitcoin_price=0, source=None
-    ):
-        assert operation in ["Buy", "Sell"]
-        assert date is not None
-        assert type(btc_quantity) is float
-        assert btc_quantity > 0
-
-        self.operation = operation
-        self.btc_quantity = btc_quantity
-        self.date = date.replace(tzinfo=None)
-        self.usd_btc_price = usd_bitcoin_price
-        self.source = source
-        self.asset_name = "BTC"
 
     def __repr__(self):
         return "<TX: {} {} BTC @ {}, on {} from exchange {}>".format(
