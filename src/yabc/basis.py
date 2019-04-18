@@ -4,25 +4,14 @@ Utilities for calculating the cost basis.
 
 __author__ = "Robert Karl <robertkarljr@gmail.com>"
 
+import collections
 import copy
-import sys
 
 from yabc import csv_to_json
 from yabc import transaction
 
-# TODO(robertkarl): clean this up, and add tests with these .csv files
-"""
-TODO:
-    - make_cost_basis_report should have IRS fields
-    - Generate applescript files with 14 rows each
-    - Run them all and save PDFs
-
-"""
-
-
 SATOSHIS_PER_BITCOIN = int(1e8)
 
-import collections
 
 CostBasisReport = collections.namedtuple(
     "CostBasisReport",

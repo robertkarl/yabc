@@ -2,7 +2,13 @@ import datetime
 import math
 import unittest
 
+import sqlalchemy
+from sqlalchemy.orm import sessionmaker
+
+from yabc import Base
 from yabc import transaction
+from yabc import user  # noqa
+
 
 class TransactionTest(unittest.TestCase):
     def test_from_coinbase_buy(self):
@@ -79,6 +85,23 @@ class TransactionTest(unittest.TestCase):
         self.assertEqual(trans.usd_btc_price, 0.5)
         self.assertEqual(trans.source, "gemini")
         self.assertEqual(trans.asset_name, "BTC")
+
+    def test_sql_create(self):
+        sell_json_gemini = {
+            "Type": "Sell",
+            "BTC Amount": 2,
+            "USD Amount": 1,
+            "USD Fee": 0.05,
+            "Date": "2015-2-5",
+        }
+
+        trans = transaction.Transaction.FromGeminiJSON(sell_json_gemini)
+        engine = sqlalchemy.create_engine("sqlite:///:memory:", echo=True)
+        Session = sessionmaker(bind=engine)
+        session = Session()
+        Base.metadata.create_all(engine)
+        session.add(trans)
+        session.commit()
 
 
 if __name__ == "__main__":

@@ -4,13 +4,52 @@ Definition of a Transaction, the in-memory version of an asset buy/sell
 
 __author__ = "Robert Karl <robertkarljr@gmail.com>"
 
-from dateutil import parser as dateutil_parser
+
+import dateutil
+from sqlalchemy import Column
+from sqlalchemy import DateTime
+from sqlalchemy import Float
+from sqlalchemy import ForeignKey
+from sqlalchemy import Integer
+from sqlalchemy import String
+
+import yabc
 
 
-class Transaction:
+class Transaction(yabc.Base):
     """
     Exchange-independent representation of a transaction (buy or sell)
     """
+
+    __tablename__ = "transaction"
+    id = Column(Integer, primary_key=True)
+    user_id = Column(String, ForeignKey("user.user_id"))
+    asset_name = Column(String)
+    btc_quantity = Column(Float)
+    date = Column(DateTime)
+    operation = Column(String)
+    source = Column(String)
+    usd_btc_price = Column(Float)
+
+    def __init__(
+        self,
+        operation=None,
+        btc_quantity=0,
+        date=None,
+        usd_bitcoin_price=0,
+        source=None,
+        asset_name="BTC",
+    ):
+        assert operation in ["Buy", "Sell"]
+        assert date is not None
+        assert type(btc_quantity) is float
+        assert btc_quantity > 0
+        self.btc_quantity = btc_quantity
+        self.operation = operation
+        self.date = date.replace(tzinfo=None)
+        self.usd_btc_price = usd_bitcoin_price
+        self.source = source
+        self.asset_name = "BTC"
 
     @staticmethod
     def FromCoinbaseJSON(json):
@@ -39,7 +78,7 @@ class Transaction:
         return Transaction(
             operation,
             btc_quantity=btc_quantity,
-            date=dateutil_parser.parse(timestamp_str),
+            date=dateutil.parser.parse(timestamp_str),
             source="coinbase",
             usd_bitcoin_price=unit_price,
         )
@@ -67,28 +106,14 @@ class Transaction:
         return Transaction(
             operation,
             btc_quantity=btc_quantity,
-            date=dateutil_parser.parse(timestamp_str),
+            date=dateutil.parser.parse(timestamp_str),
             source="gemini",
             usd_bitcoin_price=unit_price,
         )
 
-    def __init__(
-        self, operation, btc_quantity=0, date=None, usd_bitcoin_price=0, source=None
-    ):
-        assert operation in ["Buy", "Sell"]
-        assert date is not None
-        assert type(btc_quantity) is float
-        assert btc_quantity > 0
-
-        self.operation = operation
-        self.btc_quantity = btc_quantity
-        self.date = date.replace(tzinfo=None)
-        self.usd_btc_price = usd_bitcoin_price
-        self.source = source
-        self.asset_name = "BTC"
-
     def __repr__(self):
-        return "<TX: {} {} BTC @ {}, on {} from exchange {}>".format(
+        return "<TX for {}: {} {} BTC @ {}, on {} from exchange {}>".format(
+            self.user_id,
             self.operation,
             self.btc_quantity,
             self.usd_btc_price,
