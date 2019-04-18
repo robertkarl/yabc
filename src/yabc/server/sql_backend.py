@@ -1,15 +1,15 @@
 import hashlib
 import tempfile
 
-import sqlalchemy
 import flask
+import sqlalchemy
 from sqlalchemy.orm import sessionmaker
 
 from yabc import Base
 from yabc import basis
+from yabc import taxdoc
 from yabc import transaction
 from yabc import user
-from yabc import taxdoc
 
 # TODO: remove all references to `storage'
 

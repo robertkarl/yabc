@@ -22,7 +22,7 @@ def get_backend():
     global _backend
     if not _backend:
         _backend = sql_backend.SqlBackend()
-    print('created a new backend')
+    print("created a new backend")
     return _backend
 
 
