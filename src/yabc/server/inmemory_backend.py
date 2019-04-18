@@ -8,7 +8,6 @@ import tempfile
 
 import flask
 
-
 from yabc import basis
 from yabc import transaction
 

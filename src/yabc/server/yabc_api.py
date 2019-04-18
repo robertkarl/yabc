@@ -10,7 +10,7 @@ import tempfile
 import flask
 
 from yabc import basis
-from yabc.server import inmemory_backend
+from yabc.server import inmemory_backend  # TODO: remove this line
 
 application = flask.Flask(__name__)
 
@@ -26,29 +26,25 @@ HEADER_TEXT = """
 footer_text = "</body>\n</html>"
 
 
-backend = None
+sql_session = None
 
-
-def set_backend():
+def _setup_session():
     """
     Search order:
         1) environment variable 'COINSAPI_BACKEND'
     If not set, then use the inmemory backend.
     """
-    global backend
-    if BACKEND_ENV_KEY in os.environ:
-        backend_str = os.environ[BACKEND_ENV_KEY]
-        if backend_str == INMEMORY_BACKEND_ENV_VALUE:
-            backend = inmemory_backend
-            print("in memory backend chosen")
-    if not backend:
-        print("Defaulted to inmemory backend")
-        backend = inmemory_backend
+    global sql_session
+    engine = sqlalchemy.create_engine("sqlite:///:memory:", echo=True)
+    Session = sessionmaker(bind=engine)
+    sql_session = Session()
+    Base.metadata.create_all(engine)
 
 
-def get_backend():
-    return backend
-
+def get_session():
+    if not sql_session:
+        _setup_session()
+    return sql_session
 
 def say_python_version():
     return "<p>Python version is {}.</p>\n".format(sys.version)
@@ -96,7 +92,7 @@ def main():
         application.debug = True
         print("endpoints are: {}".format(list(x.__name__ for x in endpoints)))
         print("listening on port {}".format(port))
-    set_backend()
+    setup_backend()
     application.run(port=port, host="0.0.0.0")
 
 

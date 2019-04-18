@@ -8,7 +8,11 @@ import datetime
 
 import dateutil
 import sqlalchemy
-from sqlalchemy import Column, DateTime, Float, Integer, String
+from sqlalchemy import Column
+from sqlalchemy import DateTime
+from sqlalchemy import Float
+from sqlalchemy import Integer
+from sqlalchemy import String
 from sqlalchemy.orm import sessionmaker
 
 import yabc
@@ -25,7 +29,6 @@ class Transaction(yabc.Base):
     btc_quantity = Column(Float)
     date = Column(DateTime)
     operation = Column(String)
-    source = Column(String)
     source = Column(String)
     usd_btc_price = Column(Float)
 

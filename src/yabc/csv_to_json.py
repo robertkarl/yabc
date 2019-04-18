@@ -4,11 +4,12 @@ Convert coinbase or gemini files to json.
 
 __author__ = "Robert Karl <robertkarljr@gmail.com>"
 
-from collections import OrderedDict
 import csv
 import sys
+from collections import OrderedDict
 
 from dateutil import parser
+
 
 """
 ['Date', 'BTC Amount', 'USD Fee', 'Type', 'USD Amount', 'Site', 'Cost Basis']

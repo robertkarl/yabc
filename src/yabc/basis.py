@@ -4,6 +4,7 @@ Utilities for calculating the cost basis.
 
 __author__ = "Robert Karl <robertkarljr@gmail.com>"
 
+import collections
 import copy
 import sys
 
@@ -22,7 +23,6 @@ TODO:
 
 SATOSHIS_PER_BITCOIN = int(1e8)
 
-import collections
 
 CostBasisReport = collections.namedtuple(
     "CostBasisReport",
