@@ -7,3 +7,7 @@ install:
 - pip install --upgrade --force-reinstall --ignore-installed -e .
 script:
 - python setup.py test
+script:
+- make run&
+- sleep 5
+- make test_all
