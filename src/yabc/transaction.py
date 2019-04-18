@@ -112,7 +112,8 @@ class Transaction(yabc.Base):
         )
 
     def __repr__(self):
-        return "<TX: {} {} BTC @ {}, on {} from exchange {}>".format(
+        return "<TX for {}: {} {} BTC @ {}, on {} from exchange {}>".format(
+            self.user_id,
             self.operation,
             self.btc_quantity,
             self.usd_btc_price,

@@ -1,4 +1,5 @@
 import hashlib
+import json
 import tempfile
 
 import flask
@@ -25,11 +26,13 @@ class SqlBackend:
 
     def add_tx(self, userid):
         tx = flask.request.get_data()
-        if not userid in storage[ADHOC_KEY]:
-            storage[ADHOC_KEY][userid] = []
         loaded_tx = transaction.Transaction.FromCoinbaseJSON(json.loads(tx))
-        storage[ADHOC_KEY][userid].append(loaded_tx)
-        return "Transaction added. Operation is {}.\n".format(loaded_tx.operation)
+        loaded_tx.user_id = userid
+        self.session.add(loaded_tx)
+        self.session.commit()
+        return "Transaction added for user {}. Operation is {}.\n".format(
+            userid, loaded_tx.operation
+        )
 
     def add_user(self, userid):
         user_obj = user.User(user_id=userid)
@@ -58,8 +61,13 @@ class SqlBackend:
         Returns: the total profit as a JSON object (just an integer or float).
         """
         docs = self.session.query(taxdoc.TaxDoc).filter_by(user_id=userid)
-        print(docs)
-        all_txs = []
+        adhoc_txs = self.session.query(transaction.Transaction).filter_by(
+            user_id=userid
+        )
+        all_txs = list(adhoc_txs)
+        import pdb
+
+        pdb.set_trace()
         for taxdoc_obj in docs:
             tmp_fname = "/tmp/tmp"
             temp = tempfile.NamedTemporaryFile(delete=False)
@@ -74,5 +82,5 @@ class SqlBackend:
         for tx in basis_reports:
             ans += "Profit (loss) of {} on {}\n".format(tx.gain_or_loss, tx.date_sold)
         profit = sum([tx.gain_or_loss for tx in basis_reports])
-        ans += "total profit of {}".format(profit)
+        ans += "total profit of {}\n".format(profit)
         return ans
