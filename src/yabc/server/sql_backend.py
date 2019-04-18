@@ -65,9 +65,6 @@ class SqlBackend:
             user_id=userid
         )
         all_txs = list(adhoc_txs)
-        import pdb
-
-        pdb.set_trace()
         for taxdoc_obj in docs:
             tmp_fname = "/tmp/tmp"
             temp = tempfile.NamedTemporaryFile(delete=False)

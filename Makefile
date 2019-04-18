@@ -2,7 +2,7 @@ build: src
 	docker build --tag yabc .
 
 run:
-	rm tmp.db
+	rm -f tmp.db
 	PYTHONPATH=src python -m yabc.server.yabc_api
 
 run_docker:
