@@ -1,15 +1,11 @@
 """
 yabc HTTP endpoints are declared here.
 """
-import hashlib
-import json
 import os
 import sys
-import tempfile
 
 import flask
 
-from yabc import basis
 from yabc.server import inmemory_backend  # TODO: remove this line
 
 application = flask.Flask(__name__)
@@ -28,6 +24,7 @@ footer_text = "</body>\n</html>"
 
 sql_session = None
 
+
 def _setup_session():
     """
     Search order:
@@ -45,6 +42,7 @@ def get_session():
     if not sql_session:
         _setup_session()
     return sql_session
+
 
 def say_python_version():
     return "<p>Python version is {}.</p>\n".format(sys.version)

@@ -6,7 +6,6 @@ __author__ = "Robert Karl <robertkarljr@gmail.com>"
 
 import collections
 import copy
-import sys
 
 from yabc import csv_to_json
 from yabc import transaction

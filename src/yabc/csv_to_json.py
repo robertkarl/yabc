@@ -5,8 +5,6 @@ Convert coinbase or gemini files to json.
 __author__ = "Robert Karl <robertkarljr@gmail.com>"
 
 import csv
-import sys
-from collections import OrderedDict
 
 from dateutil import parser
 
@@ -15,6 +13,7 @@ from dateutil import parser
 ['Date', 'BTC Amount', 'USD Fee', 'Type', 'USD Amount', 'Site', 'Cost Basis']
 
 """
+
 
 def round_to_int(somefloat):
     assert type(somefloat) is float

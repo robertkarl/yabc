@@ -1,17 +1,11 @@
 import sqlalchemy
-from sqlalchemy import Column
-from sqlalchemy import DateTime
-from sqlalchemy import Integer
-from sqlalchemy import String
-from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 
 from yabc import basis
 from yabc import transaction
 
 
-class SqlBackend():
-
+class SqlBackend:
     def __init__(self):
         engine = sqlalchemy.create_engine("sqlite:///:memory:", echo=True)
         Session = sessionmaker(bind=engine)
@@ -26,7 +20,6 @@ class SqlBackend():
         storage[ADHOC_KEY][userid].append(loaded_tx)
         return "Transaction added. Operation is {}.\n".format(loaded_tx.operation)
 
-
     def add_document(self, exchange, userid):
         submitted_stuff = flask.request.get_data()
         contents_md5_hash = hashlib.md5(submitted_stuff).hexdigest()
@@ -36,7 +29,6 @@ class SqlBackend():
             "contents": submitted_stuff,
         }
         return "stored in memory. hash: {}\n".format(contents_md5_hash)
-
 
     def run_basis(self, userid):
         """
