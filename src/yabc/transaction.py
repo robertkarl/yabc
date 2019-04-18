@@ -11,6 +11,7 @@ from sqlalchemy import DateTime
 from sqlalchemy import Float
 from sqlalchemy import Integer
 from sqlalchemy import String
+from sqlalchemy import ForeignKey
 
 import yabc
 
@@ -22,6 +23,7 @@ class Transaction(yabc.Base):
 
     __tablename__ = "transaction"
     id = Column(Integer, primary_key=True)
+    user_id = Column(string, ForeignKey("user.user_id")
     asset_name = Column(String)
     btc_quantity = Column(Float)
     date = Column(DateTime)

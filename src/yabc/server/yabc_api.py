@@ -6,42 +6,24 @@ import sys
 
 import flask
 
-from yabc.server import inmemory_backend  # TODO: remove this line
+from yabc.server import sql_backend
 
 application = flask.Flask(__name__)
-
-
-BACKEND_ENV_KEY = "COINSAPI_BACKEND"
-INMEMORY_BACKEND_ENV_VALUE = "inmemory"
-
-COINS_USER_DATA_BUCKET = "coins8949-userdata"
-
 
 HEADER_TEXT = """
     <html>\n<head> <title>yabc over HTTP</title> </head>\n<body>"""
 footer_text = "</body>\n</html>"
 
 
-sql_session = None
+_backend = None
 
 
-def _setup_session():
-    """
-    Search order:
-        1) environment variable 'COINSAPI_BACKEND'
-    If not set, then use the inmemory backend.
-    """
-    global sql_session
-    engine = sqlalchemy.create_engine("sqlite:///:memory:", echo=True)
-    Session = sessionmaker(bind=engine)
-    sql_session = Session()
-    Base.metadata.create_all(engine)
-
-
-def get_session():
-    if not sql_session:
-        _setup_session()
-    return sql_session
+def get_backend():
+    global _backend
+    if not _backend:
+        _backend = sql_backend.SqlBackend()
+    print('created a new backend')
+    return _backend
 
 
 def say_python_version():
@@ -77,6 +59,11 @@ def add_tx(userid):
     return get_backend().add_tx(userid)
 
 
+@application.route("/add_user/<userid>", methods=["POST"])
+def add_user(userid):
+    return get_backend().add_user(userid)
+
+
 endpoints.append(add_document)
 
 #
@@ -90,7 +77,6 @@ def main():
         application.debug = True
         print("endpoints are: {}".format(list(x.__name__ for x in endpoints)))
         print("listening on port {}".format(port))
-    setup_backend()
     application.run(port=port, host="0.0.0.0")
 
 

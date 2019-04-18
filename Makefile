@@ -2,6 +2,10 @@ build: src
 	docker build --tag yabc .
 
 run:
+	rm tmp.db
+	PYTHONPATH=src python -m yabc.server.yabc_api
+
+run_docker:
 	docker run -it --publish 127.0.0.1:5000:5000 yabc
 
 test_local:
@@ -10,6 +14,7 @@ test_local:
 	curl -X POST localhost:5000/run_basis/rk
 
 test_buyone_sellone:
+	curl -X POST localhost:5000/add_user/testuser
 	curl --data-binary @testdata/synthetic_buyone_sellone_coinbase.csv -X POST localhost:5000/add_document/coinbase/testuser
 	curl -X POST localhost:5000/run_basis/testuser
 

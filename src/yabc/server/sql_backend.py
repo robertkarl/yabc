@@ -1,13 +1,24 @@
+import hashlib
+import tempfile
+
 import sqlalchemy
+import flask
 from sqlalchemy.orm import sessionmaker
 
+from yabc import Base
 from yabc import basis
 from yabc import transaction
+from yabc import user
+from yabc import taxdoc
+
+# TODO: remove all references to `storage'
 
 
 class SqlBackend:
     def __init__(self):
-        engine = sqlalchemy.create_engine("sqlite:///:memory:", echo=True)
+        # Note: some web servers (aka Flask) will create a new instance of this
+        # class for each request.
+        engine = sqlalchemy.create_engine("sqlite:///tmp.db", echo=True)
         Session = sessionmaker(bind=engine)
         self.session = Session()
         Base.metadata.create_all(engine)
@@ -20,38 +31,43 @@ class SqlBackend:
         storage[ADHOC_KEY][userid].append(loaded_tx)
         return "Transaction added. Operation is {}.\n".format(loaded_tx.operation)
 
+    def add_user(self, userid):
+        user_obj = user.User(user_id=userid)
+        self.session.add(user_obj)
+        self.session.commit()
+        return "user {} created\n".format(userid)
+
     def add_document(self, exchange, userid):
         submitted_stuff = flask.request.get_data()
         contents_md5_hash = hashlib.md5(submitted_stuff).hexdigest()
-        storage[DOCS_KEY][contents_md5_hash] = {
-            "exchange": exchange,
-            "userid": userid,
-            "contents": submitted_stuff,
-        }
-        return "stored in memory. hash: {}\n".format(contents_md5_hash)
+        taxdoc_obj = taxdoc.TaxDoc(
+            exchange=exchange,
+            user_id=userid,
+            file_hash=contents_md5_hash,
+            contents=submitted_stuff,
+        )
+        self.session.add(taxdoc_obj)
+        self.session.commit()
+        return "File stored. hash: {}\n".format(contents_md5_hash)
 
     def run_basis(self, userid):
         """
         Given a userid, look up all of their tax documents and run basis calculator
-        on all trannies.
+        on all txs.
 
         Returns: the total profit as a JSON object (just an integer or float).
         """
-        docs = []
-        for object_key in storage[DOCS_KEY]:
-            if storage[DOCS_KEY][object_key]["userid"] == userid:
-                docs.append(storage[DOCS_KEY][object_key])
+        docs = self.session.query(taxdoc.TaxDoc).filter_by(user_id=userid)
+        print(docs)
         all_txs = []
-        if userid in storage[ADHOC_KEY]:
-            all_txs.extend(storage[ADHOC_KEY][userid])
-        for taxdoc in docs:
+        for taxdoc_obj in docs:
             tmp_fname = "/tmp/tmp"
             temp = tempfile.NamedTemporaryFile(delete=False)
-            temp.write(taxdoc["contents"])
+            temp.write(taxdoc_obj.contents)
             temp.close()
-            if taxdoc["exchange"] == "gemini":
+            if taxdoc_obj.exchange == "gemini":
                 all_txs.extend(basis.get_all_transactions(None, temp.name))
-            if taxdoc["exchange"] == "coinbase":
+            if taxdoc_obj.exchange == "coinbase":
                 all_txs.extend(basis.get_all_transactions(temp.name, None))
         basis_reports = basis.process_all(all_txs)
         ans = ""
