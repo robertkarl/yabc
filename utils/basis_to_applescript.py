@@ -48,6 +48,7 @@ from yabc import basis
 NUM_ENTRIES_IN_8949 = 14
 TAX_YEAR = "2018"
 GENERATED_FNAME_FMT = "populate_8949-{}.script"
+REPORT_FNAME_FMT = "report-{}.txt"
 
 
 def append_tab(strokes):
@@ -116,6 +117,23 @@ def get_preamble():
 def get_suffix():
     return ["end tell"]
 
+def human_readable_report(txs):
+    """
+    Given a list of CostBasisReports to be submitted to tax authorities, generate a human
+    readable report.
+    """
+    total_proceeds = sum([tx.proceeds for tx in txs])
+    total_basis = sum([tx.basis for tx in txs])
+    total_gain_or_loss = sum([tx.gain_or_loss for tx in txs])
+    ans = ""
+    ans += "{} transactions for ty {}\n\n".format(len(txs), TAX_YEAR)
+    for i in txs:
+        ans += "{}\n".format(str(i))
+    ans += "\ntotal gain or loss for above transactions: {}".format(total_gain_or_loss)
+    ans += "\n"
+    ans += "\ntotal basis for above transactions: {}".format(total_basis)
+    ans += "\ntotal proceeds for above transactions: {}".format(total_proceeds)
+    return ans
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
@@ -141,4 +159,6 @@ if __name__ == "__main__":
             of.writelines([i + "\n" for i in get_preamble()])
             of.writelines([i + "\n" for i in get_strokes(batch)])
             of.writelines([i + "\n" for i in get_suffix()])
+        with open(REPORT_FNAME_FMT.format(i), "w") as of:
+            of.write(human_readable_report(batch))
         i += 1
