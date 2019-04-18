@@ -23,7 +23,7 @@ class Transaction(yabc.Base):
 
     __tablename__ = "transaction"
     id = Column(Integer, primary_key=True)
-    user_id = Column(string, ForeignKey("user.user_id")
+    user_id = Column(String, ForeignKey("user.user_id"))
     asset_name = Column(String)
     btc_quantity = Column(Float)
     date = Column(DateTime)
