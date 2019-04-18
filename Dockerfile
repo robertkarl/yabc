@@ -22,4 +22,4 @@ WORKDIR /yabc
 ADD . /yabc
 RUN python3 ./setup.py install 
 
-ENTRYPOINT python3 -m yabc.server.yabc_api
+ENTRYPOINT python3 -m yabc.server.server

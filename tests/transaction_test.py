@@ -2,14 +2,13 @@ import datetime
 import math
 import unittest
 
-from yabc import transaction
-from yabc import Base
-from yabc import user
-
 import sqlalchemy
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy import Column, Integer, String, DateTime
 from sqlalchemy.orm import sessionmaker
+
+from yabc import Base
+from yabc import transaction
+from yabc import user  # noqa
+
 
 class TransactionTest(unittest.TestCase):
     def test_from_coinbase_buy(self):
@@ -103,7 +102,6 @@ class TransactionTest(unittest.TestCase):
         Base.metadata.create_all(engine)
         session.add(trans)
         session.commit()
-
 
 
 if __name__ == "__main__":

@@ -17,7 +17,7 @@ virtualenv -p python3 venv
 source ./venv/bin/activate
 # Creating and activating a virtual environment above is optional and recommended
 ./setup.py install
-python -m yabc_api.yabc_api
+python -m yabc.server.server
 ```
 
 # Running the docker image

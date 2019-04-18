@@ -3,7 +3,7 @@ build: src
 
 run:
 	rm -f tmp.db
-	PYTHONPATH=src python -m yabc.server.yabc_api
+	PYTHONPATH=src python -m yabc.server.server
 
 run_docker:
 	docker run -it --publish 127.0.0.1:5000:5000 yabc

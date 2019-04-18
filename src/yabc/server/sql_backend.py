@@ -1,3 +1,9 @@
+"""
+Track the sql alchemy session and provide methods for endpoints.
+"""
+
+__author__ = "Robert Karl <robertkarljr@gmail.com>"
+
 import hashlib
 import json
 import tempfile
@@ -11,8 +17,6 @@ from yabc import basis
 from yabc import taxdoc
 from yabc import transaction
 from yabc import user
-
-# TODO: remove all references to `storage'
 
 
 class SqlBackend:
