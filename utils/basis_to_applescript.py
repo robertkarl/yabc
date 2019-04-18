@@ -117,6 +117,7 @@ def get_preamble():
 def get_suffix():
     return ["end tell"]
 
+
 def human_readable_report(txs):
     """
     Given a list of CostBasisReports to be submitted to tax authorities, generate a human
@@ -134,6 +135,7 @@ def human_readable_report(txs):
     ans += "\ntotal basis for above transactions: {}".format(total_basis)
     ans += "\ntotal proceeds for above transactions: {}".format(total_proceeds)
     return ans
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
