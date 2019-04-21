@@ -48,6 +48,7 @@ def process_one(trans, pool):
             - ans['add']: At most one coin to add to the pool, if there was a partial sale.
 
     @param transaction (transaction.Transaction): a buy or sell with fields filled
+    @param pool: a sequence containing transaction.Transaction instances.
 
     @return json describing the transaction:
     {'sell': [T1, T1], 'remove_from_pool': 1, 'add_to_pool': [T5]}
@@ -98,7 +99,7 @@ def process_one(trans, pool):
     # have pool_index==0, and won't call @make_cost_basis_report below.
     for i in range(pool_index):
         # each of these including pool_index will become a sale to be reported to IRS
-        # The cost basis is pool[i].usd_bitcoin_price
+        # The cost basis is pool[i].asset_price
         # The sale price is dependent on the parameter `trans'
         ir = make_cost_basis_report(
             pool[i].usd_btc_price,

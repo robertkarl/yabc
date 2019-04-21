@@ -30,14 +30,16 @@ class Transaction(yabc.Base):
     operation = Column(String)
     source = Column(String)
     usd_btc_price = Column(Float)
+    fees = Column(Float)
 
     def __init__(
         self,
         operation=None,
         btc_quantity=0,
         date=None,
-        usd_bitcoin_price=0,
+        asset_price=0,
         source=None,
+        fees=0,
         asset_name="BTC",
     ):
         assert operation in ["Buy", "Sell"]
@@ -47,7 +49,7 @@ class Transaction(yabc.Base):
         self.btc_quantity = btc_quantity
         self.operation = operation
         self.date = date.replace(tzinfo=None)
-        self.usd_btc_price = usd_bitcoin_price
+        self.usd_btc_price = asset_price
         self.source = source
         self.asset_name = "BTC"
 
@@ -80,7 +82,7 @@ class Transaction(yabc.Base):
             btc_quantity=btc_quantity,
             date=dateutil.parser.parse(timestamp_str),
             source="coinbase",
-            usd_bitcoin_price=unit_price,
+            asset_price=unit_price,
         )
 
     @staticmethod
@@ -108,7 +110,7 @@ class Transaction(yabc.Base):
             btc_quantity=btc_quantity,
             date=dateutil.parser.parse(timestamp_str),
             source="gemini",
-            usd_bitcoin_price=unit_price,
+            asset_price=unit_price,
         )
 
     def __repr__(self):
