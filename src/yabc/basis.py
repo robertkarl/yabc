@@ -63,30 +63,30 @@ def process_one(trans, pool):
     if trans.operation == "Buy":
         return {"basis_reports": [], "add": trans, "remove_index": -1}
 
-    while amount < trans.btc_quantity:
+    while amount < trans.quantity:
         pool_index += 1
-        amount += pool[pool_index].btc_quantity
+        amount += pool[pool_index].quantity
     # TODO we should be using Satoshis for this accounting. We should deal with
     # edge cases such as "transactions rounding to $0.00" elsewhere (when the
     # 8949 is generated.
-    needs_split = (amount - trans.btc_quantity) > 1e-5
+    needs_split = (amount - trans.quantity) > 1e-5
 
     to_add = None
     if needs_split:
         coin_to_split = pool[pool_index]
-        split_amount_back_in_pool = amount - trans.btc_quantity
-        split_amount_to_sell = coin_to_split.btc_quantity - split_amount_back_in_pool
+        split_amount_back_in_pool = amount - trans.quantity
+        split_amount_to_sell = coin_to_split.quantity - split_amount_back_in_pool
 
         to_add = copy.deepcopy(coin_to_split)
-        split_quantity = to_add.btc_quantity
-        to_add.btc_quantity = split_amount_back_in_pool
+        split_quantity = to_add.quantity
+        to_add.quantity = split_amount_back_in_pool
         to_add.operation = "Split"
         cost_basis_reports.append(
             make_cost_basis_report(
-                coin_to_split.usd_btc_price,
+                coin_to_split.usd_subtotal,
                 split_amount_to_sell,
                 coin_to_split.date,
-                trans.usd_btc_price,
+                trans.usd_subtotal,
                 trans.date,
             )
         )
@@ -99,13 +99,13 @@ def process_one(trans, pool):
     # have pool_index==0, and won't call @make_cost_basis_report below.
     for i in range(pool_index):
         # each of these including pool_index will become a sale to be reported to IRS
-        # The cost basis is pool[i].asset_price
+        # The cost basis is pool[i].proceeds
         # The sale price is dependent on the parameter `trans'
         ir = make_cost_basis_report(
-            pool[i].usd_btc_price,
-            pool[i].btc_quantity,
+            pool[i].usd_subtotal,
+            pool[i].quantity,
             pool[i].date,
-            trans.usd_btc_price,
+            trans.usd_subtotal,
             trans.date,
         )
         cost_basis_reports.append(ir)

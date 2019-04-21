@@ -23,9 +23,9 @@ class TransactionTest(unittest.TestCase):
         trans = transaction.Transaction.FromCoinbaseJSON(coinbase_json_buy)
 
         self.assertEqual(trans.operation, "Buy")
-        self.assertEqual(trans.btc_quantity, coinbase_json_buy["Amount"])
+        self.assertEqual(trans.quantity, coinbase_json_buy["Amount"])
         self.assertEqual(trans.date, datetime.datetime(2015, 2, 5, 6, 27, 56, 373000))
-        self.assertEqual(trans.usd_btc_price, 0.5)
+        self.assertEqual(trans.usd_subtotal, 0.5)
         self.assertEqual(trans.source, "coinbase")
         self.assertEqual(trans.asset_name, "BTC")
 
@@ -40,9 +40,9 @@ class TransactionTest(unittest.TestCase):
         trans = transaction.Transaction.FromCoinbaseJSON(coinbase_json_sell)
 
         self.assertEqual(trans.operation, "Sell")
-        self.assertEqual(trans.btc_quantity, math.fabs(coinbase_json_sell["Amount"]))
+        self.assertEqual(trans.quantity, math.fabs(coinbase_json_sell["Amount"]))
         self.assertEqual(trans.date, datetime.datetime(2015, 2, 5, 6, 27, 56, 373000))
-        self.assertEqual(trans.usd_btc_price, 0.5)
+        self.assertEqual(trans.usd_subtotal, 0.5)
         self.assertEqual(trans.source, "coinbase")
         self.assertEqual(trans.asset_name, "BTC")
 
@@ -60,9 +60,9 @@ class TransactionTest(unittest.TestCase):
         trans = transaction.Transaction.FromGeminiJSON(gemini_json_buy)
 
         self.assertEqual(trans.operation, "Buy")
-        self.assertEqual(trans.btc_quantity, 2)
+        self.assertEqual(trans.quantity, 2)
         self.assertEqual(trans.date, datetime.datetime(2015, 2, 5, 0, 0))
-        self.assertEqual(trans.usd_btc_price, 0.5)
+        self.assertEqual(trans.usd_subtotal, 0.5)
         self.assertEqual(trans.source, "gemini")
         self.assertEqual(trans.asset_name, "BTC")
 
@@ -80,9 +80,9 @@ class TransactionTest(unittest.TestCase):
         trans = transaction.Transaction.FromGeminiJSON(gemini_json_sell)
 
         self.assertEqual(trans.operation, "Sell")
-        self.assertEqual(trans.btc_quantity, 2)
+        self.assertEqual(trans.quantity, 2)
         self.assertEqual(trans.date, datetime.datetime(2015, 2, 5, 0, 0))
-        self.assertEqual(trans.usd_btc_price, 0.5)
+        self.assertEqual(trans.usd_subtotal, 0.5)
         self.assertEqual(trans.source, "gemini")
         self.assertEqual(trans.asset_name, "BTC")
 

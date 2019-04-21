@@ -25,31 +25,31 @@ class Transaction(yabc.Base):
     id = Column(Integer, primary_key=True)
     user_id = Column(String, ForeignKey("user.user_id"))
     asset_name = Column(String)
-    btc_quantity = Column(Float)
+    quantity = Column(Float)
     date = Column(DateTime)
     operation = Column(String)
     source = Column(String)
-    usd_btc_price = Column(Float)
+    usd_subtotal = Column(Float)
     fees = Column(Float)
 
     def __init__(
         self,
         operation=None,
-        btc_quantity=0,
+        quantity=0,
         date=None,
-        asset_price=0,
+        proceeds=0,
         source=None,
         fees=0,
         asset_name="BTC",
     ):
         assert operation in ["Buy", "Sell"]
         assert date is not None
-        assert type(btc_quantity) is float
-        assert btc_quantity > 0
-        self.btc_quantity = btc_quantity
+        assert type(quantity) is float
+        assert quantity > 0
+        self.quantity = quantity
         self.operation = operation
         self.date = date.replace(tzinfo=None)
-        self.usd_btc_price = asset_price
+        self.usd_subtotal = proceeds
         self.source = source
         self.asset_name = "BTC"
 
@@ -66,23 +66,20 @@ class Transaction(yabc.Base):
         Returns: Transaction instance with important fields populated
         """
         operation = "Buy"
-        total_price = float(json["Transfer Total"])
+        proceeds = float(json["Transfer Total"])
         fee = float(json["Transfer Fee"])
-        btc_quantity = float(json["Amount"])
-        if btc_quantity < 0:
+        quantity = float(json["Amount"])
+        if quantity < 0:
             operation = "Sell"
-            btc_quantity = abs(btc_quantity)
-        assert btc_quantity > 0
-        unit_price = (total_price - fee) / btc_quantity
+            quantity = abs(quantity)
         timestamp_str = json["Timestamp"]
-        # TODO(robertkarl): I assume we're only supporting USD <-> BC
-        # transactions?
         return Transaction(
             operation,
-            btc_quantity=btc_quantity,
+            quantity=quantity,
             date=dateutil.parser.parse(timestamp_str),
+            fees=fee,
             source="coinbase",
-            asset_price=unit_price,
+            proceeds=proceeds,
         )
 
     @staticmethod
@@ -92,33 +89,27 @@ class Transaction(yabc.Base):
             json (Dictionary): 
         """
         operation = json["Type"]
-        btc_quantity = float(json["BTC Amount"])
+        quantity = float(json["BTC Amount"])
         usd_total = float(json["USD Amount"])
         fee = float(json["USD Fee"])
-        assert fee >= 0  # Fee can round to zero for small trannies
-        unit_price = float(usd_total) / btc_quantity
+        assert fee >= 0  # Fee can round to zero for small txs
         assert unit_price > 0
         timestamp_str = "{}".format(json["Date"])
-        # TODO(robertkarl): the original format seems to only include the date.
-        # The timestamp needs the time as well (e.g. we should use the below
-        # line). For now, I'm focusing on making a small PR to add basic tests,
-        # so punting for now.
-        # timestamp_str = "{} {}".format(json['Date'], json['Time'])
-
         return Transaction(
             operation,
-            btc_quantity=btc_quantity,
+            quantity=quantity,
+            fees=fee,
             date=dateutil.parser.parse(timestamp_str),
             source="gemini",
-            asset_price=unit_price,
+            proceeds=usd_total,
         )
 
     def __repr__(self):
         return "<TX for {}: {} {} BTC @ {}, on {} from exchange {}>".format(
             self.user_id,
             self.operation,
-            self.btc_quantity,
-            self.usd_btc_price,
+            self.quantity,
+            self.usd_subtotal,
             self.date,
             self.source,
         )
