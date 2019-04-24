@@ -114,7 +114,8 @@ def process_one(trans, pool):
 
     @return json describing the transaction:
     {'sell': [T1, T1], 'remove_from_pool': 1, 'add_to_pool': [T5]}
-    @TODO
+
+    @TODO process_one can call to split_report when amount > coin_to_split.quantity
     """
     assert type(trans) is transaction.Transaction and type(pool) is list
     pool = sorted(pool, key=lambda tx: tx.date)
