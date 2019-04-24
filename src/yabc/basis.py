@@ -78,7 +78,6 @@ def split_report(coin_to_split, amount, trans):
     assert isinstance(coin_to_split, transaction.Transaction)
     assert isinstance(trans, transaction.Transaction)
     assert amount < coin_to_split.quantity
-    print("amount: {}, trans.quantity: {}".format(amount, trans.quantity))
     assert not (amount - trans.quantity > 1e-5)  # allowed to be equal
 
     # basis and fee (partial amounts of coin_to_split)
@@ -120,8 +119,6 @@ def process_one(trans, pool):
 
     @return json describing the transaction:
     {'sell': [T1, T1], 'remove_from_pool': 1, 'add_to_pool': [T5]}
-
-    @TODO process_one can call to split_report when amount > coin_to_split.quantity
     """
     assert type(trans) is transaction.Transaction and type(pool) is list
     pool = sorted(pool, key=lambda tx: tx.date)
