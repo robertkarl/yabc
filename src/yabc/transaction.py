@@ -5,7 +5,7 @@ Definition of a Transaction, the in-memory version of an asset buy/sell
 __author__ = "Robert Karl <robertkarljr@gmail.com>"
 
 
-import dateutil
+import dateutil.parser
 from sqlalchemy import Column
 from sqlalchemy import DateTime
 from sqlalchemy import Float
@@ -23,24 +23,25 @@ class Transaction(yabc.Base):
 
     __tablename__ = "transaction"
     id = Column(Integer, primary_key=True)
-    user_id = Column(String, ForeignKey("user.user_id"))
     asset_name = Column(String)
-    quantity = Column(Float)
     date = Column(DateTime)
+    fees = Column(Float)
     operation = Column(String)
+    quantity = Column(Float)
     source = Column(String)
     usd_subtotal = Column(Float)
-    fees = Column(Float)
+    user_id = Column(String, ForeignKey("user.user_id"))
 
     def __init__(
         self,
+        asset_name="BTC",
+        date=None,
+        fees=0,
         operation=None,
         quantity=0,
-        date=None,
-        proceeds=0,
         source=None,
-        fees=0,
-        asset_name="BTC",
+        usd_subtotal=0,
+        user_id=""
     ):
         assert operation in ["Buy", "Sell"]
         assert date is not None
@@ -49,19 +50,20 @@ class Transaction(yabc.Base):
         self.quantity = quantity
         self.operation = operation
         self.date = date.replace(tzinfo=None)
-        self.usd_subtotal = proceeds
+        self.usd_subtotal = usd_subtotal
         self.source = source
-        self.asset_name = "BTC"
+        self.asset_name = asset_name
+        self.user_id = user_id
+        self.fees = fees
 
     @staticmethod
     def FromCoinbaseJSON(json):
         """
         Arguments:
             json (dict): a coinbase-style dictionary with the following fields:
-                - 'Transfer Total': the total price, including fees.
-                - 'Transfer Fee': the fee charged by the exchange.
-                - 'Amount': the amount of bitcoin sold. (It's negative for
-                  sales.)
+                - 'Transfer Total': the total USD price, including fees.
+                - 'Transfer Fee': the USD fee charged by the exchange.
+                - 'Amount': the amount of bitcoin sold. (It's negative for sales.)
                 - 'Timestamp': 'hour:min:sec.millisecs' formatted timestamp.
         Returns: Transaction instance with important fields populated
         """
@@ -74,12 +76,12 @@ class Transaction(yabc.Base):
             quantity = abs(quantity)
         timestamp_str = json["Timestamp"]
         return Transaction(
-            operation,
+            operation=operation,
             quantity=quantity,
             date=dateutil.parser.parse(timestamp_str),
             fees=fee,
             source="coinbase",
-            proceeds=proceeds,
+            usd_subtotal=proceeds,
         )
 
     @staticmethod
@@ -93,23 +95,23 @@ class Transaction(yabc.Base):
         usd_total = float(json["USD Amount"])
         fee = float(json["USD Fee"])
         assert fee >= 0  # Fee can round to zero for small txs
-        assert unit_price > 0
         timestamp_str = "{}".format(json["Date"])
         return Transaction(
-            operation,
+            operation=operation,
             quantity=quantity,
             fees=fee,
             date=dateutil.parser.parse(timestamp_str),
             source="gemini",
-            proceeds=usd_total,
+            usd_subtotal=usd_total,
         )
 
     def __repr__(self):
-        return "<TX for {}: {} {} BTC @ {}, on {} from exchange {}>".format(
+        return "<TX for user '{}': {} {} BTC @ {}, on {} from exchange {}. Fee {}.>".format(
             self.user_id,
             self.operation,
             self.quantity,
             self.usd_subtotal,
             self.date,
             self.source,
+            self.fees
         )

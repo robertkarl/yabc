@@ -6,17 +6,56 @@ import sqlalchemy
 from sqlalchemy.orm import sessionmaker
 
 from yabc import Base
+from yabc import basis
 from yabc import transaction
 from yabc import user  # noqa
 
 
+def make_transaction(kind, quantity, fees, subtotal):
+    sample_date = datetime.datetime(2015, 2, 5, 6, 27, 56, 373000)
+    return transaction.Transaction(date=sample_date, operation=kind, asset_name="BTC", fees=fees, quantity=quantity,usd_subtotal=subtotal)
+
+    
+
 class TransactionTest(unittest.TestCase):
+    def setUp(self):
+        self.sample_buy = make_transaction("Buy", 1.0, 10.0, 100.0)
+
+    def test_split_report_no_gain(self):
+        """ Test the case where the coin is sold for exactly what it was purchased for.
+        """
+        proceeds = 100
+        buy = make_transaction("Buy", 1.0, 0, 100.0)
+        sell = make_transaction("Sell", 1.0, 0, 100.0)
+        report = basis.split_report(buy, .5, sell)
+        self.assertEqual(report.gain_or_loss, 0)
+
+    def test_split_report(self):
+        """ Test the case where the coin is sold for exactly what it was purchased for.
+        """
+        buy = make_transaction("Buy", 1.0, 10, 100.0)
+        sell = make_transaction("Sell", 1.0, 10, 200.0)
+        report = basis.split_report(buy, .5, sell)
+        ans_basis = 55.0
+        sale_basis = 95.0
+        ans_gain_or_loss = 40.0
+        self.assertEqual(report.gain_or_loss, ans_gain_or_loss)
+
+    def test_split_report_bad_input(self):
+        """ Test the case where the coin is sold for exactly what it was purchased for.
+        """
+        proceeds = 100
+        purchase_quantity = 1.0
+        buy = make_transaction("Buy", purchase_quantity, 0, 100.0)
+        sell = make_transaction("Sell", 2.0, 0, 100.0)
+        with self.assertRaises(AssertionError):
+            basis.split_report(buy, purchase_quantity, sell) # Should not split the basis coin, quantity matches
+
     def test_from_coinbase_buy(self):
         coinbase_json_buy = {
             "Transfer Total": 1.05,
             "Transfer Fee": 0.05,
             "Amount": 2,
-            # TODO(robertkarl): What does the coinbase format look like?
             "Timestamp": "2015-2-5 06:27:56.373",
         }
 
@@ -25,7 +64,7 @@ class TransactionTest(unittest.TestCase):
         self.assertEqual(trans.operation, "Buy")
         self.assertEqual(trans.quantity, coinbase_json_buy["Amount"])
         self.assertEqual(trans.date, datetime.datetime(2015, 2, 5, 6, 27, 56, 373000))
-        self.assertEqual(trans.usd_subtotal, 0.5)
+        self.assertEqual(trans.usd_subtotal, 1.05)
         self.assertEqual(trans.source, "coinbase")
         self.assertEqual(trans.asset_name, "BTC")
 
@@ -42,7 +81,7 @@ class TransactionTest(unittest.TestCase):
         self.assertEqual(trans.operation, "Sell")
         self.assertEqual(trans.quantity, math.fabs(coinbase_json_sell["Amount"]))
         self.assertEqual(trans.date, datetime.datetime(2015, 2, 5, 6, 27, 56, 373000))
-        self.assertEqual(trans.usd_subtotal, 0.5)
+        self.assertEqual(trans.usd_subtotal, 1.05)
         self.assertEqual(trans.source, "coinbase")
         self.assertEqual(trans.asset_name, "BTC")
 
@@ -62,7 +101,8 @@ class TransactionTest(unittest.TestCase):
         self.assertEqual(trans.operation, "Buy")
         self.assertEqual(trans.quantity, 2)
         self.assertEqual(trans.date, datetime.datetime(2015, 2, 5, 0, 0))
-        self.assertEqual(trans.usd_subtotal, 0.5)
+        self.assertEqual(trans.usd_subtotal, 1.0)
+        self.assertEqual(trans.fees, 0.05)
         self.assertEqual(trans.source, "gemini")
         self.assertEqual(trans.asset_name, "BTC")
 
@@ -81,8 +121,9 @@ class TransactionTest(unittest.TestCase):
 
         self.assertEqual(trans.operation, "Sell")
         self.assertEqual(trans.quantity, 2)
+        self.assertEqual(trans.fees, 0.05)
         self.assertEqual(trans.date, datetime.datetime(2015, 2, 5, 0, 0))
-        self.assertEqual(trans.usd_subtotal, 0.5)
+        self.assertEqual(trans.usd_subtotal, 1.0)
         self.assertEqual(trans.source, "gemini")
         self.assertEqual(trans.asset_name, "BTC")
 
