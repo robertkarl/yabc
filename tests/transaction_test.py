@@ -28,6 +28,8 @@ class TransactionTest(unittest.TestCase):
         self.sample_buy = make_transaction("Buy", 1.0, 10.0, 100.0)
 
     def test_fees_no_proceeds(self):
+        """ Test case where fees make a profit of 0.
+        """
         date = datetime.datetime(2015, 2, 5, 6, 27, 56, 373000)
         pool = [
             transaction.Transaction(
@@ -56,7 +58,7 @@ class TransactionTest(unittest.TestCase):
         self.assertEqual(result["basis_reports"][0].gain_or_loss, 0)
 
     def test_split_report_no_gain(self):
-        """ Test the case where the coin is sold for exactly what it was purchased for.
+        """ Test simple case with no profit or loss.
         """
         proceeds = 100
         buy = make_transaction("Buy", 1.0, 0, 100.0)
@@ -65,7 +67,7 @@ class TransactionTest(unittest.TestCase):
         self.assertEqual(report.gain_or_loss, 0)
 
     def test_split_report(self):
-        """ Test the case where the coin is sold for exactly what it was purchased for.
+        """ Test split_report function.
         """
         buy = make_transaction("Buy", 1.0, 10, 100.0)
         sell = make_transaction("Sell", 1.0, 10, 200.0)
@@ -76,7 +78,7 @@ class TransactionTest(unittest.TestCase):
         self.assertEqual(report.gain_or_loss, ans_gain_or_loss)
 
     def test_split_report_bad_input(self):
-        """ Test the case where the coin is sold for exactly what it was purchased for.
+        """ Test where function split_report gets bad inputs and should throw / assert.
         """
         proceeds = 100
         purchase_quantity = 1.0
@@ -88,6 +90,8 @@ class TransactionTest(unittest.TestCase):
             )  # Should not split the basis coin, quantity matches
 
     def test_from_coinbase_buy(self):
+        """ Test loading a coinbase tx from json.
+        """
         coinbase_json_buy = {
             "Transfer Total": 1.05,
             "Transfer Fee": 0.05,
@@ -105,6 +109,8 @@ class TransactionTest(unittest.TestCase):
         self.assertEqual(trans.asset_name, "BTC")
 
     def test_from_coinbase_sell(self):
+        """ Test loading a coinbase sell from json.
+        """
         coinbase_json_sell = {
             "Transfer Total": 1.05,
             "Transfer Fee": 0.05,
@@ -122,6 +128,8 @@ class TransactionTest(unittest.TestCase):
         self.assertEqual(trans.asset_name, "BTC")
 
     def test_from_gemini_buy(self):
+        """ Test loading a gemini buy from json.
+        """
         gemini_json_buy = {
             "Type": "Buy",
             "BTC Amount": 2,
@@ -143,6 +151,8 @@ class TransactionTest(unittest.TestCase):
         self.assertEqual(trans.asset_name, "BTC")
 
     def test_from_gemini_sell(self):
+        """ Test loading a gemini sell from json.
+        """
         gemini_json_sell = {
             "Type": "Sell",
             "BTC Amount": 2,
@@ -164,6 +174,8 @@ class TransactionTest(unittest.TestCase):
         self.assertEqual(trans.asset_name, "BTC")
 
     def test_sql_create(self):
+        """ Test modifying SQL db via ORM.
+        """
         sell_json_gemini = {
             "Type": "Sell",
             "BTC Amount": 2,
