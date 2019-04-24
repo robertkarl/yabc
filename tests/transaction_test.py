@@ -27,6 +27,34 @@ class TransactionTest(unittest.TestCase):
     def setUp(self):
         self.sample_buy = make_transaction("Buy", 1.0, 10.0, 100.0)
 
+    def test_fees_no_proceeds(self):
+        date = datetime.datetime(2015, 2, 5, 6, 27, 56, 373000)
+        pool = [
+            transaction.Transaction(
+                operation="Buy",
+                quantity=0.5,
+                source=None,
+                usd_subtotal=990.0,
+                date=date,
+                asset_name="BTC",
+                fees=10,
+            )
+        ]
+        sale = transaction.Transaction(
+            operation="Sell",
+            quantity=0.5,
+            source=None,
+            usd_subtotal=1010.0,
+            date=date,
+            asset_name="BTC",
+            fees=10,
+        )
+        # Cost basis: (purchase price + fees) / quantity = 500
+        # Proceeds: (.5 / (1010 - 10)) = 500
+        # This transaction should result in $0 of capital gains.
+        result = basis.process_one(sale, pool)
+        self.assertEqual(result["basis_reports"][0].gain_or_loss, 0)
+
     def test_split_report_no_gain(self):
         """ Test the case where the coin is sold for exactly what it was purchased for.
         """
