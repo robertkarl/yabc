@@ -30,6 +30,7 @@ def make_cost_basis_report(buy_price, quantity, date_purchased, sale_price, date
     basis = buy_price
     return CostBasisReport(descr, acquired, sold, proceeds, basis, proceeds - basis)
 
+
 def split_coin_to_add(coin_to_split, amount, trans):
     """
     Create a coin to be added back to the pool.
@@ -41,16 +42,19 @@ def split_coin_to_add(coin_to_split, amount, trans):
         trans: the transaction triggering the report
     """
     assert isinstance(amount, float)
-    assert isinstance(transaction.Transaction, coin_to_split)
-    assert isinstance(transaction.Transaction, trans)
+    assert isinstance(coin_to_split, transaction.Transaction)
+    assert isinstance(trans, transaction.Transaction)
     split_amount_back_in_pool = coin_to_split.quantity - amount
-    split_fee_back_in_pool = coin_to_split.fee * (split_amount_back_in_pool / coin_to_split.amount)
+    split_fee_back_in_pool = coin_to_split.fees * (
+        split_amount_back_in_pool / coin_to_split.quantity
+    )
     to_add = copy.deepcopy(coin_to_split)
-    split_quantity = to_add.quantity
     to_add.quantity = split_amount_back_in_pool
     to_add.fee = split_fee_back_in_pool
     to_add.operation = "Split"
+    assert to_add.quantity > 0
     return to_add
+
 
 def split_report(coin_to_split, amount, trans):
     """
@@ -66,7 +70,7 @@ def split_report(coin_to_split, amount, trans):
         coin_to_split (Transaction): part of this will be the cost basis
         portion of this report
 
-        amount (Float): quantity of the asset that needs to be sold in this report (not the USD)
+        amount (Float): quantity of the split asset that needs to be sold in this report (not the USD).
 
         trans (Transaction): the transaction triggering this report
     """
@@ -74,11 +78,12 @@ def split_report(coin_to_split, amount, trans):
     assert isinstance(coin_to_split, transaction.Transaction)
     assert isinstance(trans, transaction.Transaction)
     assert amount < coin_to_split.quantity
-    assert amount < trans.quantity
+    print("amount: {}, trans.quantity: {}".format(amount, trans.quantity))
+    assert not (amount - trans.quantity > 1e-5)  # allowed to be equal
 
     # basis and fee (partial amounts of coin_to_split)
     frac_of_basis_coin = amount / coin_to_split.quantity
-    purchase_price= frac_of_basis_coin * coin_to_split.usd_subtotal
+    purchase_price = frac_of_basis_coin * coin_to_split.usd_subtotal
     purchase_fee = frac_of_basis_coin * coin_to_split.fees
 
     # sale proceeds and fee (again, partial amounts of trans)
@@ -86,12 +91,13 @@ def split_report(coin_to_split, amount, trans):
     proceeds = frac_of_sale_tx * trans.usd_subtotal
     sale_fee = frac_of_sale_tx * trans.fees
     return make_cost_basis_report(
-            purchase_price + purchase_fee,
-            amount,
-            coin_to_split.date,
-            proceeds - sale_fee,
-            trans.date,
-        )
+        purchase_price + purchase_fee,
+        amount,
+        coin_to_split.date,
+        proceeds - sale_fee,
+        trans.date,
+    )
+
 
 def process_one(trans, pool):
     """
@@ -137,8 +143,12 @@ def process_one(trans, pool):
     to_add = None
     if needs_split:
         coin_to_split = pool[pool_index]
-        cost_basis_reports.append(split_report(coin_to_split, amount, trans))
-        to_add = split_coin_to_add(coin_to_split, amount, trans)
+        excess = amount - trans.quantity
+        portion_of_split_coin_to_sell = coin_to_split.quantity - excess
+        cost_basis_reports.append(
+            split_report(coin_to_split, portion_of_split_coin_to_sell, trans)
+        )
+        to_add = split_coin_to_add(coin_to_split, portion_of_split_coin_to_sell, trans)
     needs_remove = pool_index
     if not needs_split:
         pool_index += 1  # Ensures that we report the oldest transaction as a sale.

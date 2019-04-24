@@ -13,9 +13,15 @@ from yabc import user  # noqa
 
 def make_transaction(kind, quantity, fees, subtotal):
     sample_date = datetime.datetime(2015, 2, 5, 6, 27, 56, 373000)
-    return transaction.Transaction(date=sample_date, operation=kind, asset_name="BTC", fees=fees, quantity=quantity,usd_subtotal=subtotal)
+    return transaction.Transaction(
+        date=sample_date,
+        operation=kind,
+        asset_name="BTC",
+        fees=fees,
+        quantity=quantity,
+        usd_subtotal=subtotal,
+    )
 
-    
 
 class TransactionTest(unittest.TestCase):
     def setUp(self):
@@ -27,7 +33,7 @@ class TransactionTest(unittest.TestCase):
         proceeds = 100
         buy = make_transaction("Buy", 1.0, 0, 100.0)
         sell = make_transaction("Sell", 1.0, 0, 100.0)
-        report = basis.split_report(buy, .5, sell)
+        report = basis.split_report(buy, 0.5, sell)
         self.assertEqual(report.gain_or_loss, 0)
 
     def test_split_report(self):
@@ -35,7 +41,7 @@ class TransactionTest(unittest.TestCase):
         """
         buy = make_transaction("Buy", 1.0, 10, 100.0)
         sell = make_transaction("Sell", 1.0, 10, 200.0)
-        report = basis.split_report(buy, .5, sell)
+        report = basis.split_report(buy, 0.5, sell)
         ans_basis = 55.0
         sale_basis = 95.0
         ans_gain_or_loss = 40.0
@@ -49,7 +55,9 @@ class TransactionTest(unittest.TestCase):
         buy = make_transaction("Buy", purchase_quantity, 0, 100.0)
         sell = make_transaction("Sell", 2.0, 0, 100.0)
         with self.assertRaises(AssertionError):
-            basis.split_report(buy, purchase_quantity, sell) # Should not split the basis coin, quantity matches
+            basis.split_report(
+                buy, purchase_quantity, sell
+            )  # Should not split the basis coin, quantity matches
 
     def test_from_coinbase_buy(self):
         coinbase_json_buy = {

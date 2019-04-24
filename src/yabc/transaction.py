@@ -41,7 +41,7 @@ class Transaction(yabc.Base):
         quantity=0,
         source=None,
         usd_subtotal=0,
-        user_id=""
+        user_id="",
     ):
         assert operation in ["Buy", "Sell"]
         assert date is not None
@@ -113,5 +113,5 @@ class Transaction(yabc.Base):
             self.usd_subtotal,
             self.date,
             self.source,
-            self.fees
+            self.fees,
         )
