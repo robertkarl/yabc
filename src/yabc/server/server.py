@@ -3,6 +3,7 @@ yabc HTTP endpoints are declared here.
 """
 import os
 import sys
+import sqlalchemy
 
 import flask
 
@@ -18,13 +19,6 @@ footer_text = "</body>\n</html>"
 _backend = None
 
 
-def get_backend():
-    global _backend
-    if not _backend:
-        _backend = sql_backend.SqlBackend()
-    return _backend
-
-
 def say_python_version():
     return "<p>Python version is {}.</p>\n".format(sys.version)
 
@@ -34,24 +28,42 @@ application.add_url_rule(
 )
 
 
-@application.route("/run_basis/<userid>", methods=["POST"])
-def run_basis(userid):
-    return get_backend().run_basis(userid)
+@application.route("/yabc/v1/run_basis", methods=["POST"])
+def run_basis():
+    userid = flask.request.args.get('userid')
+    backend = sql_backend.SqlBackend()
+    return backend.run_basis(userid)
 
 
-@application.route("/add_document/<exchange>/<userid>", methods=["POST"])
-def add_document(exchange, userid):
-    return get_backend().add_document(exchange, userid)
+@application.route("/yabc/v1/taxdocs", methods=["POST"])
+def taxdoc_create():
+    print(dir(sqlalchemy.dialects))
+    exchange = flask.request.args.get('exchange')
+    userid = flask.request.args.get('userid')
+    submitted_stuff = flask.request.get_data()
+    backend = sql_backend.SqlBackend()
+    return backend.taxdoc_create(exchange, userid, submitted_stuff)
 
 
 @application.route("/add_tx/<userid>", methods=["POST"])
 def add_tx(userid):
-    return get_backend().add_tx(userid)
+    tx = flask.request.get_data()
+    backend = sql_backend.SqlBackend()
+    return backend.add_tx(userid, tx)
 
 
-@application.route("/add_user/<userid>", methods=["POST"])
-def add_user(userid):
-    return get_backend().add_user(userid)
+# User
+
+@application.route("/yabc/v1/users/<userid>", methods=["GET"])
+def user_read(userid):
+    backend = sql_backend.SqlBackend()
+    return backend.user_read(userid)
+
+@application.route("/yabc/v1/users", methods=["POST"])
+def user_create():
+    name = flask.request.args.get('name')
+    backend = sql_backend.SqlBackend()
+    return backend.user_create(name)
 
 
 def main():

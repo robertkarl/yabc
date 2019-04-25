@@ -8,8 +8,9 @@ import yabc
 
 class TaxDoc(yabc.Base):
     __tablename__ = "taxdoc"
+    #__table_args__ = {'prefixes':["if", "not", "exists"]}
     id = Column(Integer, primary_key=True)
-    user_id = Column(String, ForeignKey("user.user_id"))
+    user_id = Column(String, ForeignKey("user.id"))
     file_name = Column(String)
     file_hash = Column(String)
     exchange = Column(String)
