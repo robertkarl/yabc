@@ -22,15 +22,12 @@ class SqlBackend:
     def __init__(self):
         # Note: some web servers (aka Flask) will create a new instance of this
         # class for each request.
-        
-        engine = sqlalchemy.create_engine("sqlite:///tmp.db", echo=True, poolclass=sqlalchemy.pool.QueuePool)
-        Session = sessionmaker(bind=engine)
+        self.engine = sqlalchemy.create_engine("sqlite:///tmp.db", echo=True, poolclass=sqlalchemy.pool.QueuePool)
+        Session = sessionmaker(bind=self.engine)
         self.session = Session()
-        declared_table_classes = (taxdoc.TaxDoc, transaction.Transaction, user.User)
-        for i in declared_table_classes:
-            if not engine.dialect.has_table(engine, i.__tablename__):
-                print("Doesn't have the table {}; creating it.".format(i.__tablename__))
-                i.__table__.create(bind=engine, checkfirst=True)
+
+    def create_tables(self):
+        Base.metadata.create_all(self.engine, checkfirst=True)
 
     def add_tx(self, userid, tx):
         loaded_tx = transaction.Transaction.FromCoinbaseJSON(json.loads(tx))

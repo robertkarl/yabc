@@ -16,9 +16,6 @@ HEADER_TEXT = """
 footer_text = "</body>\n</html>"
 
 
-_backend = None
-
-
 def say_python_version():
     return "<p>Python version is {}.</p>\n".format(sys.version)
 
@@ -45,8 +42,9 @@ def taxdoc_create():
     return backend.taxdoc_create(exchange, userid, submitted_stuff)
 
 
-@application.route("/add_tx/<userid>", methods=["POST"])
-def add_tx(userid):
+@application.route("/transactions", methods=["POST"])
+def add_tx():
+    userid = flask.request.args.get('userid')
     tx = flask.request.get_data()
     backend = sql_backend.SqlBackend()
     return backend.add_tx(userid, tx)
@@ -71,6 +69,8 @@ def main():
     if "YABC_DEBUG" in os.environ:
         application.debug = True
         print("listening on port {}".format(port))
+    backend = sql_backend.SqlBackend()
+    backend.create_tables()
     application.run(port=port, host="0.0.0.0")
 
 
