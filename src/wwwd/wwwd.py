@@ -1,28 +1,24 @@
 """
-yabc HTTP endpoints are declared here.
+Server that runs the REST endpoints and development server.
 """
 import os
 import sys
 
 import flask
+from flask import render_template
 
 from yabc.server import sql_backend
 from yabc.server.yabc_api import yabc_api
 
 application = flask.Flask(__name__)
 
-HEADER_TEXT = """
-    <html>\n<head> <title>yabc over HTTP</title> </head>\n<body>"""
-footer_text = "</body>\n</html>"
+@application.route('/register')
+def register():
+    return render_template('register.html')
 
-
-def say_python_version():
-    return "<p>Python version is {}.</p>\n".format(sys.version)
-
-
-application.add_url_rule(
-    "/", "index", (lambda: HEADER_TEXT + say_python_version() + footer_text)
-)
+@application.route('/portfolio')
+def portfolio():
+    return render_template('portfolio.html')
 
 def main():
     port = 5000
