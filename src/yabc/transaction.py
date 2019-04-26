@@ -30,7 +30,7 @@ class Transaction(yabc.Base):
     quantity = Column(Float)
     source = Column(String)
     usd_subtotal = Column(Float)
-    user_id = Column(String, ForeignKey("user.user_id"))
+    user_id = Column(String, ForeignKey("user.id"))
 
     def __init__(
         self,

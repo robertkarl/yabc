@@ -1,4 +1,5 @@
 from sqlalchemy import Column
+from sqlalchemy import Integer
 from sqlalchemy import String
 
 import yabc
@@ -6,4 +7,5 @@ import yabc
 
 class User(yabc.Base):
     __tablename__ = "user"
-    user_id = Column(String, primary_key=True)
+    id = Column(Integer, primary_key=True)
+    name = Column(String)

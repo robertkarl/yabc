@@ -8,7 +8,6 @@ import hashlib
 import json
 import tempfile
 
-import flask
 import sqlalchemy
 from sqlalchemy.orm import sessionmaker
 
@@ -23,13 +22,16 @@ class SqlBackend:
     def __init__(self):
         # Note: some web servers (aka Flask) will create a new instance of this
         # class for each request.
-        engine = sqlalchemy.create_engine("sqlite:///tmp.db", echo=True)
-        Session = sessionmaker(bind=engine)
+        self.engine = sqlalchemy.create_engine(
+            "sqlite:///tmp.db", echo=True, poolclass=sqlalchemy.pool.QueuePool
+        )
+        Session = sessionmaker(bind=self.engine)
         self.session = Session()
-        Base.metadata.create_all(engine)
 
-    def add_tx(self, userid):
-        tx = flask.request.get_data()
+    def create_tables(self):
+        Base.metadata.create_all(self.engine, checkfirst=True)
+
+    def add_tx(self, userid, tx):
         loaded_tx = transaction.Transaction.FromCoinbaseJSON(json.loads(tx))
         loaded_tx.user_id = userid
         self.session.add(loaded_tx)
@@ -38,14 +40,20 @@ class SqlBackend:
             userid, loaded_tx.operation
         )
 
-    def add_user(self, userid):
-        user_obj = user.User(user_id=userid)
+    def user_create(self, name):
+        user_obj = user.User(name=name)
         self.session.add(user_obj)
         self.session.commit()
-        return "user {} created\n".format(userid)
+        return json.dumps(user_obj.id)
 
-    def add_document(self, exchange, userid):
-        submitted_stuff = flask.request.get_data()
+    def user_read(self, uid):
+        user_obj = user.User(id=userid)
+        users = self.session.query(user.User).filter_by(userid=uid)
+        if users:
+            return json.dumps(users[0])
+        return None
+
+    def taxdoc_create(self, exchange, userid, submitted_stuff):
         contents_md5_hash = hashlib.md5(submitted_stuff).hexdigest()
         taxdoc_obj = taxdoc.TaxDoc(
             exchange=exchange,
