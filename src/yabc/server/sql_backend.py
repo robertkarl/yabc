@@ -22,7 +22,9 @@ class SqlBackend:
     def __init__(self):
         # Note: some web servers (aka Flask) will create a new instance of this
         # class for each request.
-        self.engine = sqlalchemy.create_engine("sqlite:///tmp.db", echo=True, poolclass=sqlalchemy.pool.QueuePool)
+        self.engine = sqlalchemy.create_engine(
+            "sqlite:///tmp.db", echo=True, poolclass=sqlalchemy.pool.QueuePool
+        )
         Session = sessionmaker(bind=self.engine)
         self.session = Session()
 

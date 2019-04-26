@@ -3,9 +3,9 @@ yabc HTTP endpoints are declared here.
 """
 import os
 import sys
-import sqlalchemy
 
 import flask
+import sqlalchemy
 
 from yabc.server import sql_backend
 
@@ -27,7 +27,7 @@ application.add_url_rule(
 
 @application.route("/yabc/v1/run_basis", methods=["POST"])
 def run_basis():
-    userid = flask.request.args.get('userid')
+    userid = flask.request.args.get("userid")
     backend = sql_backend.SqlBackend()
     return backend.run_basis(userid)
 
@@ -35,8 +35,8 @@ def run_basis():
 @application.route("/yabc/v1/taxdocs", methods=["POST"])
 def taxdoc_create():
     print(dir(sqlalchemy.dialects))
-    exchange = flask.request.args.get('exchange')
-    userid = flask.request.args.get('userid')
+    exchange = flask.request.args.get("exchange")
+    userid = flask.request.args.get("userid")
     submitted_stuff = flask.request.get_data()
     backend = sql_backend.SqlBackend()
     return backend.taxdoc_create(exchange, userid, submitted_stuff)
@@ -44,7 +44,7 @@ def taxdoc_create():
 
 @application.route("/yabc/v1/transactions", methods=["POST"])
 def transactions_create():
-    userid = flask.request.args.get('userid')
+    userid = flask.request.args.get("userid")
     tx = flask.request.get_data()
     backend = sql_backend.SqlBackend()
     return backend.add_tx(userid, tx)
@@ -52,14 +52,16 @@ def transactions_create():
 
 # User
 
+
 @application.route("/yabc/v1/users/<userid>", methods=["GET"])
 def user_read(userid):
     backend = sql_backend.SqlBackend()
     return backend.user_read(userid)
 
+
 @application.route("/yabc/v1/users", methods=["POST"])
 def user_create():
-    name = flask.request.args.get('name')
+    name = flask.request.args.get("name")
     backend = sql_backend.SqlBackend()
     return backend.user_create(name)
 
