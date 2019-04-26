@@ -1,4 +1,4 @@
-URL="localhost:5000/yabc/v1"
+URL=localhost:5000/yabc/v1
 
 build: src
 	docker build --tag yabc .
@@ -26,9 +26,9 @@ test_buyone_sellone:
 
 test_adhoc:
 	curl -X POST ${URL}/users?userid=testuser
-	curl --data '{"Transfer Total": "1234", "Transfer Fee": "12", "Amount": "1", "Timestamp": "5/6/07 1:12"}' localhost:5000/yabc/v1/add_tx/newuser
-	curl --data '{"Transfer Total": "1299", "Transfer Fee": "12", "Amount": "-1", "Timestamp": "5/6/07 1:12"}' localhost:5000/yabc/v1/add_tx/newuser
-	curl -X POST ${URL}/run_basis?userid=3
+	curl --data '{"Transfer Total": "1234", "Transfer Fee": "12", "Amount": "1", "Timestamp": "5/6/07 1:12"}' ${URL}/transactions?userid=3
+	curl --data '{"Transfer Total": "1299", "Transfer Fee": "12", "Amount": "-1", "Timestamp": "5/6/07 1:12"}' "${URL}/transactions?userid=3"
+	curl -X POST "${URL}/run_basis?userid=3" 2>/dev/null | grep 41
 
 test_all:
 	make create_test_user

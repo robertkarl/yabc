@@ -42,8 +42,8 @@ def taxdoc_create():
     return backend.taxdoc_create(exchange, userid, submitted_stuff)
 
 
-@application.route("/transactions", methods=["POST"])
-def add_tx():
+@application.route("/yabc/v1/transactions", methods=["POST"])
+def transactions_create():
     userid = flask.request.args.get('userid')
     tx = flask.request.get_data()
     backend = sql_backend.SqlBackend()
