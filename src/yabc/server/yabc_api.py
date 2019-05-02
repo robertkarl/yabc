@@ -38,6 +38,6 @@ def user_read(userid):
 
 @yabc_api.route("/yabc/v1/users", methods=["POST"])
 def user_create():
-    name = flask.request.args.get("name")
+    name = flask.request.args.get("username")
     backend = sql_backend.SqlBackend()
     return backend.user_create(name)

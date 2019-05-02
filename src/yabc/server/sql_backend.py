@@ -41,7 +41,7 @@ class SqlBackend:
         )
 
     def user_create(self, name):
-        user_obj = user.User(name=name)
+        user_obj = user.User(username=name)
         self.session.add(user_obj)
         self.session.commit()
         return json.dumps(user_obj.id)

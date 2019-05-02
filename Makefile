@@ -11,7 +11,7 @@ run_docker:
 	docker run -it --publish 127.0.0.1:5000:5000 yabc
 
 create_test_user:
-	curl -X POST ${URL}/users?userid=robert
+	curl -X POST ${URL}/users?username=robert
 
 test_local: 
 	curl --data-binary @testdata/synthetic_coinbase_csv.csv "${URL}/taxdocs?exchange=coinbase&userid=1"
