@@ -1,17 +1,10 @@
 import flask
+from flask import Blueprint
+
 from yabc.server import sql_backend
-from flask import Blueprint, render_template, abort
-from jinja2 import TemplateNotFound
 
-yabc_api = Blueprint('yabc_api', __name__)
+yabc_api = Blueprint("yabc_api", __name__)
 
-@yabc_api.route('/asdf')
-def show(page):
-    return "simple page"
-    try:
-        return render_template('pages/%s.html' % page)
-    except TemplateNotFound:
-        abort(404)
 
 @yabc_api.route("/yabc/v1/run_basis", methods=["POST"])
 def run_basis():

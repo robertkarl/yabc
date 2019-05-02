@@ -24,6 +24,7 @@ application.add_url_rule(
     "/", "index", (lambda: HEADER_TEXT + say_python_version() + footer_text)
 )
 
+
 def main():
     port = 5000
     if "YABC_DEBUG" in os.environ:
