@@ -8,4 +8,5 @@ import yabc
 class User(yabc.Base):
     __tablename__ = "user"
     id = Column(Integer, primary_key=True)
-    name = Column(String)
+    username = Column(String, nullable=False, unique=True)
+    password = Column(String)

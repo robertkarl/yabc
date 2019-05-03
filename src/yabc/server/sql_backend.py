@@ -8,7 +8,10 @@ import hashlib
 import json
 import tempfile
 
+import click
+import flask
 import sqlalchemy
+from flask.cli import with_appcontext
 from sqlalchemy.orm import sessionmaker
 
 from yabc import Base
@@ -18,12 +21,39 @@ from yabc import transaction
 from yabc import user
 
 
+@click.command("init-db")
+@with_appcontext
+def init_db_command():
+    db = get_db()
+    db.create_tables()
+    click.echo("Initialized the database.")
+
+
+def get_db():
+    if "db" not in flask.g:
+        flask.g.db = SqlBackend(flask.current_app.config["DATABASE"])
+    return flask.g.db
+
+
+def close_db(e=None):
+    db = flask.g.pop("db", None)
+    if db is not None:
+        db.session.close()
+
+
+def init_app(app):
+    app.cli.add_command(init_db_command)
+    app.teardown_appcontext(close_db)
+
+
 class SqlBackend:
-    def __init__(self):
+    def __init__(self, db_path):
         # Note: some web servers (aka Flask) will create a new instance of this
         # class for each request.
         self.engine = sqlalchemy.create_engine(
-            "sqlite:///tmp.db", echo=True, poolclass=sqlalchemy.pool.QueuePool
+            "sqlite:///{}".format(db_path),
+            echo=True,
+            poolclass=sqlalchemy.pool.QueuePool,
         )
         Session = sessionmaker(bind=self.engine)
         self.session = Session()
@@ -41,17 +71,16 @@ class SqlBackend:
         )
 
     def user_create(self, name):
-        user_obj = user.User(name=name)
+        user_obj = user.User(username=name)
         self.session.add(user_obj)
         self.session.commit()
         return json.dumps(user_obj.id)
 
     def user_read(self, uid):
-        user_obj = user.User(id=userid)
-        users = self.session.query(user.User).filter_by(userid=uid)
-        if users:
+        users = self.session.query(user.User).filter_by(id=uid)
+        if users.count():
             return json.dumps(users[0])
-        return None
+        return flask.jsonify({"error": "invalid userid"})
 
     def taxdoc_create(self, exchange, userid, submitted_stuff):
         contents_md5_hash = hashlib.md5(submitted_stuff).hexdigest()
