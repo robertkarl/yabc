@@ -4,9 +4,13 @@ Track the sql alchemy session and provide methods for endpoints.
 
 __author__ = "Robert Karl <robertkarljr@gmail.com>"
 
+import click
 import hashlib
 import json
 import tempfile
+from flask.cli import with_appcontext
+import flask
+import os
 
 import sqlalchemy
 from sqlalchemy.orm import sessionmaker
@@ -18,12 +22,32 @@ from yabc import transaction
 from yabc import user
 
 
+@click.command('init-db')
+@with_appcontext
+def init_db_command():
+    db = get_db()
+    db.create_tables()
+    click.echo('Initialized the database.')
+
+def init_app(app):
+    app.cli.add_command(init_db_command)
+
+def get_db():
+    if 'db' not in flask.g:
+        flask.g.db = SqlBackend(flask.current_app.config['DATABASE'])
+    return flask.g.db
+
+def close_db(e=None):
+    db = g.pop('db', None)
+    if db is not None:
+        db.close()
+
 class SqlBackend:
-    def __init__(self):
+    def __init__(self, db_path):
         # Note: some web servers (aka Flask) will create a new instance of this
         # class for each request.
         self.engine = sqlalchemy.create_engine(
-            "sqlite:///tmp.db", echo=True, poolclass=sqlalchemy.pool.QueuePool
+                "sqlite:///{}".format(db_path), echo=True, poolclass=sqlalchemy.pool.QueuePool
         )
         Session = sessionmaker(bind=self.engine)
         self.session = Session()
@@ -47,11 +71,10 @@ class SqlBackend:
         return json.dumps(user_obj.id)
 
     def user_read(self, uid):
-        user_obj = user.User(id=userid)
-        users = self.session.query(user.User).filter_by(userid=uid)
-        if users:
+        users = self.session.query(user.User).filter_by(id=uid)
+        if users.count():
             return json.dumps(users[0])
-        return None
+        return flask.jsonify({'error':'invalid userid'})
 
     def taxdoc_create(self, exchange, userid, submitted_stuff):
         contents_md5_hash = hashlib.md5(submitted_stuff).hexdigest()

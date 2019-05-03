@@ -30,7 +30,9 @@ def main():
     if "YABC_DEBUG" in os.environ:
         application.debug = True
         print("listening on port {}".format(port))
-    backend = sql_backend.SqlBackend()
+    db_fname = os.path.join(application.instance_path, "cbr.sqlite")
+    print(db_fname)
+    backend = sql_backend.SqlBackend(db_fname)
     backend.create_tables()
     application.register_blueprint(yabc_api)
     print([i for i in application.url_map.iter_rules()])
