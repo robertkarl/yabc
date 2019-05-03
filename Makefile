@@ -5,9 +5,9 @@ build: src
 
 
 run:
-	rm -rf src/instance
-	PYTHONPATH=src FLASK_APP=wwwd FLASK_ENV=development flask init-db
-	PYTHONPATH=src FLASK_APP=wwwd FLASK_ENV=development flask run
+	rm -f src/instance/*
+	PYTHONPATH=src FLASK_APP=yabc.app FLASK_ENV=development flask init-db
+	PYTHONPATH=src FLASK_APP=yabc.app FLASK_ENV=development flask run
 
 run_docker:
 	docker run -it --publish 127.0.0.1:5000:5000 yabc
