@@ -14,12 +14,18 @@ def run_basis():
     return backend.run_basis(userid)
 
 
-@yabc_api.route("/yabc/v1/taxdocs", methods=["POST"])
+@yabc_api.route("/yabc/v1/taxdocs", methods=["POST", "GET"])
 def taxdoc_create():
-    exchange = flask.request.args.get("exchange")
     userid = flask.request.args.get("userid")
-    submitted_stuff = flask.request.get_data()
+    if not userid:
+        userid = flask.session['user_id']
+        assert userid
     backend = sql_backend.get_db()
+    if flask.request.method == 'GET':
+        print("userid is {}".format(userid))
+        return backend.taxdoc_list(userid)
+    exchange = flask.request.args.get("exchange")
+    submitted_stuff = flask.request.get_data()
     return backend.taxdoc_create(exchange, userid, submitted_stuff)
 
 

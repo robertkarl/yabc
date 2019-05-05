@@ -30,9 +30,9 @@ def init_db_command():
 
 
 def get_db():
-    if "db" not in flask.g:
-        flask.g.db = SqlBackend(flask.current_app.config["DATABASE"])
-    return flask.g.db
+    if "yabc_db" not in flask.g:
+        flask.g.yabc_db = SqlBackend(flask.current_app.config["DATABASE"])
+    return flask.g.yabc_db
 
 
 def close_db(e=None):
@@ -81,6 +81,13 @@ class SqlBackend:
         if users.count():
             return json.dumps(users[0])
         return flask.jsonify({"error": "invalid userid"})
+
+    def taxdoc_list(self, userid):
+        docs = self.session.query(taxdoc.TaxDoc).filter_by(user_id=userid)
+        result = []
+        for obj in docs.all():
+            result.append({'userid': obj.user_id, 'name': obj.file_name, 'hash':obj.file_hash, 'preview': obj.contents[:10].decode()})
+        return flask.jsonify(result)
 
     def taxdoc_create(self, exchange, userid, submitted_stuff):
         contents_md5_hash = hashlib.md5(submitted_stuff).hexdigest()
