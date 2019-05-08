@@ -16,13 +16,13 @@ create_test_user:
 	curl -X POST ${URL}/users?username=testuser1
 
 test_local: 
-	curl --data-binary @testdata/synthetic_coinbase_csv.csv "${URL}/taxdocs?exchange=coinbase&userid=1"
-	curl --data-binary @testdata/synthetic_gemini_csv.csv "${URL}/taxdocs?exchange=gemini&userid=1"
+	curl -F taxdoc=@testdata/synthetic_coinbase_csv.csv "${URL}/taxdocs?exchange=coinbase&userid=1"
+	curl -F taxdoc=@testdata/synthetic_gemini_csv.csv "${URL}/taxdocs?exchange=gemini&userid=1"
 	curl -X POST localhost:5000/yabc/v1/run_basis?userid=1 2>/dev/null | grep 15027
 
 test_buyone_sellone:
 	curl -X POST ${URL}/users?username=testuser2
-	curl --data-binary @testdata/synthetic_buyone_sellone_coinbase.csv \
+	curl -F taxdoc=@testdata/synthetic_buyone_sellone_coinbase.csv \
 			"${URL}/taxdocs?exchange=coinbase&userid=2"
 	curl -X POST localhost:5000/yabc/v1/run_basis?userid=2
 

@@ -5,6 +5,7 @@ Track the sql alchemy session and provide methods for endpoints.
 __author__ = "Robert Karl <robertkarljr@gmail.com>"
 
 import hashlib
+import io
 import json
 import tempfile
 
@@ -30,9 +31,9 @@ def init_db_command():
 
 
 def get_db():
-    if "db" not in flask.g:
-        flask.g.db = SqlBackend(flask.current_app.config["DATABASE"])
-    return flask.g.db
+    if "yabc_db" not in flask.g:
+        flask.g.yabc_db = SqlBackend(flask.current_app.config["DATABASE"])
+    return flask.g.yabc_db
 
 
 def close_db(e=None):
@@ -82,24 +83,58 @@ class SqlBackend:
             return json.dumps(users[0])
         return flask.jsonify({"error": "invalid userid"})
 
-    def taxdoc_create(self, exchange, userid, submitted_stuff):
+    def taxdoc_list(self, userid):
+        docs = self.session.query(taxdoc.TaxDoc).filter_by(user_id=userid)
+        result = []
+        for obj in docs.all():
+            result.append(
+                {
+                    "userid": obj.user_id,
+                    "file_name": obj.file_name,
+                    "hash": obj.file_hash,
+                    "preview": obj.contents[:10].decode() + "...",
+                }
+            )
+        return flask.jsonify(result)
+
+    def taxdoc_create(self, exchange, userid, submitted_file):
+        """
+        @param submitted_file: a filelike object
+        exchange and userid should be strings.
+        """
+        submitted_stuff = submitted_file.read()
         contents_md5_hash = hashlib.md5(submitted_stuff).hexdigest()
         taxdoc_obj = taxdoc.TaxDoc(
             exchange=exchange,
             user_id=userid,
             file_hash=contents_md5_hash,
             contents=submitted_stuff,
+            file_name=submitted_file.filename,
         )
         self.session.add(taxdoc_obj)
         self.session.commit()
-        return "File stored. hash: {}\n".format(contents_md5_hash)
+        return flask.jsonify(
+            {
+                "hash": contents_md5_hash,
+                "result": "success",
+                "exchange": exchange,
+                "preview": str(submitted_stuff[:20]),
+            }
+        )
 
     def run_basis(self, userid):
         """
         Given a userid, look up all of their tax documents and run basis calculator
         on all txs.
 
-        Returns: the total profit as a JSON object (just an integer or float).
+        TODO: There is some impedance mismatch between flask and python's csv
+        module.  csv requires CSVs to be written as strings, while flask's
+        underlying web server requires applications to write binary responses.
+        Currently we write to the CSV with strings, and then read the entire
+        contents into memory and write to an in-memory binary file-like object
+        which is handed off to flask. Fix.
+
+        Returns: CSV containing cost basis reports useful for the IRS.
         """
         docs = self.session.query(taxdoc.TaxDoc).filter_by(user_id=userid)
         adhoc_txs = self.session.query(transaction.Transaction).filter_by(
@@ -116,9 +151,8 @@ class SqlBackend:
             if taxdoc_obj.exchange == "coinbase":
                 all_txs.extend(basis.get_all_transactions(temp.name, None))
         basis_reports = basis.process_all(all_txs)
-        ans = ""
-        for tx in basis_reports:
-            ans += "Profit (loss) of {} on {}\n".format(tx.gain_or_loss, tx.date_sold)
-        profit = sum([tx.gain_or_loss for tx in basis_reports])
-        ans += "total profit of {}\n".format(profit)
-        return ans
+        stringio_file = basis.reports_to_csv(basis_reports)
+        mem = io.BytesIO()
+        mem.write(stringio_file.getvalue().encode("utf-8"))
+        mem.seek(0)
+        return mem

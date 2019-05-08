@@ -10,17 +10,30 @@ bp = yabc_api
 @yabc_api.route("/yabc/v1/run_basis", methods=["POST"])
 def run_basis():
     userid = flask.request.args.get("userid")
+    if not userid:
+        userid = flask.session["user_id"]
+    assert userid
     backend = sql_backend.get_db()
-    return backend.run_basis(userid)
+    csv_of = backend.run_basis(userid)
+    result = flask.send_file(
+        csv_of, mimetype="text/csv", attachment_filename="basis.csv", as_attachment=True
+    )
+    return result
 
 
-@yabc_api.route("/yabc/v1/taxdocs", methods=["POST"])
-def taxdoc_create():
-    exchange = flask.request.args.get("exchange")
-    userid = flask.request.args.get("userid")
-    submitted_stuff = flask.request.get_data()
+@yabc_api.route("/yabc/v1/taxdocs", methods=["POST", "GET"])
+def taxdocs():
+    if "userid" in flask.request.values:
+        userid = flask.request.values["userid"]
+    else:
+        userid = flask.session["user_id"]
+    assert userid
     backend = sql_backend.get_db()
-    return backend.taxdoc_create(exchange, userid, submitted_stuff)
+    if flask.request.method == "GET":
+        return backend.taxdoc_list(userid)
+    exchange = flask.request.values["exchange"]
+    submitted_file = flask.request.files["taxdoc"]
+    return backend.taxdoc_create(exchange, userid, submitted_file)
 
 
 @yabc_api.route("/yabc/v1/transactions", methods=["POST"])
