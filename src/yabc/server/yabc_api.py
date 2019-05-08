@@ -23,7 +23,10 @@ def run_basis():
 
 @yabc_api.route("/yabc/v1/taxdocs", methods=["POST", "GET"])
 def taxdocs():
-    userid = flask.session["user_id"]
+    if "userid" in flask.request.values:
+        userid = flask.request.values["userid"]
+    else:
+        userid = flask.session["user_id"]
     assert userid
     backend = sql_backend.get_db()
     if flask.request.method == "GET":

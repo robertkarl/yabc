@@ -206,6 +206,7 @@ def reports_to_csv(reports):
     writer.writerow(CostBasisReport._fields)
     for r in reports:
         writer.writerow(r)
+    writer.writerow(["total", "{}".format(sum([i.gain_or_loss for i in reports]))])
     of.seek(0)
     return of
 
