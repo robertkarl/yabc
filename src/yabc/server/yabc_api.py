@@ -36,11 +36,18 @@ def taxdocs():
     return backend.taxdoc_create(exchange, userid, submitted_file)
 
 
-@yabc_api.route("/yabc/v1/transactions", methods=["POST"])
-def transactions_create():
-    userid = flask.request.args.get("userid")
-    tx = flask.request.get_data()
+@yabc_api.route("/yabc/v1/transactions", methods=["GET", "POST"])
+def transactions():
+    if "userid" in flask.request.values:
+        userid = flask.request.values["userid"]
+    else:
+        userid = flask.session["user_id"]
+    assert userid
     backend = sql_backend.get_db()
+    if flask.request.method == "GET":
+        return backend.tx_list(userid)
+    tx = flask.request.values["tx"]
+    assert tx
     return backend.add_tx(userid, tx)
 
 

@@ -7,7 +7,6 @@ __author__ = "Robert Karl <robertkarljr@gmail.com>"
 import hashlib
 import io
 import json
-import tempfile
 
 import click
 import flask
@@ -63,6 +62,8 @@ class SqlBackend:
         Base.metadata.create_all(self.engine, checkfirst=True)
 
     def add_tx(self, userid, tx):
+        assert tx
+        print("TX IS {}".format(tx))
         loaded_tx = transaction.Transaction.FromCoinbaseJSON(json.loads(tx))
         loaded_tx.user_id = userid
         self.session.add(loaded_tx)
@@ -83,6 +84,17 @@ class SqlBackend:
             return json.dumps(users[0])
         return flask.jsonify({"error": "invalid userid"})
 
+    def tx_list(self, userid):
+        """ TODO
+        """
+        docs = self.session.query(transaction.Transaction).filter_by(user_id=userid)
+        ans = []
+        for tx in docs.all():
+            tx_dict = dict(tx.__dict__)
+            tx_dict.pop("_sa_instance_state")
+            ans.append(tx_dict)
+        return flask.jsonify(ans)
+
     def taxdoc_list(self, userid):
         docs = self.session.query(taxdoc.TaxDoc).filter_by(user_id=userid)
         result = []
@@ -99,10 +111,16 @@ class SqlBackend:
 
     def taxdoc_create(self, exchange, userid, submitted_file):
         """
+        Add the tx doc for this user.
+
+        Also perform inserts for each of its rows.
+
         @param submitted_file: a filelike object
         exchange and userid should be strings.
         """
         submitted_stuff = submitted_file.read()
+        submitted_file.seek(0)
+        tx = basis.transactions_from_file(submitted_file, exchange)
         contents_md5_hash = hashlib.md5(submitted_stuff).hexdigest()
         taxdoc_obj = taxdoc.TaxDoc(
             exchange=exchange,
@@ -112,6 +130,9 @@ class SqlBackend:
             file_name=submitted_file.filename,
         )
         self.session.add(taxdoc_obj)
+        for t in tx:
+            t.user_id = userid
+            self.session.add(t)
         self.session.commit()
         return flask.jsonify(
             {
@@ -137,19 +158,9 @@ class SqlBackend:
         Returns: CSV containing cost basis reports useful for the IRS.
         """
         docs = self.session.query(taxdoc.TaxDoc).filter_by(user_id=userid)
-        adhoc_txs = self.session.query(transaction.Transaction).filter_by(
-            user_id=userid
+        all_txs = list(
+            self.session.query(transaction.Transaction).filter_by(user_id=userid)
         )
-        all_txs = list(adhoc_txs)
-        for taxdoc_obj in docs:
-            tmp_fname = "/tmp/tmp"
-            temp = tempfile.NamedTemporaryFile(delete=False)
-            temp.write(taxdoc_obj.contents)
-            temp.close()
-            if taxdoc_obj.exchange == "gemini":
-                all_txs.extend(basis.get_all_transactions(None, temp.name))
-            if taxdoc_obj.exchange == "coinbase":
-                all_txs.extend(basis.get_all_transactions(temp.name, None))
         basis_reports = basis.process_all(all_txs)
         stringio_file = basis.reports_to_csv(basis_reports)
         mem = io.BytesIO()
