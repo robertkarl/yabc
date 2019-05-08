@@ -64,7 +64,8 @@ def coinbase_to_dict(fname):
     filename = fname
     with open(filename) as f:  # TODO don't open and read this file twice
         rawcsv = [i for i in csv.reader(f)]
-
+        if len(rawcsv) < 4:
+            raise ValueError("Invalid CSV file {}, not enough rows.".format(fname))
         fieldnames = rawcsv[4]
         assert fieldnames[-2].count("Coinbase") > 0
         fieldnames[-1] = "Bitcoin Hash"

@@ -6,6 +6,8 @@ __author__ = "Robert Karl <robertkarljr@gmail.com>"
 
 import collections
 import copy
+import csv
+import io
 
 from yabc import csv_to_json
 from yabc import transaction
@@ -196,6 +198,16 @@ def get_all_transactions(coinbase, gemini):
             t = transaction.Transaction.FromCoinbaseJSON(i)
             txs.append(t)
     return txs
+
+
+def reports_to_csv(reports):
+    of = io.StringIO()
+    writer = csv.writer(of)
+    writer.writerow(CostBasisReport._fields)
+    for r in reports:
+        writer.writerow(r)
+    of.seek(0)
+    return of
 
 
 def process_all(txs):
