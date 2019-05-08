@@ -7,7 +7,6 @@ __author__ = "Robert Karl <robertkarljr@gmail.com>"
 import hashlib
 import io
 import json
-import tempfile
 
 import click
 import flask
@@ -63,8 +62,8 @@ class SqlBackend:
         Base.metadata.create_all(self.engine, checkfirst=True)
 
     def add_tx(self, userid, tx):
-        assert(tx)
-        print('TX IS {}'.format(tx))
+        assert tx
+        print("TX IS {}".format(tx))
         loaded_tx = transaction.Transaction.FromCoinbaseJSON(json.loads(tx))
         loaded_tx.user_id = userid
         self.session.add(loaded_tx)
@@ -92,7 +91,7 @@ class SqlBackend:
         ans = []
         for tx in docs.all():
             tx_dict = dict(tx.__dict__)
-            tx_dict.pop('_sa_instance_state')
+            tx_dict.pop("_sa_instance_state")
             ans.append(tx_dict)
         return flask.jsonify(ans)
 
@@ -159,9 +158,9 @@ class SqlBackend:
         Returns: CSV containing cost basis reports useful for the IRS.
         """
         docs = self.session.query(taxdoc.TaxDoc).filter_by(user_id=userid)
-        all_txs = list(self.session.query(transaction.Transaction).filter_by(
-            user_id=userid
-        ))
+        all_txs = list(
+            self.session.query(transaction.Transaction).filter_by(user_id=userid)
+        )
         basis_reports = basis.process_all(all_txs)
         stringio_file = basis.reports_to_csv(basis_reports)
         mem = io.BytesIO()

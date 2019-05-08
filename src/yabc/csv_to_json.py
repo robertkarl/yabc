@@ -5,9 +5,10 @@ Convert coinbase or gemini files to json.
 __author__ = "Robert Karl <robertkarljr@gmail.com>"
 
 import csv
-from yabc import transaction
 
 from dateutil import parser
+
+from yabc import transaction
 
 
 """
@@ -45,16 +46,19 @@ def clean_gemini_row(tx):
 
 
 def gemini_to_dict(fname):
-    f = open(fname, 'r')
+    f = open(fname, "r")
     return from_gemini(f)
+
 
 def txs_from_gemini(f):
     dicts = from_gemini(f)
     return [transaction.Transaction.FromGeminiJSON(i) for i in dicts]
 
+
 def txs_from_coinbase(f):
     dicts = from_coinbase(f)
     return [transaction.Transaction.FromCoinbaseJSON(i) for i in dicts]
+
 
 def from_gemini(f):
     fieldnames = []
@@ -70,9 +74,11 @@ def from_gemini(f):
             ans.append(item)
     return [i for i in ans if i["Type"] == "Buy" or i["Type"] == "Sell"]
 
+
 def coinbase_to_dict(fname):
-    f = open(fname, 'r')
+    f = open(fname, "r")
     return from_coinbase(f)
+
 
 def from_coinbase(f):
     rawcsv = [i for i in csv.reader(f)]
