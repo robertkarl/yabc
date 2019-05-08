@@ -63,6 +63,8 @@ class SqlBackend:
         Base.metadata.create_all(self.engine, checkfirst=True)
 
     def add_tx(self, userid, tx):
+        assert(tx)
+        print('TX IS {}'.format(tx))
         loaded_tx = transaction.Transaction.FromCoinbaseJSON(json.loads(tx))
         loaded_tx.user_id = userid
         self.session.add(loaded_tx)
@@ -157,19 +159,9 @@ class SqlBackend:
         Returns: CSV containing cost basis reports useful for the IRS.
         """
         docs = self.session.query(taxdoc.TaxDoc).filter_by(user_id=userid)
-        adhoc_txs = self.session.query(transaction.Transaction).filter_by(
+        all_txs = list(self.session.query(transaction.Transaction).filter_by(
             user_id=userid
-        )
-        all_txs = list(adhoc_txs)
-        for taxdoc_obj in docs:
-            tmp_fname = "/tmp/tmp"
-            temp = tempfile.NamedTemporaryFile(delete=False)
-            temp.write(taxdoc_obj.contents)
-            temp.close()
-            if taxdoc_obj.exchange == "gemini":
-                all_txs.extend(basis.get_all_transactions(None, temp.name))
-            if taxdoc_obj.exchange == "coinbase":
-                all_txs.extend(basis.get_all_transactions(temp.name, None))
+        ))
         basis_reports = basis.process_all(all_txs)
         stringio_file = basis.reports_to_csv(basis_reports)
         mem = io.BytesIO()

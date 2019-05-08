@@ -47,6 +47,8 @@ def transactions():
     if flask.request.method == "GET":
         return backend.tx_list(userid)
     tx = flask.request.get_data()
+    import pdb; pdb.set_trace()
+    print('received {} in the request'.format(tx))
     return backend.add_tx(userid, tx)
 
 
