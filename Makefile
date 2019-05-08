@@ -9,6 +9,11 @@ run:
 	PYTHONPATH=src FLASK_APP=yabc.app FLASK_ENV=development flask init-db
 	PYTHONPATH=src FLASK_APP=yabc.app FLASK_ENV=development flask run
 
+run_no_devel:
+	rm -f src/instance/*
+	PYTHONPATH=src FLASK_APP=yabc.app flask init-db
+	PYTHONPATH=src FLASK_APP=yabc.app flask run
+
 run_docker:
 	docker run -it --publish 127.0.0.1:5000:5000 yabc
 
@@ -28,8 +33,8 @@ test_buyone_sellone:
 
 test_adhoc:
 	curl -X POST ${URL}/users?username=testuser3
-	curl --data '{"Transfer Total": "1234", "Transfer Fee": "12", "Amount": "1", "Timestamp": "5/6/07 1:12"}' ${URL}/transactions?userid=3
-	curl --data '{"Transfer Total": "1299", "Transfer Fee": "12", "Amount": "-1", "Timestamp": "5/6/07 1:12"}' "${URL}/transactions?userid=3"
+	curl --data tx='{"Transfer Total": "1234", "Transfer Fee": "12", "Amount": "1", "Timestamp": "5/6/07 1:12"}' ${URL}/transactions?userid=3
+	curl --data tx='{"Transfer Total": "1299", "Transfer Fee": "12", "Amount": "-1", "Timestamp": "5/6/07 1:12"}' "${URL}/transactions?userid=3"
 	curl -X POST "${URL}/run_basis?userid=3" 2>/dev/null | grep 41
 
 test_all:
