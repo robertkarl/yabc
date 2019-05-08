@@ -130,6 +130,7 @@ class SqlBackend:
         )
         self.session.add(taxdoc_obj)
         for t in tx:
+            t.user_id = userid
             self.session.add(t)
         self.session.commit()
         return flask.jsonify(
