@@ -177,10 +177,18 @@ def process_one(trans, pool):
         "remove_index": needs_remove,
     }
 
+def transactions_from_file(tx_file, expected_format):
+    if expected_format == 'gemini':
+        return csv_to_json.txs_from_gemini(io.TextIOWrapper(tx_file))
+    elif expected_format == 'coinbase':
+        return csv_to_json.txs_from_coinbase(io.TextIOWrapper(tx_file))
+    raise ValueError("unknown format {}".format(expected_format))
 
 def get_all_transactions(coinbase, gemini):
     """
     Get all transactions from a coinbase and a gemini file.
+
+    TODO: Accept arbitrary (filename, format) pairs
 
     Arguments:
         coinbase (str): path to coinbase file

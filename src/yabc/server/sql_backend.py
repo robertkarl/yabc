@@ -83,6 +83,17 @@ class SqlBackend:
             return json.dumps(users[0])
         return flask.jsonify({"error": "invalid userid"})
 
+    def tx_list(self, userid):
+        """ TODO
+        """
+        docs = self.session.query(transaction.Transaction).filter_by(user_id=userid)
+        ans = []
+        for tx in docs.all():
+            tx_dict = dict(tx.__dict__)
+            tx_dict.pop('_sa_instance_state')
+            ans.append(tx_dict)
+        return flask.jsonify(ans)
+
     def taxdoc_list(self, userid):
         docs = self.session.query(taxdoc.TaxDoc).filter_by(user_id=userid)
         result = []
@@ -99,10 +110,16 @@ class SqlBackend:
 
     def taxdoc_create(self, exchange, userid, submitted_file):
         """
+        Add the tx doc for this user.
+
+        Also perform inserts for each of its rows.
+
         @param submitted_file: a filelike object
         exchange and userid should be strings.
         """
         submitted_stuff = submitted_file.read()
+        submitted_file.seek(0)
+        tx = basis.transactions_from_file(submitted_file, exchange)
         contents_md5_hash = hashlib.md5(submitted_stuff).hexdigest()
         taxdoc_obj = taxdoc.TaxDoc(
             exchange=exchange,
@@ -112,6 +129,8 @@ class SqlBackend:
             file_name=submitted_file.filename,
         )
         self.session.add(taxdoc_obj)
+        for t in tx:
+            self.session.add(t)
         self.session.commit()
         return flask.jsonify(
             {
