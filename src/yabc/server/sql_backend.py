@@ -127,6 +127,13 @@ class SqlBackend:
         Given a userid, look up all of their tax documents and run basis calculator
         on all txs.
 
+        TODO: There is some impedance mismatch between flask and python's csv
+        module.  csv requires CSVs to be written as strings, while flask's
+        underlying web server requires applications to write binary responses.
+        Currently we write to the CSV with strings, and then read the entire
+        contents into memory and write to an in-memory binary file-like object
+        which is handed off to flask. Fix.
+
         Returns: CSV containing cost basis reports useful for the IRS.
         """
         docs = self.session.query(taxdoc.TaxDoc).filter_by(user_id=userid)
