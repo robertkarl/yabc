@@ -5,15 +5,39 @@ Definition of a Transaction, the in-memory version of an asset buy/sell
 __author__ = "Robert Karl <robertkarljr@gmail.com>"
 
 
+from decimal import Decimal
+
 import dateutil.parser
 from sqlalchemy import Column
 from sqlalchemy import DateTime
-from sqlalchemy import Float
 from sqlalchemy import ForeignKey
 from sqlalchemy import Integer
 from sqlalchemy import String
+from sqlalchemy.types import TypeDecorator
 
 import yabc
+
+
+class PreciseDecimalString(TypeDecorator):
+    """
+    TODO: see sqlalchemy docs on Column and data types > Custom Types > TypeDecorator recipes.
+    """
+
+    impl = String
+
+    def process_bind_param(self, value, dialect):
+        """ Needs to return an object of the underlying impl 
+        """
+        if isinstance(value, Decimal) and value.as_tuple()[2] < self.quantize_int:
+            value = value.quantize(self.quantize)
+        return str(value)
+
+    def process_result_value(self, value, dialect):
+        if value is None:
+            return value
+        if not isinstance(value, Decimal):
+            value = Decimal(value)
+        return value
 
 
 class Transaction(yabc.Base):
@@ -25,11 +49,11 @@ class Transaction(yabc.Base):
     id = Column(Integer, primary_key=True)
     asset_name = Column(String)
     date = Column(DateTime)
-    fees = Column(Float)
+    fees = PreciseDecimalString(String)
     operation = Column(String)
-    quantity = Column(Float)
+    quantity = PreciseDecimalString(String)
     source = Column(String)
-    usd_subtotal = Column(Float)
+    usd_subtotal = PreciseDecimalString(String)
     user_id = Column(String, ForeignKey("user.id"))
 
     def __init__(
@@ -45,16 +69,17 @@ class Transaction(yabc.Base):
     ):
         assert operation in ["Buy", "Sell"]
         assert date is not None
-        assert type(quantity) is float
+        for param in (quantity, fees, usd_subtotal):
+            assert isinstance(param, (float, str, Decimal, int))
         assert quantity > 0
-        self.quantity = quantity
+        self.quantity = Decimal(quantity)
         self.operation = operation
         self.date = date.replace(tzinfo=None)
-        self.usd_subtotal = usd_subtotal
+        self.usd_subtotal = Decimal(usd_subtotal)
         self.source = source
         self.asset_name = asset_name
         self.user_id = user_id
-        self.fees = fees
+        self.fees = Decimal(fees)
 
     @staticmethod
     def FromCoinbaseJSON(json):
@@ -91,10 +116,9 @@ class Transaction(yabc.Base):
             json (Dictionary): 
         """
         operation = json["Type"]
-        quantity = float(json["BTC Amount"])
-        usd_total = float(json["USD Amount"])
-        fee = float(json["USD Fee"])
-        assert fee >= 0  # Fee can round to zero for small txs
+        quantity = json["BTC Amount"]
+        usd_total = json["USD Amount"]
+        fee = json["USD Fee"]
         timestamp_str = "{}".format(json["Date"])
         return Transaction(
             operation=operation,

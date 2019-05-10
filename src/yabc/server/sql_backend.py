@@ -139,6 +139,7 @@ class SqlBackend:
                 "hash": contents_md5_hash,
                 "result": "success",
                 "exchange": exchange,
+                "file_name": taxdoc_obj.file_name,
                 "preview": str(submitted_stuff[:20]),
             }
         )

@@ -8,6 +8,7 @@ import collections
 import copy
 import csv
 import io
+from decimal import Decimal
 
 from yabc import csv_to_json
 from yabc import transaction
@@ -76,7 +77,7 @@ def split_report(coin_to_split, amount, trans):
 
         trans (Transaction): the transaction triggering this report
     """
-    assert isinstance(amount, float)
+    assert isinstance(amount, Decimal)
     assert isinstance(coin_to_split, transaction.Transaction)
     assert isinstance(trans, transaction.Transaction)
     assert amount < coin_to_split.quantity
@@ -125,7 +126,7 @@ def process_one(trans, pool):
     assert type(trans) is transaction.Transaction and type(pool) is list
     pool = sorted(pool, key=lambda tx: tx.date)
     cost_basis_reports = []
-    amount = 0
+    amount = Decimal(0)
     pool_index = -1
 
     if trans.operation == "Buy":
