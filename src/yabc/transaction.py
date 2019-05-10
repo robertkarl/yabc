@@ -28,16 +28,10 @@ class PreciseDecimalString(TypeDecorator):
     def process_bind_param(self, value, dialect):
         """ Needs to return an object of the underlying impl 
         """
-        if isinstance(value, Decimal) and value.as_tuple()[2] < self.quantize_int:
-            value = value.quantize(self.quantize)
         return str(value)
 
     def process_result_value(self, value, dialect):
-        if value is None:
-            return value
-        if not isinstance(value, Decimal):
-            value = Decimal(value)
-        return value
+        return Decimal(value)
 
 
 class Transaction(yabc.Base):
@@ -49,11 +43,11 @@ class Transaction(yabc.Base):
     id = Column(Integer, primary_key=True)
     asset_name = Column(String)
     date = Column(DateTime)
-    fees = PreciseDecimalString(String)
+    fees = Column(PreciseDecimalString)
     operation = Column(String)
-    quantity = PreciseDecimalString(String)
+    quantity = Column(PreciseDecimalString)
     source = Column(String)
-    usd_subtotal = PreciseDecimalString(String)
+    usd_subtotal = Column(PreciseDecimalString)
     user_id = Column(String, ForeignKey("user.id"))
 
     def __init__(
@@ -71,7 +65,6 @@ class Transaction(yabc.Base):
         assert date is not None
         for param in (quantity, fees, usd_subtotal):
             assert isinstance(param, (float, str, Decimal, int))
-        assert quantity > 0
         self.quantity = Decimal(quantity)
         self.operation = operation
         self.date = date.replace(tzinfo=None)
@@ -93,9 +86,9 @@ class Transaction(yabc.Base):
         Returns: Transaction instance with important fields populated
         """
         operation = "Buy"
-        proceeds = float(json["Transfer Total"])
-        fee = float(json["Transfer Fee"])
-        quantity = float(json["Amount"])
+        proceeds = json["Transfer Total"]
+        fee = json["Transfer Fee"]
+        quantity = Decimal(json["Amount"])
         if quantity < 0:
             operation = "Sell"
             quantity = abs(quantity)

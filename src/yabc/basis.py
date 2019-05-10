@@ -44,7 +44,7 @@ def split_coin_to_add(coin_to_split, amount, trans):
         coin_to_split: a Transaction
         trans: the transaction triggering the report
     """
-    assert isinstance(amount, float)
+    assert isinstance(amount, Decimal)
     assert isinstance(coin_to_split, transaction.Transaction)
     assert isinstance(trans, transaction.Transaction)
     split_amount_back_in_pool = coin_to_split.quantity - amount
@@ -90,8 +90,8 @@ def split_report(coin_to_split, amount, trans):
 
     # sale proceeds and fee (again, partial amounts of trans)
     frac_of_sale_tx = amount / trans.quantity
-    proceeds = frac_of_sale_tx * trans.usd_subtotal
-    sale_fee = frac_of_sale_tx * trans.fees
+    proceeds = (frac_of_sale_tx * trans.usd_subtotal).quantize(Decimal('.01'))
+    sale_fee = (frac_of_sale_tx * trans.fees).quantize(Decimal('.01'))
     return make_cost_basis_report(
         purchase_price + purchase_fee,
         amount,
