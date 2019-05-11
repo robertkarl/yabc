@@ -7,6 +7,7 @@ __author__ = "Robert Karl <robertkarljr@gmail.com>"
 import csv
 
 from dateutil import parser
+import decimal
 
 from yabc import transaction
 
@@ -17,17 +18,10 @@ from yabc import transaction
 """
 
 
-def round_to_int(somefloat):
-    assert type(somefloat) is float
-    if somefloat % 1 > 0.5:
-        return int(somefloat) + 1
-    return int(somefloat)
-
-
 def gem_int_from_dollar_string(s):
     s = s.strip(" $()")
     s = s.replace(",", "")
-    return round_to_int(float(s))
+    return decimal.Decimal(s)
 
 
 def clean_gemini_row(tx):

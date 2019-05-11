@@ -8,11 +8,11 @@ __author__ = "Robert Karl <robertkarljr@gmail.com>"
 from decimal import Decimal
 
 import dateutil.parser
+import sqlalchemy
 from sqlalchemy import Column
 from sqlalchemy import DateTime
 from sqlalchemy import ForeignKey
 from sqlalchemy import Integer
-from sqlalchemy import String
 from sqlalchemy.types import TypeDecorator
 
 import yabc
@@ -23,7 +23,7 @@ class PreciseDecimalString(TypeDecorator):
     TODO: see sqlalchemy docs on Column and data types > Custom Types > TypeDecorator recipes.
     """
 
-    impl = String
+    impl = sqlalchemy.String
 
     def process_bind_param(self, value, dialect):
         """ Needs to return an object of the underlying impl 
@@ -41,14 +41,14 @@ class Transaction(yabc.Base):
 
     __tablename__ = "transaction"
     id = Column(Integer, primary_key=True)
-    asset_name = Column(String)
+    asset_name = Column(sqlalchemy.String)
     date = Column(DateTime)
     fees = Column(PreciseDecimalString)
-    operation = Column(String)
+    operation = Column(sqlalchemy.String)
     quantity = Column(PreciseDecimalString)
-    source = Column(String)
+    source = Column(sqlalchemy.String)
     usd_subtotal = Column(PreciseDecimalString)
-    user_id = Column(String, ForeignKey("user.id"))
+    user_id = Column(sqlalchemy.String, ForeignKey("user.id"))
 
     def __init__(
         self,
