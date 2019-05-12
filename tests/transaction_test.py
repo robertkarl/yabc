@@ -1,6 +1,7 @@
 import datetime
 import math
 import unittest
+from decimal import Decimal
 
 import sqlalchemy
 from sqlalchemy.orm import sessionmaker
@@ -63,7 +64,7 @@ class TransactionTest(unittest.TestCase):
         proceeds = 100
         buy = make_transaction("Buy", 1.0, 0, 100.0)
         sell = make_transaction("Sell", 1.0, 0, 100.0)
-        report = basis.split_report(buy, 0.5, sell)
+        report = basis.split_report(buy, Decimal("0.5"), sell)
         self.assertEqual(report.gain_or_loss, 0)
 
     def test_split_report(self):
@@ -71,7 +72,7 @@ class TransactionTest(unittest.TestCase):
         """
         buy = make_transaction("Buy", 1.0, 10, 100.0)
         sell = make_transaction("Sell", 1.0, 10, 200.0)
-        report = basis.split_report(buy, 0.5, sell)
+        report = basis.split_report(buy, Decimal("0.5"), sell)
         ans_basis = 55.0
         sale_basis = 95.0
         ans_gain_or_loss = 40.0
@@ -134,7 +135,7 @@ class TransactionTest(unittest.TestCase):
             "Type": "Buy",
             "BTC Amount": 2,
             "USD Amount": 1,
-            "USD Fee": 0.05,
+            "USD Fee": "0.05",
             "Date": "2015-2-5",
             # TODO (robertkarl) fix this. Gemini currently ignores the time of day.
             # "Time": "06:27:56.373",
@@ -146,7 +147,7 @@ class TransactionTest(unittest.TestCase):
         self.assertEqual(trans.quantity, 2)
         self.assertEqual(trans.date, datetime.datetime(2015, 2, 5, 0, 0))
         self.assertEqual(trans.usd_subtotal, 1.0)
-        self.assertEqual(trans.fees, 0.05)
+        self.assertEqual(trans.fees, Decimal("0.05"))
         self.assertEqual(trans.source, "gemini")
         self.assertEqual(trans.asset_name, "BTC")
 
@@ -157,7 +158,7 @@ class TransactionTest(unittest.TestCase):
             "Type": "Sell",
             "BTC Amount": 2,
             "USD Amount": 1,
-            "USD Fee": 0.05,
+            "USD Fee": "0.05",
             "Date": "2015-2-5",
             # TODO (robertkarl) fix this. Gemini currently ignores the time of day.
             # "Time": "06:27:56.373",
@@ -167,9 +168,9 @@ class TransactionTest(unittest.TestCase):
 
         self.assertEqual(trans.operation, "Sell")
         self.assertEqual(trans.quantity, 2)
-        self.assertEqual(trans.fees, 0.05)
+        self.assertEqual(trans.fees, Decimal("0.05"))
         self.assertEqual(trans.date, datetime.datetime(2015, 2, 5, 0, 0))
-        self.assertEqual(trans.usd_subtotal, 1.0)
+        self.assertEqual(trans.usd_subtotal, Decimal("1.0"))
         self.assertEqual(trans.source, "gemini")
         self.assertEqual(trans.asset_name, "BTC")
 
@@ -180,7 +181,7 @@ class TransactionTest(unittest.TestCase):
             "Type": "Sell",
             "BTC Amount": 2,
             "USD Amount": 1,
-            "USD Fee": 0.05,
+            "USD Fee": Decimal("0.05"),
             "Date": "2015-2-5",
         }
 

@@ -36,6 +36,19 @@ def taxdocs():
     return backend.taxdoc_create(exchange, userid, submitted_file)
 
 
+@yabc_api.route("/yabc/v1/transactions/<txid>", methods=["DELETE"])
+def transaction_delete(txid):
+    if "userid" in flask.request.values:
+        userid = flask.request.values["userid"]
+    else:
+        userid = flask.session["user_id"]
+    assert userid
+    backend = sql_backend.get_db()
+    backend.tx_delete(userid, txid)
+    sql_backend.close_db()
+    return flask.jsonify({"result": "Deleted transaction with id {}".format(txid)})
+
+
 @yabc_api.route("/yabc/v1/transactions", methods=["GET", "POST"])
 def transactions():
     if "userid" in flask.request.values:

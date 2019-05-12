@@ -20,6 +20,8 @@ from yabc import taxdoc
 from yabc import transaction
 from yabc import user
 
+DB_KEY = "yabc_db"
+
 
 @click.command("init-db")
 @with_appcontext
@@ -30,13 +32,13 @@ def init_db_command():
 
 
 def get_db():
-    if "yabc_db" not in flask.g:
+    if DB_KEY not in flask.g:
         flask.g.yabc_db = SqlBackend(flask.current_app.config["DATABASE"])
     return flask.g.yabc_db
 
 
 def close_db(e=None):
-    db = flask.g.pop("db", None)
+    db = flask.g.pop(DB_KEY, None)
     if db is not None:
         db.session.close()
 
@@ -54,6 +56,7 @@ class SqlBackend:
             "sqlite:///{}".format(db_path),
             echo=True,
             poolclass=sqlalchemy.pool.QueuePool,
+            connect_args={"timeout": 15},
         )
         Session = sessionmaker(bind=self.engine)
         self.session = Session()
@@ -63,7 +66,6 @@ class SqlBackend:
 
     def add_tx(self, userid, tx):
         assert tx
-        print("TX IS {}".format(tx))
         loaded_tx = transaction.Transaction.FromCoinbaseJSON(json.loads(tx))
         loaded_tx.user_id = userid
         self.session.add(loaded_tx)
@@ -84,6 +86,14 @@ class SqlBackend:
             return json.dumps(users[0])
         return flask.jsonify({"error": "invalid userid"})
 
+    def tx_delete(self, userid, txid):
+        docs = (
+            self.session.query(transaction.Transaction)
+            .filter_by(user_id=userid, id=txid)
+            .delete()
+        )
+        self.session.commit()
+
     def tx_list(self, userid):
         """ TODO
         """
@@ -93,6 +103,8 @@ class SqlBackend:
             tx_dict = dict(tx.__dict__)
             tx_dict.pop("_sa_instance_state")
             ans.append(tx_dict)
+            for numeric_key in ("usd_subtotal", "fees", "quantity"):
+                tx_dict[numeric_key] = str(tx_dict[numeric_key])
         return flask.jsonify(ans)
 
     def taxdoc_list(self, userid):
@@ -139,6 +151,7 @@ class SqlBackend:
                 "hash": contents_md5_hash,
                 "result": "success",
                 "exchange": exchange,
+                "file_name": taxdoc_obj.file_name,
                 "preview": str(submitted_stuff[:20]),
             }
         )

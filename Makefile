@@ -23,7 +23,7 @@ create_test_user:
 test_local: 
 	curl -F taxdoc=@testdata/synthetic_coinbase_csv.csv "${URL}/taxdocs?exchange=coinbase&userid=1"
 	curl -F taxdoc=@testdata/synthetic_gemini_csv.csv "${URL}/taxdocs?exchange=gemini&userid=1"
-	curl -X POST localhost:5000/yabc/v1/run_basis?userid=1 2>/dev/null | grep 15027
+	curl -X POST localhost:5000/yabc/v1/run_basis?userid=1 2>/dev/null | grep 15026
 
 test_buyone_sellone:
 	curl -X POST ${URL}/users?username=testuser2
