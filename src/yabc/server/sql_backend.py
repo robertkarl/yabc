@@ -65,7 +65,6 @@ class SqlBackend:
 
     def add_tx(self, userid, tx):
         assert tx
-        print("TX IS {}".format(tx))
         loaded_tx = transaction.Transaction.FromCoinbaseJSON(json.loads(tx))
         loaded_tx.user_id = userid
         self.session.add(loaded_tx)
