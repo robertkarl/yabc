@@ -22,6 +22,7 @@ from yabc import user
 
 DB_KEY = "yabc_db"
 
+
 @click.command("init-db")
 @with_appcontext
 def init_db_command():

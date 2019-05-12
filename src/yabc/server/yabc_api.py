@@ -46,7 +46,7 @@ def transaction_delete(txid):
     backend = sql_backend.get_db()
     backend.tx_delete(userid, txid)
     sql_backend.close_db()
-    return flask.jsonify({'result': 'Deleted transaction with id {}'.format(txid)})
+    return flask.jsonify({"result": "Deleted transaction with id {}".format(txid)})
 
 
 @yabc_api.route("/yabc/v1/transactions", methods=["GET", "POST"])
