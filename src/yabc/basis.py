@@ -90,8 +90,8 @@ def split_report(coin_to_split, amount, trans):
 
     # sale proceeds and fee (again, partial amounts of trans)
     frac_of_sale_tx = amount / trans.quantity
-    proceeds = (frac_of_sale_tx * trans.usd_subtotal).quantize(Decimal('.01'))
-    sale_fee = (frac_of_sale_tx * trans.fees).quantize(Decimal('.01'))
+    proceeds = (frac_of_sale_tx * trans.usd_subtotal).quantize(Decimal(".01"))
+    sale_fee = (frac_of_sale_tx * trans.fees).quantize(Decimal(".01"))
     return make_cost_basis_report(
         purchase_price + purchase_fee,
         amount,

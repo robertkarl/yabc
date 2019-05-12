@@ -30,7 +30,7 @@ def init_db_command():
 
 
 def get_db():
-    print('current db{}'.format(flask.current_app.config['DATABASE']))
+    print("current db{}".format(flask.current_app.config["DATABASE"]))
     if "yabc_db" not in flask.g:
         flask.g.yabc_db = SqlBackend(flask.current_app.config["DATABASE"])
     return flask.g.yabc_db
@@ -55,7 +55,7 @@ class SqlBackend:
             "sqlite:///{}".format(db_path),
             echo=True,
             poolclass=sqlalchemy.pool.QueuePool,
-            connect_args={'timeout': 15}
+            connect_args={"timeout": 15},
         )
         Session = sessionmaker(bind=self.engine)
         self.session = Session()
@@ -86,7 +86,11 @@ class SqlBackend:
         return flask.jsonify({"error": "invalid userid"})
 
     def tx_delete(self, userid, txid):
-        docs = self.session.query(transaction.Transaction).filter_by(user_id=userid, id=txid).delete()
+        docs = (
+            self.session.query(transaction.Transaction)
+            .filter_by(user_id=userid, id=txid)
+            .delete()
+        )
         self.session.commit()
 
     def tx_list(self, userid):
@@ -98,7 +102,7 @@ class SqlBackend:
             tx_dict = dict(tx.__dict__)
             tx_dict.pop("_sa_instance_state")
             ans.append(tx_dict)
-            for numeric_key in ('usd_subtotal', 'fees', 'quantity'):
+            for numeric_key in ("usd_subtotal", "fees", "quantity"):
                 tx_dict[numeric_key] = str(tx_dict[numeric_key])
         return flask.jsonify(ans)
 

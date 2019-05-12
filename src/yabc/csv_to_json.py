@@ -5,9 +5,9 @@ Convert coinbase or gemini files to json.
 __author__ = "Robert Karl <robertkarljr@gmail.com>"
 
 import csv
+import decimal
 
 from dateutil import parser
-import decimal
 
 from yabc import transaction
 
