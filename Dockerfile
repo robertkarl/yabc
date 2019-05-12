@@ -4,7 +4,6 @@ FROM ubuntu
 # Python environment setup
 RUN apt update 2>/dev/null # 5-9-2019
 RUN apt upgrade -y 2>/dev/null # 5-9-2019
-RUN apt upgrade -y 2>/dev/null # 5-9-2019
 RUN apt install python3 python3-pip -y 2>/dev/null
 RUN pip3 install --upgrade pip
 RUN pip3 install --upgrade setuptools

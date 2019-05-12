@@ -20,6 +20,7 @@ from yabc import taxdoc
 from yabc import transaction
 from yabc import user
 
+DB_KEY = "yabc_db"
 
 @click.command("init-db")
 @with_appcontext
@@ -30,14 +31,13 @@ def init_db_command():
 
 
 def get_db():
-    print("current db{}".format(flask.current_app.config["DATABASE"]))
-    if "yabc_db" not in flask.g:
+    if DB_KEY not in flask.g:
         flask.g.yabc_db = SqlBackend(flask.current_app.config["DATABASE"])
     return flask.g.yabc_db
 
 
 def close_db(e=None):
-    db = flask.g.pop("yabc_db", None)
+    db = flask.g.pop(DB_KEY, None)
     if db is not None:
         db.session.close()
 
