@@ -27,10 +27,6 @@ make run
 ```
 
 # Notes
-File structure inspired by source and test layout of python modules sshuttle and flask.
-
-# Distributing
-```
-python3 setup.py sdist bdist_wheel
-python3 -m twine upload dist/*
-```
+File structure inspired by source and test layout of python modules
+[sshuttle](https://github.com/sshuttle/sshuttle) and
+[flask](https://github.com/pallets/flask).
