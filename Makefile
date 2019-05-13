@@ -3,7 +3,6 @@ URL=localhost:5000/yabc/v1
 build: src
 	docker build --tag yabc .
 
-
 run:
 	rm -f src/instance/*
 	PYTHONPATH=src FLASK_APP=yabc.app FLASK_ENV=development flask init-db
@@ -43,4 +42,10 @@ test_all:
 	make test_buyone_sellone
 	make test_adhoc
 
-.PHONY: build test_all test_adhoc test_local test_buyone_sellone
+pypi_deploy:
+	rm -f dist/*
+	python3 setup.py sdist bdist_wheel
+	TWINE_USERNAME=robertkarl python3 -m twine upload dist/* --skip-existing
+
+
+.PHONY: build test_all test_adhoc test_local test_buyone_sellone pypi_deploy
