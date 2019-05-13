@@ -3,7 +3,6 @@ URL=localhost:5000/yabc/v1
 build: src
 	docker build --tag yabc .
 
-
 run:
 	rm -f src/instance/*
 	PYTHONPATH=src FLASK_APP=yabc.app FLASK_ENV=development flask init-db

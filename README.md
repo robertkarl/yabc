@@ -5,11 +5,17 @@ Cost basis calculation library and HTTP API. Most useful for blockchain-backed
 assets like bitcoin.
 
 # Requirements and python deps
+- python3.5+
+
+pip packages:
+- flask
+- dateutil
+- twine (for distribution only)
 python3 is required. Flask is required for running the HTTP endpoints. Basis
 calculation code uses dateutil.
 
 
-# Running the code
+# Running
 Running and testing the api server in development mode from source:
 
 ```
@@ -17,13 +23,13 @@ virtualenv -p python3 venv
 source ./venv/bin/activate
 # Creating and activating a virtual environment above is optional and recommended
 ./setup.py install
-python -m yabc.server.server
+make run
 ```
 
 # Running the docker image
 ```
 make build
-make run
+make run_docker
 ```
 
 # Notes
