@@ -11,12 +11,9 @@ pip packages:
 - flask
 - dateutil
 - twine (for distribution only)
-python3 is required. Flask is required for running the HTTP endpoints. Basis
-calculation code uses dateutil.
-
 
 # Running
-Running and testing the api server in development mode from source:
+Running the api server in development mode from source:
 
 ```
 virtualenv -p python3 venv
