@@ -95,9 +95,18 @@ class SqlBackend:
         )
         self.session.commit()
 
+    def tx_update(self, userid, txid, values):
+        docs = (
+            self.session.query(transaction.Transaction)
+            .filter_by(user_id=userid, id=txid)
+        )
+        obj = docs.all()[0]
+        for key in values:
+            if key in obj.__dict__:
+                setattr(obj, key, values[key])
+        self.session.commit()
+
     def tx_list(self, userid):
-        """ TODO
-        """
         docs = self.session.query(transaction.Transaction).filter_by(user_id=userid)
         ans = []
         for tx in docs.all():
@@ -106,7 +115,10 @@ class SqlBackend:
             ans.append(tx_dict)
             for numeric_key in ("usd_subtotal", "fees", "quantity"):
                 tx_dict[numeric_key] = str(tx_dict[numeric_key])
-        return flask.jsonify(ans)
+        # TODO: don't use jsonify as it requires a flask app context and fails in tests.
+        for item in ans:
+            item['date'] = str(item['date'])
+        return json.dumps(ans)
 
     def taxdoc_list(self, userid):
         docs = self.session.query(taxdoc.TaxDoc).filter_by(user_id=userid)
