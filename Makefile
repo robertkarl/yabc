@@ -43,4 +43,10 @@ test_all:
 	make test_buyone_sellone
 	make test_adhoc
 
-.PHONY: build test_all test_adhoc test_local test_buyone_sellone
+pypi_deploy:
+	rm -f dist/*
+	python3 setup.py sdist bdist_wheel
+	TWINE_USERNAME=robertkarl python3 -m twine upload dist/* --skip-existing
+
+
+.PHONY: build test_all test_adhoc test_local test_buyone_sellone pypi_deploy
