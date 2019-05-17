@@ -42,6 +42,8 @@ class SqlTest(unittest.TestCase):
         self.db.tx_update(userid=1, txid=1, values={"quantity": 2})
         stuff = json.loads(self.db.tx_list(userid=1))
         self.assertEqual(stuff[0]['quantity'], '2')
+        with SqlBackend("memory") as asdf:
+            pass
 
 if __name__ == "__main__":
     unittest.main()
