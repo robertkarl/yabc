@@ -66,7 +66,9 @@ def transaction_update(txid):
     elif flask.request.method == "PUT":
         backend.tx_update(userid, txid, request.values)
     else:
-        raise ValueError("method {} not support for transaction".format(flask.request.method))
+        raise ValueError(
+            "method {} not support for transaction".format(flask.request.method)
+        )
     sql_backend.close_db()
     return flask.jsonify({"result": "Deleted transaction with id {}".format(txid)})
 
