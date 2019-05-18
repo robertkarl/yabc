@@ -54,14 +54,21 @@ def taxdocs():
 
 
 @yabc_api.route("/yabc/v1/transactions/<txid>", methods=["DELETE"])
-def transaction_delete(txid):
+def transaction_update(txid):
     if "userid" in flask.request.values:
         userid = flask.request.values["userid"]
     else:
         userid = flask.session["user_id"]
     assert userid
     backend = sql_backend.get_db()
-    backend.tx_delete(userid, txid)
+    if flask.request.method == "DELETE":
+        backend.tx_delete(userid, txid)
+    elif flask.request.method == "PUT":
+        backend.tx_update(userid, txid, request.values)
+    else:
+        raise ValueError(
+            "method {} not support for transaction".format(flask.request.method)
+        )
     sql_backend.close_db()
     return flask.jsonify({"result": "Deleted transaction with id {}".format(txid)})
 
