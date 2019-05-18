@@ -30,7 +30,6 @@ class SqlTest(unittest.TestCase):
         self.db.create_tables()
 
     def test_modify_object(self):
-        print('entering test')
         coinbase_json_buy = {
             "Transfer Total": "1.05",
             "Transfer Fee": "0.05",
@@ -42,8 +41,6 @@ class SqlTest(unittest.TestCase):
         self.db.tx_update(userid=1, txid=1, values={"quantity": 2})
         stuff = json.loads(self.db.tx_list(userid=1))
         self.assertEqual(stuff[0]['quantity'], '2')
-        with SqlBackend("memory") as asdf:
-            pass
 
 if __name__ == "__main__":
     unittest.main()
