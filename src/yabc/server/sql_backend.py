@@ -175,9 +175,10 @@ class SqlBackend:
         docs = self.session.query(taxdoc.TaxDoc).filter_by(user_id=userid)
         first_invalid_date = datetime.datetime(tax_year + 1, 1, 1)
         all_txs = list(
-            self.session.query(transaction.Transaction).filter_by(
-              user_id=userid).filter(
-                transaction.Transaction.date < first_invalid_date))
+            self.session.query(transaction.Transaction)
+            .filter_by(user_id=userid)
+            .filter(transaction.Transaction.date < first_invalid_date)
+        )
         basis_reports = basis.process_all(all_txs)
         # We only need those transactions inside the tax year.
         ty_reports = [i for i in basis_reports if i.date_sold.year == tax_year]
