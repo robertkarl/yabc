@@ -19,10 +19,6 @@ import yabc
 
 
 class PreciseDecimalString(TypeDecorator):
-    """
-    TODO: see sqlalchemy docs on Column and data types > Custom Types > TypeDecorator recipes.
-    """
-
     impl = sqlalchemy.String
 
     def process_bind_param(self, value, dialect):

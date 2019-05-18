@@ -4,6 +4,7 @@ Track the sql alchemy session and provide methods for endpoints.
 
 __author__ = "Robert Karl <robertkarljr@gmail.com>"
 
+import datetime
 import hashlib
 import io
 import json
@@ -156,10 +157,10 @@ class SqlBackend:
             }
         )
 
-    def run_basis(self, userid):
+    def run_basis(self, userid, tax_year):
         """
-        Given a userid, look up all of their tax documents and run basis calculator
-        on all txs.
+        Given a userid, get the cost basis report for sale transactions in that
+        tax year.
 
         TODO: There is some impedance mismatch between flask and python's csv
         module.  csv requires CSVs to be written as strings, while flask's
@@ -168,13 +169,19 @@ class SqlBackend:
         contents into memory and write to an in-memory binary file-like object
         which is handed off to flask. Fix.
 
-        Returns: CSV containing cost basis reports useful for the IRS.
+        Returns: file-like object with  CSV containing cost basis reports
+        useful for the IRS.
         """
         docs = self.session.query(taxdoc.TaxDoc).filter_by(user_id=userid)
+        first_invalid_date = datetime.datetime(tax_year + 1, 1, 1)
         all_txs = list(
-            self.session.query(transaction.Transaction).filter_by(user_id=userid)
+            self.session.query(transaction.Transaction)
+            .filter_by(user_id=userid)
+            .filter(transaction.Transaction.date < first_invalid_date)
         )
         basis_reports = basis.process_all(all_txs)
+        # We only need those transactions inside the tax year.
+        ty_reports = [i for i in basis_reports if i.date_sold.year == tax_year]
         stringio_file = basis.reports_to_csv(basis_reports)
         mem = io.BytesIO()
         mem.write(stringio_file.getvalue().encode("utf-8"))

@@ -27,8 +27,8 @@ def make_cost_basis_report(buy_price, quantity, date_purchased, sale_price, date
     Should be in the format needed by 8949; dollar amounts are rounded
     """
     descr = "{:.6f} BTC".format(quantity)
-    acquired = date_purchased.strftime("%m-%d-%Y")
-    sold = date_sold.strftime("%m-%d-%Y")
+    acquired = date_purchased
+    sold = date_sold
     proceeds = sale_price
     basis = buy_price
     return CostBasisReport(descr, acquired, sold, proceeds, basis, proceeds - basis)
