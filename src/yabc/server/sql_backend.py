@@ -50,10 +50,6 @@ def init_app(app):
 
 
 class SqlBackend:
-    def __enter__(self):
-        print('enter')
-    def __exit__(self, asdf, b, c):
-        print('exit')
     def __init__(self, db_path):
         # Note: some web servers (aka Flask) will create a new instance of this
         # class for each request.
