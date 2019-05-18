@@ -1,0 +1,9 @@
+Transactions,,,,,,,,,,,,,,,,,,,,,
+User,fakeboi@fakeyboi.net,cafebabe,,,,,,,,,,,,,,,,,,,
+Account,BTC Wallet,deadbeef,,,,,,,,,,,,,,,,,,,
+
+Timestamp,Balance,Amount,Currency,To,Notes,Instantly Exchanged,Transfer Total,Transfer Total Currency,Transfer Fee,Transfer Fee Currency,Transfer Payment Method,Transfer ID,Order Price,Order Currency,Order BTC,Order Tracking Code,Order Custom Parameter,Order Paid Out,Recurring Payment ID,Coinbase ID (visit https://www.coinbase.com/transactions/[ID] in your browser),Bitcoin Hash (visit https://www.coinbase.com/tx/[HASH] in your browser for more info)
+5/6/07 1:18,1,1,BTC,cafebabe,,FALSE,275,USD,7.46,USD,,,,,,,,,,deadbeef,deadbeef
+5/7/07 1:10,1,1,BCH,cafebabe,,FALSE,100,USD,7.46,USD,,,,,,,,,,deadbeef,deadbeef
+4/21/08 1:14,18.128,-1,BTC,cafebabe,,FALSE,1993.93,USD,48.44,USD,,,,,,,,,,deadbeef,deadbeef
+4/22/08 1:15,18.128,-1,BCH,cafebabe,,FALSE,993.93,USD,48.44,USD,,,,,,,,,,deadbeef,deadbeef
