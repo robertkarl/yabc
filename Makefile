@@ -32,8 +32,8 @@ test_buyone_sellone:
 
 test_adhoc:
 	curl -X POST ${URL}/users?username=testuser3
-	curl --data tx='{"Transfer Total": "1234", "Transfer Fee": "12", "Amount": "1", "Timestamp": "5/6/07 1:12"}' ${URL}/transactions?userid=3
-	curl --data tx='{"Transfer Total": "1299", "Transfer Fee": "12", "Amount": "-1", "Timestamp": "5/6/07 1:12"}' "${URL}/transactions?userid=3"
+	curl --data tx='{"Currency": "BTC", "Transfer Total": "1234", "Transfer Fee": "12", "Amount": "1", "Timestamp": "5/6/07 1:12"}' ${URL}/transactions?userid=3
+	curl --data tx='{"Transfer Total": "1299", "Currency": "BTC", "Transfer Fee": "12", "Amount": "-1", "Timestamp": "5/6/07 1:12"}' "${URL}/transactions?userid=3"
 	curl -X POST "${URL}/run_basis/2008?userid=3" 2>/dev/null | grep 41
 
 test_all:

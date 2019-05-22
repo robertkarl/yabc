@@ -21,6 +21,7 @@ class CostBasisReport():
     """
     Represents a row in form 8949.
     """
+    _fields =  ["basis", "quantity", "date_purchased", "proceeds", "date_sold", "asset_name", "gain_or_loss"]
 
     def __init__(self, basis, quantity, date_purchased, proceeds, date_sold, asset):
         assert isinstance(date_sold, datetime.datetime)
@@ -42,6 +43,16 @@ class CostBasisReport():
 
     def __repr__(self):
         return "<Sold {} {} for {} total profiting {}>".format(self.quantity, self.asset_name, self.proceeds, self.gain_or_loss)
+
+    def fields(self):
+        ans = []
+        for i in CostBasisReport._fields:
+            ans.append(getattr(self, i))
+        return ans
+
+    @staticmethod
+    def field_names():
+        return CostBasisReport._fields
 
 
 def split_coin_to_add(coin_to_split, amount, trans):
@@ -223,9 +234,10 @@ def get_all_transactions(coinbase, gemini):
 def reports_to_csv(reports):
     of = io.StringIO()
     writer = csv.writer(of)
-    writer.writerow(CostBasisReport._fields)
+    names = CostBasisReport.field_names()
+    writer.writerow(names)
     for r in reports:
-        writer.writerow(r)
+        writer.writerow(r.fields())
     writer.writerow(["total", "{}".format(sum([i.gain_or_loss for i in reports]))])
     of.seek(0)
     return of
