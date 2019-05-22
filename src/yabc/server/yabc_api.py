@@ -42,37 +42,23 @@ def check_authorized(view):
 
     return wrapped_view
 
-
-@yabc_api.route("/yabc/v1/run_basis/<tax_year>", methods=["POST"])
-@check_authorized
-def run_basis(tax_year):
-    """
-    Perform the cost basis calculations for a given tax year.
-
-    Returns a CSV in form 8949 format. Also has the side effect of locking the
-    portfolio's cost basis in for the given year.
-
-    Prerequisites:
-        - the given tax year must be ONE of the following:
-            - the first year with any sale in the database
-            - OR the oldest unlocked year with any sale transactions.
-
-    Side effects:
-        - Locks the tax year given.
-        - Saves the list of transactions still in the pool into the table
-          'pool'. These transactions will provide the literal basis for sales
-          in future tax years.
-    """
-
+def get_userid():
     userid = flask.request.args.get("userid")
     if not userid:
         userid = flask.session["user_id"]
     assert userid
+    return userid
+
+
+@yabc_api.route("/yabc/v1/run_basis", methods=["POST"])
+@check_authorized
+def run_basis():
+    """
+    Perform the cost basis calculations and write them all to the database.
+    """
+    userid = get_userid()
     backend = sql_backend.get_db()
-    csv_of = backend.run_basis(userid, int(tax_year))
-    result = flask.send_file(
-        csv_of, mimetype="text/csv", attachment_filename="basis.csv", as_attachment=True
-    )
+    result = backend.run_basis(userid)
     return result
 
 

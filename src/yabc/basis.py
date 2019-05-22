@@ -12,11 +12,19 @@ import datetime
 import io
 from decimal import Decimal
 
+import yabc
 from yabc import csv_to_json
 from yabc import transaction
 
+from yabc.transaction import PreciseDecimalString
+import sqlalchemy
+from sqlalchemy import Column
+from sqlalchemy import DateTime
+from sqlalchemy import ForeignKey
+from sqlalchemy import Integer
 
-class CostBasisReport:
+
+class CostBasisReport(yabc.Base):
     """
     Represents a row in form 8949.
     """
@@ -29,12 +37,25 @@ class CostBasisReport:
         "date_sold",
         "asset_name",
         "gain_or_loss",
+        "user_id",
     ]
 
-    def __init__(self, basis, quantity, date_purchased, proceeds, date_sold, asset):
+    __tablename__ = "basis_report"
+    id = Column(Integer, primary_key=True)
+    basis = Column(PreciseDecimalString)
+    quantity = Column(PreciseDecimalString)
+    proceeds = Column(PreciseDecimalString)
+    gain_or_loss = Column(PreciseDecimalString)
+    date_purchased = Column(DateTime)
+    date_sold = Column(DateTime)
+    asset_name = Column(sqlalchemy.String)
+    user_id = Column(sqlalchemy.Integer, ForeignKey("user.id"))
+
+    def __init__(self, userid, basis, quantity, date_purchased, proceeds, date_sold, asset):
         assert isinstance(date_sold, datetime.datetime)
         assert isinstance(date_purchased, datetime.datetime)
         assert isinstance(asset, str)
+        self.userid = userid
         self.basis = basis
         self.quantity = quantity
         self.date_purchased = date_purchased
@@ -124,6 +145,7 @@ def split_report(coin_to_split, amount, trans):
     proceeds = (frac_of_sale_tx * trans.usd_subtotal).quantize(Decimal(".01"))
     sale_fee = (frac_of_sale_tx * trans.fees).quantize(Decimal(".01"))
     return CostBasisReport(
+            trans.user_id,
         purchase_price + purchase_fee,
         amount,
         coin_to_split.date,
@@ -193,6 +215,7 @@ def process_one(trans, pool):
         # through we only use a portion of trans.
         portion_of_sale = pool[i].quantity / trans.quantity
         ir = CostBasisReport(
+            pool[i].user_id,
             pool[i].usd_subtotal + pool[i].fees,
             pool[i].quantity,
             pool[i].date,

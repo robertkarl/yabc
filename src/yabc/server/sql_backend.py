@@ -168,11 +168,8 @@ class SqlBackend:
             }
         )
 
-    def run_basis(self, userid, tax_year):
+    def run_basis(self, userid):
         """
-        Given a userid, get the cost basis report for sale transactions in that
-        tax year.
-
         TODO: There is some impedance mismatch between flask and python's csv
         module.  csv requires CSVs to be written as strings, while flask's
         underlying web server requires applications to write binary responses.
@@ -180,21 +177,16 @@ class SqlBackend:
         contents into memory and write to an in-memory binary file-like object
         which is handed off to flask. Fix.
 
-        Returns: file-like object with  CSV containing cost basis reports
-        useful for the IRS.
+        Returns: just a status
         """
         docs = self.session.query(taxdoc.TaxDoc).filter_by(user_id=userid)
-        first_invalid_date = datetime.datetime(tax_year + 1, 1, 1)
         all_txs = list(
             self.session.query(transaction.Transaction)
             .filter_by(user_id=userid)
-            .filter(transaction.Transaction.date < first_invalid_date)
         )
         basis_reports = basis.process_all("FIFO", all_txs)
-        # We only need those transactions inside the tax year.
-        ty_reports = [i for i in basis_reports if i.date_sold.year == tax_year]
-        stringio_file = basis.reports_to_csv(basis_reports)
-        mem = io.BytesIO()
-        mem.write(stringio_file.getvalue().encode("utf-8"))
-        mem.seek(0)
-        return mem
+        for i in basis_reports:
+            self.session.add(i)
+        self.session.commit()
+        return "success"
+
