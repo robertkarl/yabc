@@ -190,7 +190,7 @@ class SqlBackend:
             .filter_by(user_id=userid)
             .filter(transaction.Transaction.date < first_invalid_date)
         )
-        basis_reports = basis.process_all(all_txs)
+        basis_reports = basis.process_all("FIFO", all_txs)
         # We only need those transactions inside the tax year.
         ty_reports = [i for i in basis_reports if i.date_sold.year == tax_year]
         stringio_file = basis.reports_to_csv(basis_reports)

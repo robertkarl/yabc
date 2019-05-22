@@ -75,6 +75,9 @@ def coinbase_to_dict(fname):
 
 
 def from_coinbase(f):
+    """
+    @return dictionaries with coinbase fields
+    """
     rawcsv = [i for i in csv.reader(f)]
     if len(rawcsv) < 4:
         raise ValueError("Invalid CSV file {}, not enough rows.".format(fname))

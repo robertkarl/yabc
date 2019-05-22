@@ -48,7 +48,7 @@ class Transaction(yabc.Base):
 
     def __init__(
         self,
-        asset_name="BTC",
+        asset_name,
         date=None,
         fees=0,
         operation=None,
@@ -84,12 +84,14 @@ class Transaction(yabc.Base):
         operation = "Buy"
         proceeds = json["Transfer Total"]
         fee = json["Transfer Fee"]
+        asset_name = json["Currency"]
         quantity = Decimal(json["Amount"])
         if quantity < 0:
             operation = "Sell"
             quantity = abs(quantity)
         timestamp_str = json["Timestamp"]
         return Transaction(
+            asset_name=asset_name,
             operation=operation,
             quantity=quantity,
             date=dateutil.parser.parse(timestamp_str),
@@ -110,6 +112,7 @@ class Transaction(yabc.Base):
         fee = json["USD Fee"]
         timestamp_str = "{}".format(json["Date"])
         return Transaction(
+                asset_name="BTC",
             operation=operation,
             quantity=quantity,
             fees=fee,

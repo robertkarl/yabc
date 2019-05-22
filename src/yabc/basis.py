@@ -1,5 +1,7 @@
 """
-Utilities for calculating the cost basis.
+Calculating the cost basis.
+
+TODO: Add other accounting methods than FIFO, most notably LIFO.
 """
 
 __author__ = "Robert Karl <robertkarljr@gmail.com>"
@@ -9,29 +11,48 @@ import copy
 import csv
 import io
 from decimal import Decimal
+import datetime
 
 from yabc import csv_to_json
 from yabc import transaction
 
-SATOSHIS_PER_BITCOIN = int(1e8)
 
-
-CostBasisReport = collections.namedtuple(
-    "CostBasisReport",
-    ("descr", "date_acquired", "date_sold", "proceeds", "basis", "gain_or_loss"),
-)
-
-
-def make_cost_basis_report(buy_price, quantity, date_purchased, sale_price, date_sold):
+class CostBasisReport():
     """
-    Should be in the format needed by 8949; dollar amounts are rounded
+    Represents a row in form 8949.
     """
-    descr = "{:.6f} BTC".format(quantity)
-    acquired = date_purchased
-    sold = date_sold
-    proceeds = sale_price
-    basis = buy_price
-    return CostBasisReport(descr, acquired, sold, proceeds, basis, proceeds - basis)
+    _fields =  ["basis", "quantity", "date_purchased", "proceeds", "date_sold", "asset_name", "gain_or_loss"]
+
+    def __init__(self, basis, quantity, date_purchased, proceeds, date_sold, asset):
+        assert isinstance(date_sold, datetime.datetime)
+        assert isinstance(date_purchased, datetime.datetime)
+        assert isinstance(asset, str)
+        self.basis = basis
+        self.quantity = quantity
+        self.date_purchased = date_purchased
+        self.proceeds = proceeds
+        self.date_sold = date_sold
+        self.asset_name = asset
+        self.gain_or_loss = self.proceeds - self.basis
+
+    def is_long_term(self):
+        return (self.date_sold - self.date_purchased) > datetime.timedelta(1)
+
+    def description(self):
+        return "{:.6f} {}".format(self.quantity, self.asset_name)
+
+    def __repr__(self):
+        return "<Sold {} {} for {} total profiting {}>".format(self.quantity, self.asset_name, self.proceeds, self.gain_or_loss)
+
+    def fields(self):
+        ans = []
+        for i in CostBasisReport._fields:
+            ans.append(getattr(self, i))
+        return ans
+
+    @staticmethod
+    def field_names():
+        return CostBasisReport._fields
 
 
 def split_coin_to_add(coin_to_split, amount, trans):
@@ -92,12 +113,13 @@ def split_report(coin_to_split, amount, trans):
     frac_of_sale_tx = amount / trans.quantity
     proceeds = (frac_of_sale_tx * trans.usd_subtotal).quantize(Decimal(".01"))
     sale_fee = (frac_of_sale_tx * trans.fees).quantize(Decimal(".01"))
-    return make_cost_basis_report(
+    return CostBasisReport(
         purchase_price + purchase_fee,
         amount,
         coin_to_split.date,
         proceeds - sale_fee,
         trans.date,
+        trans.asset_name
     )
 
 
@@ -152,9 +174,6 @@ def process_one(trans, pool):
     needs_remove = pool_index
     if not needs_split:
         pool_index += 1  # Ensures that we report the oldest transaction as a sale.
-    # TODO it seems like this quantity maybe should be 'pool_index + 1'
-    # Consider the case of selling a single bitcoin (without splitting). We will
-    # have pool_index==0, and won't call @make_cost_basis_report below.
     for i in range(pool_index):
         # each of these including pool_index will become a sale to be reported to IRS
         # The cost basis is pool[i].proceeds
@@ -163,12 +182,13 @@ def process_one(trans, pool):
         # NOTE: the entire basis coin will be sold; but for each iteration
         # through we only use a portion of trans.
         portion_of_sale = pool[i].quantity / trans.quantity
-        ir = make_cost_basis_report(
+        ir = CostBasisReport(
             pool[i].usd_subtotal + pool[i].fees,
             pool[i].quantity,
             pool[i].date,
             portion_of_sale * (trans.usd_subtotal - trans.fees),
             trans.date,
+            pool[i].asset_name
         )
         cost_basis_reports.append(ir)
 
@@ -214,15 +234,21 @@ def get_all_transactions(coinbase, gemini):
 def reports_to_csv(reports):
     of = io.StringIO()
     writer = csv.writer(of)
-    writer.writerow(CostBasisReport._fields)
+    names = CostBasisReport.field_names()
+    writer.writerow(names)
     for r in reports:
-        writer.writerow(r)
+        writer.writerow(r.fields())
     writer.writerow(["total", "{}".format(sum([i.gain_or_loss for i in reports]))])
     of.seek(0)
     return of
 
+def process_all(method, txs):
+    if method == 'FIFO':
+        return process_all_fifo(txs)
+    raise ValueError("Invalid method {}".format(method))
 
-def process_all(txs):
+
+def process_all_fifo(txs):
     """
     Process a list of transactions (which may have been read from coinbase or
     gemini files).
@@ -250,3 +276,29 @@ def process_all(txs):
                 pool.insert(0, to_add)
         irs_reports.extend(reports)
     return irs_reports
+
+def run_basis(pool, transactions, method, userid, tax_year):
+    """
+    Where the magic happens.
+
+    Requirements:
+        - pool is a sequence of purchases or splits (no sales).
+        - Each element in pool needs to have a `purchase date` before
+          `tax_year` begins.
+        - txs should have at least one 'sale' within tax_year and zero sale txs
+          before tax_year.
+    """
+    supported_methods = ["FIFO"]
+    if not method in supported_methods:
+        raise ValueError("Accounting method {} not supported".format(method))
+    for tx in pool:
+        assert tx.operation == 'Split' or tx.operation == 'Buy'
+    asset_names = set([i.asset_name for i in txs]) # We can safely ignore pool's contents
+    reports = []
+    for asset in asset_names:
+        txs = []
+        filter_by_asset = lambda x: x.asset_name == asset
+        txs.extend(filter(filter_by_asset, pool))
+        txs.extend(filter(filter_by_asset, transactions))
+        reports.extend(process_all(method, txs))
+    return reports

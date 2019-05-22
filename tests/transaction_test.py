@@ -97,6 +97,7 @@ class TransactionTest(unittest.TestCase):
             "Transfer Total": 1.05,
             "Transfer Fee": 0.05,
             "Amount": 2,
+            "Currency": "BTC",
             "Timestamp": "2015-2-5 06:27:56.373",
         }
 
@@ -116,6 +117,7 @@ class TransactionTest(unittest.TestCase):
             "Transfer Total": 1.05,
             "Transfer Fee": 0.05,
             "Amount": -2,
+            "Currency": "BTC",
             "Timestamp": "2015-2-5 06:27:56.373",
         }
 
