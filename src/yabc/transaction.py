@@ -112,7 +112,7 @@ class Transaction(yabc.Base):
         fee = json["USD Fee"]
         timestamp_str = "{}".format(json["Date"])
         return Transaction(
-                asset_name="BTC",
+            asset_name="BTC",
             operation=operation,
             quantity=quantity,
             fees=fee,

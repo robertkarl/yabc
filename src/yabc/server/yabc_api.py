@@ -1,3 +1,6 @@
+import functools
+import os
+
 import flask
 from flask import Blueprint
 
@@ -7,7 +10,41 @@ yabc_api = Blueprint("yabc_api", __name__)
 bp = yabc_api
 
 
+def is_authorized(userid):
+    """ @param userid: needs to match the logged in user. """
+    print("checking on user {}".format(userid))
+    FLASK_ENV_KEY = "FLASK_ENV"
+    env = os.environ.get(FLASK_ENV_KEY)
+    if env == "development":
+        # Anything goes in development.
+        return True
+    if not flask.g.user:
+        return False
+    if flask.g.user.userid == userid:
+        return True
+    return False
+
+
+def check_authorized(view):
+    """
+    Check the userid attached to the request against the logged-in user.
+    """
+
+    @functools.wraps(view)
+    def wrapped_view(**kwargs):
+        userid = flask.request.args.get("userid")
+        if not userid:
+            userid = flask.session["user_id"]
+        assert userid
+        if not is_authorized(userid):
+            return flask.make_response(("", 500))
+        return view(**kwargs)
+
+    return wrapped_view
+
+
 @yabc_api.route("/yabc/v1/run_basis/<tax_year>", methods=["POST"])
+@check_authorized
 def run_basis(tax_year):
     """
     Perform the cost basis calculations for a given tax year.
@@ -26,6 +63,7 @@ def run_basis(tax_year):
           'pool'. These transactions will provide the literal basis for sales
           in future tax years.
     """
+
     userid = flask.request.args.get("userid")
     if not userid:
         userid = flask.session["user_id"]
@@ -38,6 +76,7 @@ def run_basis(tax_year):
     return result
 
 
+@check_authorized
 @yabc_api.route("/yabc/v1/taxdocs", methods=["POST", "GET"])
 def taxdocs():
     if "userid" in flask.request.values:
@@ -53,6 +92,7 @@ def taxdocs():
     return backend.taxdoc_create(exchange, userid, submitted_file)
 
 
+@check_authorized
 @yabc_api.route("/yabc/v1/transactions/<txid>", methods=["DELETE"])
 def transaction_update(txid):
     if "userid" in flask.request.values:
@@ -73,6 +113,7 @@ def transaction_update(txid):
     return flask.jsonify({"result": "Deleted transaction with id {}".format(txid)})
 
 
+@check_authorized
 @yabc_api.route("/yabc/v1/transactions", methods=["GET", "POST"])
 def transactions():
     if "userid" in flask.request.values:
@@ -88,6 +129,7 @@ def transactions():
     return backend.add_tx(userid, tx)
 
 
+@check_authorized
 @yabc_api.route("/yabc/v1/users/<userid>", methods=["GET"])
 def user_read(userid):
     backend = sql_backend.get_db()

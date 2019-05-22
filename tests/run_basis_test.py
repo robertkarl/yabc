@@ -1,7 +1,7 @@
 import unittest
 
-from yabc import csv_to_json
 from yabc import basis
+from yabc import csv_to_json
 from yabc.transaction import Transaction
 
 

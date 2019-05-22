@@ -6,22 +6,30 @@ TODO: Add other accounting methods than FIFO, most notably LIFO.
 
 __author__ = "Robert Karl <robertkarljr@gmail.com>"
 
-import collections
 import copy
 import csv
+import datetime
 import io
 from decimal import Decimal
-import datetime
 
 from yabc import csv_to_json
 from yabc import transaction
 
 
-class CostBasisReport():
+class CostBasisReport:
     """
     Represents a row in form 8949.
     """
-    _fields =  ["basis", "quantity", "date_purchased", "proceeds", "date_sold", "asset_name", "gain_or_loss"]
+
+    _fields = [
+        "basis",
+        "quantity",
+        "date_purchased",
+        "proceeds",
+        "date_sold",
+        "asset_name",
+        "gain_or_loss",
+    ]
 
     def __init__(self, basis, quantity, date_purchased, proceeds, date_sold, asset):
         assert isinstance(date_sold, datetime.datetime)
@@ -42,7 +50,9 @@ class CostBasisReport():
         return "{:.6f} {}".format(self.quantity, self.asset_name)
 
     def __repr__(self):
-        return "<Sold {} {} for {} total profiting {}>".format(self.quantity, self.asset_name, self.proceeds, self.gain_or_loss)
+        return "<Sold {} {} for {} total profiting {}>".format(
+            self.quantity, self.asset_name, self.proceeds, self.gain_or_loss
+        )
 
     def fields(self):
         ans = []
@@ -119,7 +129,7 @@ def split_report(coin_to_split, amount, trans):
         coin_to_split.date,
         proceeds - sale_fee,
         trans.date,
-        trans.asset_name
+        trans.asset_name,
     )
 
 
@@ -188,7 +198,7 @@ def process_one(trans, pool):
             pool[i].date,
             portion_of_sale * (trans.usd_subtotal - trans.fees),
             trans.date,
-            pool[i].asset_name
+            pool[i].asset_name,
         )
         cost_basis_reports.append(ir)
 
@@ -242,8 +252,9 @@ def reports_to_csv(reports):
     of.seek(0)
     return of
 
+
 def process_all(method, txs):
-    if method == 'FIFO':
+    if method == "FIFO":
         return process_all_fifo(txs)
     raise ValueError("Invalid method {}".format(method))
 
@@ -277,6 +288,7 @@ def process_all_fifo(txs):
         irs_reports.extend(reports)
     return irs_reports
 
+
 def run_basis(pool, transactions, method, userid, tax_year):
     """
     Where the magic happens.
@@ -292,8 +304,10 @@ def run_basis(pool, transactions, method, userid, tax_year):
     if not method in supported_methods:
         raise ValueError("Accounting method {} not supported".format(method))
     for tx in pool:
-        assert tx.operation == 'Split' or tx.operation == 'Buy'
-    asset_names = set([i.asset_name for i in txs]) # We can safely ignore pool's contents
+        assert tx.operation == "Split" or tx.operation == "Buy"
+    asset_names = set(
+        [i.asset_name for i in txs]
+    )  # We can safely ignore pool's contents
     reports = []
     for asset in asset_names:
         txs = []
