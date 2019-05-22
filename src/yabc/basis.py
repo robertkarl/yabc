@@ -40,6 +40,9 @@ class CostBasisReport():
     def description(self):
         return "{:.6f} {}".format(self.quantity, self.asset_name)
 
+    def __repr__(self):
+        return "<Sold {} {} for {} total profiting {}>".format(self.quantity, self.asset_name, self.proceeds, self.gain_or_loss)
+
 
 def split_coin_to_add(coin_to_split, amount, trans):
     """
