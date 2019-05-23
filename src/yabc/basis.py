@@ -14,6 +14,7 @@ from decimal import Decimal
 from typing import Sequence
 
 import sqlalchemy
+from sqlalchemy import Boolean
 from sqlalchemy import Column
 from sqlalchemy import DateTime
 from sqlalchemy import ForeignKey
@@ -31,30 +32,36 @@ class CostBasisReport(yabc.Base):
     """
 
     _fields = [
-        "basis",
-        "quantity",
-        "date_purchased",
-        "proceeds",
-        "date_sold",
+        "id",
         "asset_name",
+        "basis",
+        "date_purchased",
+        "date_sold",
         "gain_or_loss",
+        "proceeds",
+        "quantity",
+        "long_term",
         "user_id",
     ]
 
     __tablename__ = "basis_report"
     id = Column(Integer, primary_key=True)
+    asset_name = Column(sqlalchemy.String)
     basis = Column(PreciseDecimalString)
-    quantity = Column(PreciseDecimalString)
-    proceeds = Column(PreciseDecimalString)
-    gain_or_loss = Column(PreciseDecimalString)
     date_purchased = Column(DateTime)
     date_sold = Column(DateTime)
-    asset_name = Column(sqlalchemy.String)
+    gain_or_loss = Column(PreciseDecimalString)
+    proceeds = Column(PreciseDecimalString)
+    quantity = Column(PreciseDecimalString)
+    long_term = Column(Boolean)
     user_id = Column(sqlalchemy.Integer, ForeignKey("user.id"))
 
     def __init__(
         self, userid, basis, quantity, date_purchased, proceeds, date_sold, asset
     ):
+        """
+        Note that when pulling items from a SQL alchemy ORM query, this constructor isn't called.
+        """
         assert isinstance(date_sold, datetime.datetime)
         assert isinstance(date_purchased, datetime.datetime)
         assert isinstance(asset, str)
@@ -67,7 +74,9 @@ class CostBasisReport(yabc.Base):
         self.asset_name = asset
         self.gain_or_loss = self.proceeds - self.basis
 
-    def is_long_term(self):
+        self.long_term = self._is_long_term()
+
+    def _is_long_term(self):
         return (self.date_sold - self.date_purchased) > datetime.timedelta(1)
 
     def description(self):

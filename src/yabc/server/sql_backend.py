@@ -136,17 +136,25 @@ class SqlBackend:
         return flask.jsonify(result)
 
     def taxyear_list(self, userid):
-        sale_dates = self.session.query(sqlalchemy.distinct(basis.CostBasisReport.date_sold))
+        sale_dates = self.session.query(
+            sqlalchemy.distinct(basis.CostBasisReport.date_sold)
+        )
         years = set([i[0].year for i in sale_dates])
         result = []
         for ty in years:
-            year_info = {'year': ty}
+            year_info = {"year": ty}
             reports = list(self.reports_in_taxyear(userid, ty))
-            year_info['taxable_income'] = str(int(sum([i.gain_or_loss for i in reports])))
-            year_info['shortterm'] = 17
-            year_info['longterm'] = 17
-            year_info['url8949'] = flask.url_for('yabc_api.download_8949', taxyear=ty)
-            year_info['url8949_label'] = "{}-8949.csv".format(ty)
+            year_info["taxable_income"] = str(
+                int(sum([i.gain_or_loss for i in reports]))
+            )
+            year_info["shortterm"] = str(
+                int(sum([i.gain_or_loss for i in reports if not i.long_term]))
+            )
+            year_info["longterm"] = str(
+                int(sum([i.gain_or_loss for i in reports if i.long_term]))
+            )
+            year_info["url8949"] = flask.url_for("yabc_api.download_8949", taxyear=ty)
+            year_info["url8949_label"] = "{}-8949.csv".format(ty)
             result.append(year_info)
         return flask.jsonify(result)
 

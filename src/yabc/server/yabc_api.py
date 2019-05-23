@@ -36,7 +36,7 @@ def check_authorized(view):
         if not userid:
             userid = flask.session.get(USER_ID_KEY)
         if not userid:
-            raise RuntimeError('No userid, not authorized')
+            raise RuntimeError("No userid, not authorized")
         if not is_authorized(userid):
             return flask.make_response(("", 500))
         return view(**kwargs)
@@ -81,6 +81,7 @@ def download_8949(taxyear):
     )
     return result
 
+
 @check_authorized
 @yabc_api.route("/yabc/v1/taxyears", methods=["GET"])
 def taxyears():
@@ -91,9 +92,10 @@ def taxyears():
 
     Each year that has tax information is included.
     """
-    userid = get_userid();
+    userid = get_userid()
     backend = sql_backend.get_db()
     return backend.taxyear_list(userid)
+
 
 @check_authorized
 @yabc_api.route("/yabc/v1/taxdocs", methods=["POST", "GET"])
