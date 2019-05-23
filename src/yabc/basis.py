@@ -11,17 +11,18 @@ import csv
 import datetime
 import io
 from decimal import Decimal
+from typing import Sequence
 
-import yabc
-from yabc import csv_to_json
-from yabc import transaction
-
-from yabc.transaction import PreciseDecimalString
 import sqlalchemy
 from sqlalchemy import Column
 from sqlalchemy import DateTime
 from sqlalchemy import ForeignKey
 from sqlalchemy import Integer
+
+import yabc
+from yabc import csv_to_json
+from yabc import transaction
+from yabc.transaction import PreciseDecimalString
 
 
 class CostBasisReport(yabc.Base):
@@ -51,11 +52,13 @@ class CostBasisReport(yabc.Base):
     asset_name = Column(sqlalchemy.String)
     user_id = Column(sqlalchemy.Integer, ForeignKey("user.id"))
 
-    def __init__(self, userid, basis, quantity, date_purchased, proceeds, date_sold, asset):
+    def __init__(
+        self, userid, basis, quantity, date_purchased, proceeds, date_sold, asset
+    ):
         assert isinstance(date_sold, datetime.datetime)
         assert isinstance(date_purchased, datetime.datetime)
         assert isinstance(asset, str)
-        self.userid = userid
+        self.user_id = userid
         self.basis = basis
         self.quantity = quantity
         self.date_purchased = date_purchased
@@ -145,7 +148,7 @@ def split_report(coin_to_split, amount, trans):
     proceeds = (frac_of_sale_tx * trans.usd_subtotal).quantize(Decimal(".01"))
     sale_fee = (frac_of_sale_tx * trans.fees).quantize(Decimal(".01"))
     return CostBasisReport(
-            trans.user_id,
+        trans.user_id,
         purchase_price + purchase_fee,
         amount,
         coin_to_split.date,
@@ -264,7 +267,12 @@ def get_all_transactions(coinbase, gemini):
     return txs
 
 
-def reports_to_csv(reports):
+def reports_to_csv(reports: Sequence[CostBasisReport]):
+    """ Return a file-like object with a row for each report.
+
+    Also includes summary information and headers.
+    """
+
     of = io.StringIO()
     writer = csv.writer(of)
     names = CostBasisReport.field_names()

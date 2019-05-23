@@ -42,6 +42,7 @@ def check_authorized(view):
 
     return wrapped_view
 
+
 def get_userid():
     userid = flask.request.args.get("userid")
     if not userid:
@@ -59,6 +60,24 @@ def run_basis():
     userid = get_userid()
     backend = sql_backend.get_db()
     result = backend.run_basis(userid)
+    return result
+
+
+@yabc_api.route("/yabc/v1/download_8949/<taxyear>", methods=["POST"])
+@check_authorized
+def download_8949(taxyear):
+    """
+    Perform the cost basis calculations and write them all to the database.
+    """
+    userid = get_userid()
+    backend = sql_backend.get_db()
+    of = backend.download_8949(userid, int(taxyear))
+    result = flask.send_file(
+        of,
+        mimetype="text/csv",
+        attachment_filename="i8949-{}.csv".format(taxyear),
+        as_attachment=True,
+    )
     return result
 
 

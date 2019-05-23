@@ -181,8 +181,7 @@ class SqlBackend:
         """
         docs = self.session.query(taxdoc.TaxDoc).filter_by(user_id=userid)
         all_txs = list(
-            self.session.query(transaction.Transaction)
-            .filter_by(user_id=userid)
+            self.session.query(transaction.Transaction).filter_by(user_id=userid)
         )
         basis_reports = basis.process_all("FIFO", all_txs)
         for i in basis_reports:
@@ -190,3 +189,22 @@ class SqlBackend:
         self.session.commit()
         return "success"
 
+    def download_8949(self, userid, taxyear):
+        assert isinstance(taxyear, int)
+        start, end = self.get_tax_year_bounds(userid, taxyear)
+        reports = (
+            self.session.query(basis.CostBasisReport)
+            .filter_by(user_id=userid)
+            .filter(basis.CostBasisReport.date_sold >= start)
+            .filter(basis.CostBasisReport.date_sold < end)
+        )
+        of = basis.reports_to_csv(reports)
+        mem = io.BytesIO()
+        mem.write(of.getvalue().encode("utf-8"))
+        mem.seek(0)
+        return mem
+
+    def get_tax_year_bounds(self, userid, taxyear):
+        first_invalid_date = datetime.datetime(taxyear + 1, 1, 1)
+        start = datetime.datetime(taxyear, 1, 1)
+        return start, first_invalid_date
