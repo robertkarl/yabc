@@ -8,11 +8,11 @@ from yabc.server import sql_backend
 
 yabc_api = Blueprint("yabc_api", __name__)
 bp = yabc_api
+USER_ID_KEY = "user_id"
 
 
 def is_authorized(userid):
     """ @param userid: needs to match the logged in user. """
-    print("checking on user {}".format(userid))
     FLASK_ENV_KEY = "FLASK_ENV"
     env = os.environ.get(FLASK_ENV_KEY)
     if env == "development":
@@ -32,10 +32,11 @@ def check_authorized(view):
 
     @functools.wraps(view)
     def wrapped_view(**kwargs):
-        userid = flask.request.args.get("userid")
+        userid = flask.request.args.get(USER_ID_KEY)
         if not userid:
-            userid = flask.session["user_id"]
-        assert userid
+            userid = flask.session.get(USER_ID_KEY)
+        if not userid:
+            raise RuntimeError('No userid, not authorized')
         if not is_authorized(userid):
             return flask.make_response(("", 500))
         return view(**kwargs)
@@ -44,9 +45,9 @@ def check_authorized(view):
 
 
 def get_userid():
-    userid = flask.request.args.get("userid")
+    userid = flask.request.args.get(USER_ID_KEY)
     if not userid:
-        userid = flask.session["user_id"]
+        userid = flask.session.get(USER_ID_KEY)
     assert userid
     return userid
 
@@ -63,7 +64,7 @@ def run_basis():
     return result
 
 
-@yabc_api.route("/yabc/v1/download_8949/<taxyear>", methods=["POST"])
+@yabc_api.route("/yabc/v1/download_8949/<taxyear>", methods=["GET"])
 @check_authorized
 def download_8949(taxyear):
     """
@@ -75,11 +76,24 @@ def download_8949(taxyear):
     result = flask.send_file(
         of,
         mimetype="text/csv",
-        attachment_filename="i8949-{}.csv".format(taxyear),
+        attachment_filename="{}-8949.csv".format(taxyear),
         as_attachment=True,
     )
     return result
 
+@check_authorized
+@yabc_api.route("/yabc/v1/taxyears", methods=["GET"])
+def taxyears():
+    """
+    No backend data structure corresponds to this endpoint;
+
+    It's client-friendly condensed information from the CostBasisReport table.
+
+    Each year that has tax information is included.
+    """
+    userid = get_userid();
+    backend = sql_backend.get_db()
+    return backend.taxyear_list(userid)
 
 @check_authorized
 @yabc_api.route("/yabc/v1/taxdocs", methods=["POST", "GET"])

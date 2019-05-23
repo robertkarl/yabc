@@ -135,6 +135,21 @@ class SqlBackend:
             )
         return flask.jsonify(result)
 
+    def taxyear_list(self, userid):
+        sale_dates = self.session.query(sqlalchemy.distinct(basis.CostBasisReport.date_sold))
+        years = set([i[0].year for i in sale_dates])
+        result = []
+        for ty in years:
+            year_info = {'year': ty}
+            reports = list(self.reports_in_taxyear(userid, ty))
+            year_info['taxable_income'] = str(int(sum([i.gain_or_loss for i in reports])))
+            year_info['shortterm'] = 17
+            year_info['longterm'] = 17
+            year_info['url8949'] = flask.url_for('yabc_api.download_8949', taxyear=ty)
+            year_info['url8949_label'] = "{}-8949.csv".format(ty)
+            result.append(year_info)
+        return flask.jsonify(result)
+
     def taxdoc_create(self, exchange, userid, submitted_file):
         """
         Add the tx doc for this user.
@@ -191,8 +206,7 @@ class SqlBackend:
         self.session.commit()
         return "success"
 
-    def download_8949(self, userid, taxyear):
-        assert isinstance(taxyear, int)
+    def reports_in_taxyear(self, userid, taxyear):
         start, end = self.get_tax_year_bounds(userid, taxyear)
         reports = (
             self.session.query(basis.CostBasisReport)
@@ -200,6 +214,11 @@ class SqlBackend:
             .filter(basis.CostBasisReport.date_sold >= start)
             .filter(basis.CostBasisReport.date_sold < end)
         )
+        return reports
+
+    def download_8949(self, userid, taxyear):
+        assert isinstance(taxyear, int)
+        reports = self.reports_in_taxyear(userid, taxyear)
         of = basis.reports_to_csv(reports)
         mem = io.BytesIO()
         mem.write(of.getvalue().encode("utf-8"))
