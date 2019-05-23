@@ -25,7 +25,7 @@ test_local:
 	curl -F taxdoc=@testdata/synthetic_coinbase_csv.csv "${URL}/taxdocs?exchange=coinbase&user_id=1"
 	curl -F taxdoc=@testdata/synthetic_gemini_csv.csv "${URL}/taxdocs?exchange=gemini&user_id=1"
 	curl -X POST localhost:5000/yabc/v1/run_basis?user_id=1 | grep success
-	curl -X POST localhost:5000/yabc/v1/download_8949/2008?user_id=1 2>/dev/null | grep 15026
+	curl localhost:5000/yabc/v1/download_8949/2008?user_id=1 2>/dev/null | grep 15026
 
 test_buyone_sellone:
 	curl -F taxdoc=@testdata/synthetic_buyone_sellone_coinbase.csv \
@@ -36,7 +36,7 @@ test_adhoc:
 	curl --data tx='{"Currency": "BTC", "Transfer Total": "1234", "Transfer Fee": "12", "Amount": "1", "Timestamp": "5/6/07 1:12"}' ${URL}/transactions?user_id=3
 	curl --data tx='{"Transfer Total": "1299", "Currency": "BTC", "Transfer Fee": "12", "Amount": "-1", "Timestamp": "5/6/07 1:12"}' "${URL}/transactions?user_id=3"
 	curl -X POST "${URL}/run_basis?user_id=3" | grep success
-	curl -X POST "${URL}/download_8949/2007?user_id=3" 2>/dev/null | grep 'total,41'
+	curl "${URL}/download_8949/2007?user_id=3" 2>/dev/null | grep 'total,41'
 
 test_all:
 	make create_test_users
