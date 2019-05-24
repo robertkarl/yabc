@@ -87,9 +87,9 @@ class SqlBackend:
         return json.dumps(user_obj.id)
 
     def user_read(self, uid):
-        users = self.session.query(user.User).filter_by(id=uid)
-        if users.count():
-            return json.dumps(users[0])
+        u = self.session.query(user.User).filter_by(id=uid).first()
+        if u:
+            return u
         return flask.jsonify({"error": "invalid userid"})
 
     def tx_delete(self, userid, txid):
