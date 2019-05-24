@@ -29,37 +29,40 @@ SCHEMA_VERSION = 2
 @click.command("init-db")
 @with_appcontext
 def init_db_command():
-    db = get_db()
-    db.create_tables()
+    with SqlBackend() as db:
+        db.create_tables()
     click.echo("Initialized the database.")
-
-
-def get_db():
-    if DB_KEY not in flask.g:
-        flask.g.yabc_db = SqlBackend(flask.current_app.config["DATABASE"])
-    return flask.g.yabc_db
-
-
-def close_db(e=None):
-    db = flask.g.pop(DB_KEY, None)
-    if db is not None:
-        db.session.close()
 
 
 def init_app(app):
     app.cli.add_command(init_db_command)
-    app.teardown_appcontext(close_db)
 
 
 class SqlBackend:
-    def __init__(self, db_path):
+    """
+    A db handle that can be used with `with` to auto-close the session.
+    """
+
+    def __enter__(self):
+        return self
+
+        self.session.close()
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, a, b, c):
+        self.session.close()
+
+    def __init__(self, db_url=None):
         # Note: some web servers (aka Flask) will create a new instance of this
         # class for each request.
+        if db_url is None:
+            db_url = flask.current_app.config["DATABASE"]
+
+        print("connecting to DB {}".format(db_url))
         self.engine = sqlalchemy.create_engine(
-            "sqlite:///{}".format(db_path),
-            echo=True,
-            poolclass=sqlalchemy.pool.QueuePool,
-            connect_args={"timeout": 15},
+            db_url, echo=True, poolclass=sqlalchemy.pool.QueuePool
         )
         Session = sessionmaker(bind=self.engine)
         self.session = Session()

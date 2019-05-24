@@ -1,10 +1,10 @@
 import functools
 import os
-import sqlite3
 
 import flask
 from flask import Blueprint
 
+from yabc import user
 from yabc.server import sql_backend
 
 yabc_api = Blueprint("yabc_api", __name__)
@@ -21,8 +21,9 @@ def is_authorized(userid):
         return True
     if not flask.g.user:
         return False
-    assert isinstance(flask.g.user, sqlite3.Row)
-    if flask.g.user["id"] == userid:
+    if not isinstance(flask.g.user, user.User):
+        raise RuntimeError("Not authorized; no user found in flask session.")
+    if flask.g.user.id == userid:
         return True
     return False
 
@@ -61,9 +62,9 @@ def run_basis():
     Perform the cost basis calculations and write them all to the database.
     """
     userid = get_userid()
-    backend = sql_backend.get_db()
-    result = backend.run_basis(userid)
-    return result
+    with sql_backend.SqlBackend() as backend:
+        result = backend.run_basis(userid)
+        return result
 
 
 @yabc_api.route("/yabc/v1/download_8949/<taxyear>", methods=["GET"])
@@ -73,15 +74,15 @@ def download_8949(taxyear):
     Get the relevant tax document for a given year.
     """
     userid = get_userid()
-    backend = sql_backend.get_db()
-    of = backend.download_8949(userid, int(taxyear))
-    result = flask.send_file(
-        of,
-        mimetype="text/csv",
-        attachment_filename="{}-8949.csv".format(taxyear),
-        as_attachment=True,
-    )
-    return result
+    with sql_backend.SqlBackend() as backend:
+        of = backend.download_8949(userid, int(taxyear))
+        result = flask.send_file(
+            of,
+            mimetype="text/csv",
+            attachment_filename="{}-8949.csv".format(taxyear),
+            as_attachment=True,
+        )
+        return result
 
 
 @check_authorized
@@ -95,60 +96,60 @@ def taxyears():
     Each year that has tax information is included.
     """
     userid = get_userid()
-    backend = sql_backend.get_db()
-    return backend.taxyear_list(userid)
+    with sql_backend.SqlBackend() as backend:
+        return backend.taxyear_list(userid)
 
 
 @check_authorized
 @yabc_api.route("/yabc/v1/taxdocs", methods=["POST", "GET"])
 def taxdocs():
     userid = get_userid()
-    backend = sql_backend.get_db()
-    if flask.request.method == "GET":
-        return backend.taxdoc_list(userid)
-    exchange = flask.request.values["exchange"]
-    submitted_file = flask.request.files["taxdoc"]
-    return backend.taxdoc_create(exchange, userid, submitted_file)
+    with sql_backend.SqlBackend() as backend:
+        if flask.request.method == "GET":
+            return backend.taxdoc_list(userid)
+        exchange = flask.request.values["exchange"]
+        submitted_file = flask.request.files["taxdoc"]
+        return backend.taxdoc_create(exchange, userid, submitted_file)
 
 
 @check_authorized
 @yabc_api.route("/yabc/v1/transactions/<txid>", methods=["DELETE"])
 def transaction_update(txid):
     userid = get_userid()
-    backend = sql_backend.get_db()
-    if flask.request.method == "DELETE":
-        backend.tx_delete(userid, txid)
-    elif flask.request.method == "PUT":
-        backend.tx_update(userid, txid, request.values)
-    else:
-        raise ValueError(
-            "method {} not support for transaction".format(flask.request.method)
-        )
-    sql_backend.close_db()
-    return flask.jsonify({"result": "Deleted transaction with id {}".format(txid)})
+    with sql_backend.SqlBackend() as backend:
+        if flask.request.method == "DELETE":
+            backend.tx_delete(userid, txid)
+        elif flask.request.method == "PUT":
+            backend.tx_update(userid, txid, request.values)
+        else:
+            raise ValueError(
+                "method {} not support for transaction".format(flask.request.method)
+            )
+        return flask.jsonify({"result": "Deleted transaction with id {}".format(txid)})
 
 
 @check_authorized
 @yabc_api.route("/yabc/v1/transactions", methods=["GET", "POST"])
 def transactions():
     userid = get_userid()
-    backend = sql_backend.get_db()
-    if flask.request.method == "GET":
-        return backend.tx_list(userid)
-    tx = flask.request.values["tx"]
-    assert tx
-    return backend.add_tx(userid, tx)
+    with sql_backend.SqlBackend() as backend:
+        if flask.request.method == "GET":
+            return backend.tx_list(userid)
+        tx = flask.request.values["tx"]
+        assert tx
+        ans = backend.add_tx(userid, tx)
+        return ans
 
 
 @check_authorized
 @yabc_api.route("/yabc/v1/users/<userid>", methods=["GET"])
 def user_read(userid):
-    backend = sql_backend.get_db()
-    return backend.user_read(userid)
+    with sql_backend.SqlBackend() as backend:
+        return backend.user_read(userid)
 
 
 @yabc_api.route("/yabc/v1/users", methods=["POST"])
 def user_create():
     name = flask.request.args.get("username")
-    backend = sql_backend.get_db()
-    return backend.user_create(name)
+    with sql_backend.SqlBackend() as backend:
+        return backend.user_create(name)
