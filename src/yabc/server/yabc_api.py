@@ -20,7 +20,9 @@ def is_authorized(userid):
         return True
     if not flask.g.user:
         return False
-    if flask.g.user.userid == userid:
+    import sqlite3
+    assert isinstance(flask.g.user, sqlite3.Row)
+    if flask.g.user['id'] == userid:
         return True
     return False
 
