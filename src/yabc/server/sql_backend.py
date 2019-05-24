@@ -23,6 +23,8 @@ from yabc import user
 
 DB_KEY = "yabc_db"
 
+SCHEMA_VERSION = 2
+
 
 @click.command("init-db")
 @with_appcontext
@@ -133,6 +135,29 @@ class SqlBackend:
             )
         return flask.jsonify(result)
 
+    def taxyear_list(self, userid):
+        sale_dates = self.session.query(
+            sqlalchemy.distinct(basis.CostBasisReport.date_sold)
+        )
+        years = set([i[0].year for i in sale_dates])
+        result = []
+        for ty in years:
+            year_info = {"year": ty}
+            reports = list(self.reports_in_taxyear(userid, ty))
+            year_info["taxable_income"] = str(
+                int(sum([i.gain_or_loss for i in reports]))
+            )
+            year_info["shortterm"] = str(
+                int(sum([i.gain_or_loss for i in reports if not i.long_term]))
+            )
+            year_info["longterm"] = str(
+                int(sum([i.gain_or_loss for i in reports if i.long_term]))
+            )
+            year_info["url8949"] = flask.url_for("yabc_api.download_8949", taxyear=ty)
+            year_info["url8949_label"] = "{}-8949.csv".format(ty)
+            result.append(year_info)
+        return flask.jsonify(result)
+
     def taxdoc_create(self, exchange, userid, submitted_file):
         """
         Add the tx doc for this user.
@@ -168,11 +193,8 @@ class SqlBackend:
             }
         )
 
-    def run_basis(self, userid, tax_year):
+    def run_basis(self, userid):
         """
-        Given a userid, get the cost basis report for sale transactions in that
-        tax year.
-
         TODO: There is some impedance mismatch between flask and python's csv
         module.  csv requires CSVs to be written as strings, while flask's
         underlying web server requires applications to write binary responses.
@@ -180,21 +202,38 @@ class SqlBackend:
         contents into memory and write to an in-memory binary file-like object
         which is handed off to flask. Fix.
 
-        Returns: file-like object with  CSV containing cost basis reports
-        useful for the IRS.
+        Returns: just a status
         """
         docs = self.session.query(taxdoc.TaxDoc).filter_by(user_id=userid)
-        first_invalid_date = datetime.datetime(tax_year + 1, 1, 1)
         all_txs = list(
-            self.session.query(transaction.Transaction)
-            .filter_by(user_id=userid)
-            .filter(transaction.Transaction.date < first_invalid_date)
+            self.session.query(transaction.Transaction).filter_by(user_id=userid)
         )
         basis_reports = basis.process_all("FIFO", all_txs)
-        # We only need those transactions inside the tax year.
-        ty_reports = [i for i in basis_reports if i.date_sold.year == tax_year]
-        stringio_file = basis.reports_to_csv(basis_reports)
+        for i in basis_reports:
+            self.session.add(i)
+        self.session.commit()
+        return "success"
+
+    def reports_in_taxyear(self, userid, taxyear):
+        start, end = self.get_tax_year_bounds(userid, taxyear)
+        reports = (
+            self.session.query(basis.CostBasisReport)
+            .filter_by(user_id=userid)
+            .filter(basis.CostBasisReport.date_sold >= start)
+            .filter(basis.CostBasisReport.date_sold < end)
+        )
+        return reports
+
+    def download_8949(self, userid, taxyear):
+        assert isinstance(taxyear, int)
+        reports = self.reports_in_taxyear(userid, taxyear)
+        of = basis.reports_to_csv(reports)
         mem = io.BytesIO()
-        mem.write(stringio_file.getvalue().encode("utf-8"))
+        mem.write(of.getvalue().encode("utf-8"))
         mem.seek(0)
         return mem
+
+    def get_tax_year_bounds(self, userid, taxyear):
+        first_invalid_date = datetime.datetime(taxyear + 1, 1, 1)
+        start = datetime.datetime(taxyear, 1, 1)
+        return start, first_invalid_date

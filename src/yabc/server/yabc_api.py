@@ -1,5 +1,6 @@
 import functools
 import os
+import sqlite3
 
 import flask
 from flask import Blueprint
@@ -8,11 +9,11 @@ from yabc.server import sql_backend
 
 yabc_api = Blueprint("yabc_api", __name__)
 bp = yabc_api
+USER_ID_KEY = "user_id"
 
 
 def is_authorized(userid):
     """ @param userid: needs to match the logged in user. """
-    print("checking on user {}".format(userid))
     FLASK_ENV_KEY = "FLASK_ENV"
     env = os.environ.get(FLASK_ENV_KEY)
     if env == "development":
@@ -20,7 +21,8 @@ def is_authorized(userid):
         return True
     if not flask.g.user:
         return False
-    if flask.g.user.userid == userid:
+    assert isinstance(flask.g.user, sqlite3.Row)
+    if flask.g.user["id"] == userid:
         return True
     return False
 
@@ -32,10 +34,11 @@ def check_authorized(view):
 
     @functools.wraps(view)
     def wrapped_view(**kwargs):
-        userid = flask.request.args.get("userid")
+        userid = flask.request.args.get(USER_ID_KEY)
         if not userid:
-            userid = flask.session["user_id"]
-        assert userid
+            userid = flask.session.get(USER_ID_KEY)
+        if not userid:
+            raise RuntimeError("No userid, not authorized")
         if not is_authorized(userid):
             return flask.make_response(("", 500))
         return view(**kwargs)
@@ -43,47 +46,63 @@ def check_authorized(view):
     return wrapped_view
 
 
-@yabc_api.route("/yabc/v1/run_basis/<tax_year>", methods=["POST"])
-@check_authorized
-def run_basis(tax_year):
-    """
-    Perform the cost basis calculations for a given tax year.
-
-    Returns a CSV in form 8949 format. Also has the side effect of locking the
-    portfolio's cost basis in for the given year.
-
-    Prerequisites:
-        - the given tax year must be ONE of the following:
-            - the first year with any sale in the database
-            - OR the oldest unlocked year with any sale transactions.
-
-    Side effects:
-        - Locks the tax year given.
-        - Saves the list of transactions still in the pool into the table
-          'pool'. These transactions will provide the literal basis for sales
-          in future tax years.
-    """
-
-    userid = flask.request.args.get("userid")
+def get_userid():
+    userid = flask.request.args.get(USER_ID_KEY)
     if not userid:
-        userid = flask.session["user_id"]
+        userid = flask.session.get(USER_ID_KEY)
     assert userid
+    return userid
+
+
+@yabc_api.route("/yabc/v1/run_basis", methods=["POST"])
+@check_authorized
+def run_basis():
+    """
+    Perform the cost basis calculations and write them all to the database.
+    """
+    userid = get_userid()
     backend = sql_backend.get_db()
-    csv_of = backend.run_basis(userid, int(tax_year))
+    result = backend.run_basis(userid)
+    return result
+
+
+@yabc_api.route("/yabc/v1/download_8949/<taxyear>", methods=["GET"])
+@check_authorized
+def download_8949(taxyear):
+    """
+    Get the relevant tax document for a given year.
+    """
+    userid = get_userid()
+    backend = sql_backend.get_db()
+    of = backend.download_8949(userid, int(taxyear))
     result = flask.send_file(
-        csv_of, mimetype="text/csv", attachment_filename="basis.csv", as_attachment=True
+        of,
+        mimetype="text/csv",
+        attachment_filename="{}-8949.csv".format(taxyear),
+        as_attachment=True,
     )
     return result
 
 
 @check_authorized
+@yabc_api.route("/yabc/v1/taxyears", methods=["GET"])
+def taxyears():
+    """
+    No backend data structure corresponds to this endpoint;
+
+    It's client-friendly condensed information from the CostBasisReport table.
+
+    Each year that has tax information is included.
+    """
+    userid = get_userid()
+    backend = sql_backend.get_db()
+    return backend.taxyear_list(userid)
+
+
+@check_authorized
 @yabc_api.route("/yabc/v1/taxdocs", methods=["POST", "GET"])
 def taxdocs():
-    if "userid" in flask.request.values:
-        userid = flask.request.values["userid"]
-    else:
-        userid = flask.session["user_id"]
-    assert userid
+    userid = get_userid()
     backend = sql_backend.get_db()
     if flask.request.method == "GET":
         return backend.taxdoc_list(userid)
@@ -95,11 +114,7 @@ def taxdocs():
 @check_authorized
 @yabc_api.route("/yabc/v1/transactions/<txid>", methods=["DELETE"])
 def transaction_update(txid):
-    if "userid" in flask.request.values:
-        userid = flask.request.values["userid"]
-    else:
-        userid = flask.session["user_id"]
-    assert userid
+    userid = get_userid()
     backend = sql_backend.get_db()
     if flask.request.method == "DELETE":
         backend.tx_delete(userid, txid)
@@ -116,11 +131,7 @@ def transaction_update(txid):
 @check_authorized
 @yabc_api.route("/yabc/v1/transactions", methods=["GET", "POST"])
 def transactions():
-    if "userid" in flask.request.values:
-        userid = flask.request.values["userid"]
-    else:
-        userid = flask.session["user_id"]
-    assert userid
+    userid = get_userid()
     backend = sql_backend.get_db()
     if flask.request.method == "GET":
         return backend.tx_list(userid)
