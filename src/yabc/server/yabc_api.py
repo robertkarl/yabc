@@ -1,5 +1,6 @@
 import functools
 import os
+import sqlite3
 
 import flask
 from flask import Blueprint
@@ -20,9 +21,8 @@ def is_authorized(userid):
         return True
     if not flask.g.user:
         return False
-    import sqlite3
     assert isinstance(flask.g.user, sqlite3.Row)
-    if flask.g.user['id'] == userid:
+    if flask.g.user["id"] == userid:
         return True
     return False
 

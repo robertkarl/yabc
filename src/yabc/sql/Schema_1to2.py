@@ -10,7 +10,9 @@ def main(args):
     schema integer);
     """
     db.session.execute(CREATE_META)
-    db.session.execute("insert into meta values (0, {});".format(sql_backend.SCHEMA_VERSION))
+    db.session.execute(
+        "insert into meta values (0, {});".format(sql_backend.SCHEMA_VERSION)
+    )
     db.session.commit()
     CostBasisReport.__table__.create(db.engine)
     db.session.close()
