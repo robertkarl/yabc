@@ -70,7 +70,7 @@ def run_basis():
 @check_authorized
 def download_8949(taxyear):
     """
-    Perform the cost basis calculations and write them all to the database.
+    Get the relevant tax document for a given year.
     """
     userid = get_userid()
     backend = sql_backend.get_db()
