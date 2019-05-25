@@ -62,7 +62,8 @@ class SqlBackend:
 
         print("connecting to DB {}".format(db_url))
         self.engine = sqlalchemy.create_engine(
-            db_url, echo=True, poolclass=sqlalchemy.pool.QueuePool
+            db_url, echo=True, poolclass=sqlalchemy.pool.QueuePool,
+            connect_args={'sslmode': 'require'},
         )
         Session = sessionmaker(bind=self.engine)
         self.session = Session()
