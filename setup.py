@@ -7,7 +7,7 @@ setuptools.setup(
     name="yabc",
     python_requires="~=3.5",
     author="Robert Karl",
-    install_requires=["flask", "dateutils", "sqlalchemy", "psycopg2"],
+    install_requires=["flask", "dateutils", "sqlalchemy", "psycopg2-binary"],
     test_suite="tests",
     description="Cost basis calculator for blockchain assets.",
     long_description=open("README.md").read(),

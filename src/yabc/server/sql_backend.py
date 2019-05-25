@@ -61,9 +61,14 @@ class SqlBackend:
             db_url = flask.current_app.config["DATABASE"]
 
         print("connecting to DB {}".format(db_url))
+        connect_args = {}
+        if "postgres" in db_url:
+            connect_args["sslmode"] = "require"
         self.engine = sqlalchemy.create_engine(
-            db_url, echo=True, poolclass=sqlalchemy.pool.QueuePool,
-            connect_args={'sslmode': 'require'},
+            db_url,
+            echo=True,
+            poolclass=sqlalchemy.pool.QueuePool,
+            connect_args=connect_args,
         )
         Session = sessionmaker(bind=self.engine)
         self.session = Session()
