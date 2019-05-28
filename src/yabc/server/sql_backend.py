@@ -135,11 +135,13 @@ class SqlBackend:
             )
         return flask.jsonify(result)
 
-    def taxyear_list(self, userid, url_prefix):
+    def taxyear_list(self, userid, url_prefix, suffix):
         """
         Basic statistics and download links for each taxyear the given user has data for.
 
         @param userid
+        @param url_prefix (str): for each row, a link for downloading is displayed.
+        @param suffix (str): file suffix for the downloaded file.
         """
         sale_dates = self.session.query(
             sqlalchemy.distinct(basis.CostBasisReport.date_sold)
@@ -159,7 +161,7 @@ class SqlBackend:
                 int(sum([i.gain_or_loss for i in reports if i.long_term]))
             )
             year_info["url8949"] = "{}/{}".format(url_prefix, ty)
-            year_info["url8949_label"] = "{}-8949.pdf".format(ty)
+            year_info["url8949_label"] = "{}-8949.{}".format(ty, suffix)
             result.append(year_info)
         return flask.jsonify(result)
 
