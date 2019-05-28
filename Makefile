@@ -3,14 +3,15 @@ URL=localhost:5000/yabc/v1
 build: src
 	docker build --tag yabc .
 
-run:
+nuke_db_and_run:
 	rm -f src/instance/*
 	PYTHONPATH=src FLASK_APP=yabc.app FLASK_ENV=development flask init-db
 	PYTHONPATH=src FLASK_APP=yabc.app FLASK_ENV=development flask run
 
+run:
+	PYTHONPATH=src FLASK_APP=yabc.app FLASK_ENV=development flask run
+
 run_no_devel:
-	rm -f src/instance/*
-	PYTHONPATH=src FLASK_APP=yabc.app flask init-db
 	PYTHONPATH=src FLASK_APP=yabc.app flask run
 
 run_docker:
