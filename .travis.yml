@@ -7,4 +7,4 @@ install:
 - pip install --upgrade --force-reinstall --ignore-installed -e .
 script:
 - python setup.py test
-- make run& sleep 5; make test_all
+- make nuke_db_and_run& sleep 5; make test_all
