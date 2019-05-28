@@ -25,11 +25,12 @@ class PdfFiller():
     def __init__(self):
         pass
 
-    def pairs_for_report(self, report, row):
+    def pairs_for_report(self, page, report, row):
         """
         Return list of (key, value) pairs.
         """
-        prefix = 'topmostSubform[0].Page1[0].Table_Line1[0].Row{}[0].f1_{}[0]'
+        assert page in {1, 2}
+        prefix = 'topmostSubform[0].Page{}[0].Table_Line1[0].Row{}[0].f{}_{}[0]'
         key_functions = [
                 lambda report: report.description(),
                 lambda report: report.date_purchased.date().isoformat(),
@@ -44,16 +45,28 @@ class PdfFiller():
         ans = []
         for i, f in enumerate(key_functions):
             field_index = start + (row - 1) * 8 + i
-            ans.append((prefix.format(row, field_index), f(report)))
+            ans.append((prefix.format(page, row, page, field_index), f(report)))
         print(ans)
         return ans
 
 
+    def _pairs_short_term(self, reports):
+        st = filter(lambda x: not x._is_long_term(), reports)
+        ans = []
+        for i, report in enumerate(st):
+            ans.extend(self.pairs_for_report(1, report, i))
+        return ans
+
+    def _pairs_long_term(self, reports):
+        lt = filter(lambda x: x._is_long_term(), reports)
+        ans = []
+        for i, report in enumerate(lt):
+            ans.extend(self.pairs_for_report(2, report, i))
+        return ans
+
     def fill(self, reports):
-        pairs = []
-        for index, r in enumerate(reports[:10]):
-            prefix = 'topmostSubform[0].Page1[0].Table_Line1[0].Row1[0].f1_{}[0]'
-            pairs.extend(self.pairs_for_report(r, index))
+        pairs = self._pairs_long_term(reports)
+        pairs.extend(self._pairs_short_term(reports))
         fdf = forge_fdf("",pairs,[],[],[])
         with open("data.fdf", "wb") as fdf_file:
             fdf_file.write(fdf)
