@@ -275,6 +275,24 @@ def get_all_transactions(coinbase, gemini):
             txs.append(t)
     return txs
 
+def reports_to_pdf(reports: Sequence[CostBasisReport], user_info):
+    _2018_rows = ['descr', 'acquired', 'sold', 'proceeds', 'basis', 'code', 'adjustment', 'gain_or_loss']
+    of = io.StringIO()
+    writer = csv.writer(of)
+    names = CostBasisReport.field_names()
+    writer.writerow(names)
+    pairs = []
+    for r in reports[:1]:
+        prefix = 'topmostSubform[0].Page1[0].Table_Line1[0].Row1[0].f1_{}[0]'
+        for index, field in enumerate(r.fields()):
+            pairs.append((prefix.format(3 + index), field))
+    from fdfgen import forge_fdf
+    fdf = forge_fdf("",pairs,[],[],[])
+    with open("data.fdf", "wb") as fdf_file:
+        fdf_file.write(fdf)
+        import subprocess
+    subprocess.call('pdftk /home/rk/code/yabc/2018-8949.pdf fill_form /home/rk/code/yabc/data.fdf output filled.8949.pdf flatten'.split())
+
 
 def reports_to_csv(reports: Sequence[CostBasisReport]):
     """ Return a file-like object with a row for each report.

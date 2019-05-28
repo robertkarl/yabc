@@ -26,6 +26,7 @@ test_local:
 	curl -F taxdoc=@testdata/synthetic_gemini_csv.csv "${URL}/taxdocs?exchange=gemini&user_id=1"
 	curl -X POST localhost:5000/yabc/v1/run_basis?user_id=1 | grep success
 	curl localhost:5000/yabc/v1/download_8949/2008?user_id=1 2>/dev/null | grep 15026
+	curl localhost:5000/yabc/v1/download_8949_pdf/2008?user_id=1 2>/dev/null | grep 15026
 
 test_buyone_sellone:
 	curl -F taxdoc=@testdata/synthetic_buyone_sellone_coinbase.csv \
