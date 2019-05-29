@@ -29,6 +29,17 @@ from yabc.transaction import PreciseDecimalString
 class CostBasisReport(yabc.Base):
     """
     Represents a row in form 8949.
+    TODO: Add wash sales.
+    TODO: Check that long term results match expected in leap years.
+
+    >>> r = CostBasisReport.make_random_report()
+    >>> r.date_sold = datetime.datetime(2019,1,1)
+    >>> r.date_purchased = datetime.datetime(2018,1,1)
+    >>> r._is_long_term()
+    True
+    >>> r.date_purchased = datetime.datetime(2018,1,2)
+    >>> r._is_long_term()
+    False
     """
 
     _fields = [
@@ -56,6 +67,18 @@ class CostBasisReport(yabc.Base):
     long_term = Column(Boolean)
     user_id = Column(sqlalchemy.Integer, ForeignKey("user.id"))
 
+    @staticmethod
+    def make_random_report():
+        return CostBasisReport(
+            1,
+            Decimal(1),
+            Decimal(1),
+            datetime.datetime.now(),
+            Decimal(2),
+            datetime.datetime.now(),
+            "BTC",
+        )
+
     def __init__(
         self, userid, basis, quantity, date_purchased, proceeds, date_sold, asset
     ):
@@ -77,7 +100,7 @@ class CostBasisReport(yabc.Base):
         self.long_term = self._is_long_term()
 
     def _is_long_term(self):
-        return (self.date_sold - self.date_purchased) > datetime.timedelta(1)
+        return (self.date_sold - self.date_purchased) > datetime.timedelta(364)
 
     def description(self):
         return "{:.6f} {}".format(self.quantity, self.asset_name)
