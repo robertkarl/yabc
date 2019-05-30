@@ -52,6 +52,7 @@ class CostBasisReport(yabc.Base):
         "proceeds",
         "quantity",
         "long_term",
+        "adjustment",
         "user_id",
     ]
 
@@ -64,6 +65,7 @@ class CostBasisReport(yabc.Base):
     gain_or_loss = Column(PreciseDecimalString)
     proceeds = Column(PreciseDecimalString)
     quantity = Column(PreciseDecimalString)
+    adjustment = Column(PreciseDecimalString)
     long_term = Column(Boolean)
     user_id = Column(sqlalchemy.Integer, ForeignKey("user.id"))
 
@@ -80,7 +82,15 @@ class CostBasisReport(yabc.Base):
         )
 
     def __init__(
-        self, userid, basis, quantity, date_purchased, proceeds, date_sold, asset
+        self,
+        userid,
+        basis,
+        quantity,
+        date_purchased,
+        proceeds,
+        date_sold,
+        asset,
+        adjustment=Decimal(0),
     ):
         """
         Note that when pulling items from a SQL alchemy ORM query, this constructor isn't called.
@@ -96,7 +106,7 @@ class CostBasisReport(yabc.Base):
         self.date_sold = date_sold
         self.asset_name = asset
         self.gain_or_loss = self.proceeds - self.basis
-
+        self.adjustment = adjustment
         self.long_term = self._is_long_term()
 
     def _is_long_term(self):
