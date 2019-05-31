@@ -146,7 +146,7 @@ class SqlBackend:
         sale_dates = self.session.query(
             sqlalchemy.distinct(basis.CostBasisReport.date_sold)
         )
-        years = set([i[0].year for i in sale_dates])
+        years = sorted(set([i[0].year for i in sale_dates]))
         result = []
         for ty in years:
             year_info = {"year": ty}
