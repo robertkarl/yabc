@@ -23,7 +23,6 @@ from yabc import user
 
 DB_KEY = "yabc_db"
 
-SCHEMA_VERSION = 3
 
 
 @click.command("init-db")
