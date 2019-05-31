@@ -27,6 +27,8 @@ class PreciseDecimalString(TypeDecorator):
         return str(value)
 
     def process_result_value(self, value, dialect):
+        if not value:
+            value = 0
         return Decimal(value)
 
 
