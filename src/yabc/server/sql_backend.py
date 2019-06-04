@@ -24,7 +24,6 @@ from yabc import user
 DB_KEY = "yabc_db"
 
 
-
 @click.command("init-db")
 @with_appcontext
 def init_db_command():
@@ -61,14 +60,14 @@ class SqlBackend:
     NOTE: We must be able to create SqlBackends without a flask instance running.
 
     """
+
     def __init__(self, db_url=None):
         if db_url is None:
             db_url = flask.current_app.config["DATABASE"]
         # Note: some web servers (aka Flask) will create a new instance of this
         # class for each request.
         self.engine = sqlalchemy.create_engine(
-            db_url,
-            poolclass=sqlalchemy.pool.QueuePool,
+            db_url, poolclass=sqlalchemy.pool.QueuePool
         )
         Session = sessionmaker(bind=self.engine)
         self.session = Session()
@@ -87,7 +86,7 @@ class SqlBackend:
         )
 
     def user_create(self, name):
-        user_obj = user.User(username=name)
+        user_obj = user.User(username=name, password="")
         self.session.add(user_obj)
         self.session.commit()
         return json.dumps(user_obj.id)
@@ -135,7 +134,7 @@ class SqlBackend:
         result = []
         for obj in docs.all():
             if not isinstance(obj.contents, str):
-                # Sqlite seems to return the file contents as bytes, while 
+                # Sqlite seems to return the file contents as bytes, while
                 # Postgres returns a string.
                 obj = obj.decode()
             result.append(
