@@ -42,6 +42,7 @@ def get_db():
 def close_db(e=None):
     db = flask.g.pop(DB_KEY, None)
     if db is not None:
+        print("closing the session.")
         db.session.close()
 
 
@@ -54,6 +55,9 @@ class SqlBackend:
     """
     Handle to the database as well as where DB routines are stored.
 
+    All access to this class should be  done through get_db() above.
+    TODO: move get_db() to be a staticmethod here.
+
     NOTE: We must be able to create SqlBackends without a flask instance running.
 
     """
@@ -62,12 +66,9 @@ class SqlBackend:
             db_url = flask.current_app.config["DATABASE"]
         # Note: some web servers (aka Flask) will create a new instance of this
         # class for each request.
-        print("we are using url {}".format(db_url))
         self.engine = sqlalchemy.create_engine(
             db_url,
-            echo=True,
             poolclass=sqlalchemy.pool.QueuePool,
-            connect_args={"timeout": 15},
         )
         Session = sessionmaker(bind=self.engine)
         self.session = Session()
