@@ -133,16 +133,17 @@ class SqlBackend:
         docs = self.session.query(taxdoc.TaxDoc).filter_by(user_id=userid)
         result = []
         for obj in docs.all():
-            if not isinstance(obj.contents, str):
+            preview = obj.contents[:10]
+            if not isinstance(preview, str):
                 # Sqlite seems to return the file contents as bytes, while
                 # Postgres returns a string.
-                obj = obj.decode()
+                preview = preview.decode()
             result.append(
                 {
                     "userid": obj.user_id,
                     "file_name": obj.file_name,
                     "hash": obj.file_hash,
-                    "preview": obj.contents[:10] + "...",
+                    "preview": preview + "...",
                 }
             )
         return flask.jsonify(result)
