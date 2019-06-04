@@ -21,7 +21,7 @@ def make_transaction(kind, quantity, fees, subtotal):
 
 class SqlTest(unittest.TestCase):
     def setUp(self):
-        self.db = SqlBackend(":memory:")
+        self.db = SqlBackend("sqlite:///:memory:")
         self.db.create_tables()
 
     def test_modify_object(self):

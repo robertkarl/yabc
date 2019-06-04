@@ -119,7 +119,7 @@ def transaction_update(txid):
     if flask.request.method == "DELETE":
         backend.tx_delete(userid, txid)
     elif flask.request.method == "PUT":
-        backend.tx_update(userid, txid, request.values)
+        backend.tx_update(userid, txid, flask.request.values)
     else:
         raise ValueError(
             "method {} not support for transaction".format(flask.request.method)

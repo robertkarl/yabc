@@ -10,3 +10,7 @@ class User(yabc.Base):
     id = Column(Integer, primary_key=True)
     username = Column(String, nullable=False, unique=True)
     password = Column(String)
+
+    def __init__(self, username, password):
+        self.username = username
+        self.password = password

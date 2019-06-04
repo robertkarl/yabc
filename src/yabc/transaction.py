@@ -46,7 +46,7 @@ class Transaction(yabc.Base):
     quantity = Column(PreciseDecimalString)
     source = Column(sqlalchemy.String)
     usd_subtotal = Column(PreciseDecimalString)
-    user_id = Column(sqlalchemy.String, ForeignKey("user.id"))
+    user_id = Column(sqlalchemy.Integer, ForeignKey("user.id"))
 
     def __init__(
         self,

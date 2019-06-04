@@ -24,7 +24,6 @@ from yabc import user
 DB_KEY = "yabc_db"
 
 
-
 @click.command("init-db")
 @with_appcontext
 def init_db_command():
@@ -51,14 +50,24 @@ def init_app(app):
 
 
 class SqlBackend:
-    def __init__(self, db_path):
+    """
+    Handle to the database as well as where DB routines are stored.
+
+    All access to this class should be  done through get_db() above.
+    TODO: move get_db() to be a staticmethod here.
+
+    Two backends are supported: sqlite and postgres. Others may work unintentionally.
+
+    NOTE: We must be able to create SqlBackends without a flask instance running.
+    """
+
+    def __init__(self, db_url=None):
+        if db_url is None:
+            db_url = flask.current_app.config["DATABASE"]
         # Note: some web servers (aka Flask) will create a new instance of this
         # class for each request.
         self.engine = sqlalchemy.create_engine(
-            "sqlite:///{}".format(db_path),
-            echo=True,
-            poolclass=sqlalchemy.pool.QueuePool,
-            connect_args={"timeout": 15},
+            db_url, poolclass=sqlalchemy.pool.QueuePool
         )
         Session = sessionmaker(bind=self.engine)
         self.session = Session()
@@ -77,7 +86,7 @@ class SqlBackend:
         )
 
     def user_create(self, name):
-        user_obj = user.User(username=name)
+        user_obj = user.User(username=name, password="")
         self.session.add(user_obj)
         self.session.commit()
         return json.dumps(user_obj.id)
@@ -124,12 +133,16 @@ class SqlBackend:
         docs = self.session.query(taxdoc.TaxDoc).filter_by(user_id=userid)
         result = []
         for obj in docs.all():
+            if not isinstance(obj.contents, str):
+                # Sqlite seems to return the file contents as bytes, while
+                # Postgres returns a string.
+                obj = obj.decode()
             result.append(
                 {
                     "userid": obj.user_id,
                     "file_name": obj.file_name,
                     "hash": obj.file_hash,
-                    "preview": obj.contents[:10].decode() + "...",
+                    "preview": obj.contents[:10] + "...",
                 }
             )
         return flask.jsonify(result)
