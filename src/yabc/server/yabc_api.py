@@ -1,10 +1,10 @@
 import functools
 import os
-import sqlite3
 
 import flask
 from flask import Blueprint
 
+from yabc import user
 from yabc.server import sql_backend
 
 yabc_api = Blueprint("yabc_api", __name__)
@@ -21,8 +21,8 @@ def is_authorized(userid):
         return True
     if not flask.g.user:
         return False
-    assert isinstance(flask.g.user, sqlite3.Row)
-    if flask.g.user["id"] == userid:
+    assert isinstance(flask.g.user, user.User)
+    if flask.g.user.id == userid:
         return True
     return False
 
@@ -84,8 +84,8 @@ def download_8949(taxyear):
     return result
 
 
-@check_authorized
 @yabc_api.route("/yabc/v1/taxyears", methods=["GET"])
+@check_authorized
 def taxyears():
     """
     No backend data structure corresponds to this endpoint;
@@ -99,8 +99,8 @@ def taxyears():
     return backend.taxyear_list(userid)
 
 
-@check_authorized
 @yabc_api.route("/yabc/v1/taxdocs", methods=["POST", "GET"])
+@check_authorized
 def taxdocs():
     userid = get_userid()
     backend = sql_backend.get_db()
@@ -111,8 +111,8 @@ def taxdocs():
     return backend.taxdoc_create(exchange, userid, submitted_file)
 
 
-@check_authorized
 @yabc_api.route("/yabc/v1/transactions/<txid>", methods=["DELETE"])
+@check_authorized
 def transaction_update(txid):
     userid = get_userid()
     backend = sql_backend.get_db()
@@ -128,8 +128,8 @@ def transaction_update(txid):
     return flask.jsonify({"result": "Deleted transaction with id {}".format(txid)})
 
 
-@check_authorized
 @yabc_api.route("/yabc/v1/transactions", methods=["GET", "POST"])
+@check_authorized
 def transactions():
     userid = get_userid()
     backend = sql_backend.get_db()
@@ -140,8 +140,8 @@ def transactions():
     return backend.add_tx(userid, tx)
 
 
-@check_authorized
 @yabc_api.route("/yabc/v1/users/<userid>", methods=["GET"])
+@check_authorized
 def user_read(userid):
     backend = sql_backend.get_db()
     return backend.user_read(userid)
