@@ -41,7 +41,6 @@ def get_db():
 def close_db(e=None):
     db = flask.g.pop(DB_KEY, None)
     if db is not None:
-        print("closing the session.")
         db.session.close()
 
 
@@ -57,8 +56,9 @@ class SqlBackend:
     All access to this class should be  done through get_db() above.
     TODO: move get_db() to be a staticmethod here.
 
-    NOTE: We must be able to create SqlBackends without a flask instance running.
+    Two backends are supported: sqlite and postgres. Others may work unintentionally.
 
+    NOTE: We must be able to create SqlBackends without a flask instance running.
     """
 
     def __init__(self, db_url=None):

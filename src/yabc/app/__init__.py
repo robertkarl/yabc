@@ -8,16 +8,11 @@ import yabc.server.yabc_api
 
 def create_app(test_config=None):
     """
-    Generate the flask app.    app = Flask(__name__,
-    instance_relative_config=True) app.config.from_mapping( Which database to
-    use, highest priority first:        SECRET_KEY="dev",
-    DATABASE=os.path.join(app.instance_path, "yabc.sqlite")) 
-    
+    Generate the flask app. Which database to use, highest priority first:
+
     1) any DATABASE value set in test_config 
-
     2) any DATABASE value set in config.py
-
-    3) a sqlite database: by default named sqlite:///{app.instance_path}/yabc.sqlite
+    3) sqlite:///{app.instance_path}/yabc.sqlite
 
     """
 
