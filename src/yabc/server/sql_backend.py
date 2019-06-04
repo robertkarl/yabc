@@ -51,11 +51,20 @@ def init_app(app):
 
 
 class SqlBackend:
-    def __init__(self, db_path):
+    """
+    Handle to the database as well as where DB routines are stored.
+
+    NOTE: We must be able to create SqlBackends without a flask instance running.
+
+    """
+    def __init__(self, db_url=None):
+        if db_url is None:
+            db_url = flask.current_app.config["DATABASE"]
         # Note: some web servers (aka Flask) will create a new instance of this
         # class for each request.
+        print("we are using url {}".format(db_url))
         self.engine = sqlalchemy.create_engine(
-            "sqlite:///{}".format(db_path),
+            db_url,
             echo=True,
             poolclass=sqlalchemy.pool.QueuePool,
             connect_args={"timeout": 15},
@@ -124,12 +133,16 @@ class SqlBackend:
         docs = self.session.query(taxdoc.TaxDoc).filter_by(user_id=userid)
         result = []
         for obj in docs.all():
+            if not isinstance(obj.contents, str):
+                # Sqlite seems to return the file contents as bytes, while 
+                # Postgres returns a string.
+                obj = obj.decode()
             result.append(
                 {
                     "userid": obj.user_id,
                     "file_name": obj.file_name,
                     "hash": obj.file_hash,
-                    "preview": obj.contents[:10].decode() + "...",
+                    "preview": obj.contents[:10] + "...",
                 }
             )
         return flask.jsonify(result)
