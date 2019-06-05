@@ -49,6 +49,8 @@ class CostBasisReport(yabc.Base):
     False
     """
 
+    WASH_CODE = 'W'
+
     _fields = [
         "id",
         "asset_name",
@@ -71,6 +73,7 @@ class CostBasisReport(yabc.Base):
     proceeds = Column(PreciseDecimalString)
     quantity = Column(PreciseDecimalString)
     adjustment = Column(PreciseDecimalString)
+    adjustment_code = Column(sqlalchemy.String)
     long_term = Column(Boolean)
     user_id = Column(sqlalchemy.Integer, ForeignKey("user.id"))
 
