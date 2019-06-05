@@ -3,7 +3,7 @@
 import setuptools
 
 setuptools.setup(
-    version="0.0.14",
+    version="0.0.15",
     name="yabc",
     python_requires="~=3.5",
     author="Robert Karl",
