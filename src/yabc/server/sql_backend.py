@@ -158,7 +158,7 @@ class SqlBackend:
         """
         sale_dates = self.session.query(
             sqlalchemy.distinct(basis.CostBasisReport.date_sold)
-        )
+        ).filter_by(user_id=userid)
         years = sorted(set([i[0].year for i in sale_dates]))
         result = []
         for ty in years:
@@ -184,6 +184,8 @@ class SqlBackend:
 
         Also perform inserts for each of its rows.
 
+        TODO: run the basis too
+
         @param submitted_file: a filelike object
         exchange and userid should be strings.
         """
@@ -203,6 +205,7 @@ class SqlBackend:
             t.user_id = userid
             self.session.add(t)
         self.session.commit()
+        self.run_basis(userid)  # TODO: determine if this is a performance bottleneck.
         return flask.jsonify(
             {
                 "hash": contents_md5_hash,
@@ -224,7 +227,6 @@ class SqlBackend:
 
         Returns: just a status
         """
-        docs = self.session.query(taxdoc.TaxDoc).filter_by(user_id=userid)
         all_txs = list(
             self.session.query(transaction.Transaction).filter_by(user_id=userid)
         )

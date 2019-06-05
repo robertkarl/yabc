@@ -13,8 +13,10 @@ from sqlalchemy import Integer
 import yabc
 from yabc.transaction import PreciseDecimalString
 
+
 def round_to_dollar(dec: decimal.Decimal):
     return dec.quantize(1)
+
 
 def round_to_dollar_str(dec):
     """
@@ -29,8 +31,6 @@ def round_to_dollar_str(dec):
     '-1.'
     """
     return "{:.0f}.".format(round_to_dollar(dec))
-
-
 
 
 class CostBasisReport(yabc.Base):
@@ -87,15 +87,15 @@ class CostBasisReport(yabc.Base):
         )
 
     def __init__(
-            self,
-            userid,
-            basis,
-            quantity,
-            date_purchased,
-            proceeds,
-            date_sold,
-            asset,
-            adjustment=Decimal(0),
+        self,
+        userid,
+        basis,
+        quantity,
+        date_purchased,
+        proceeds,
+        date_sold,
+        asset,
+        adjustment=Decimal(0),
     ):
         """
         Note that when pulling items from a SQL alchemy ORM query, this constructor isn't called.
@@ -117,7 +117,7 @@ class CostBasisReport(yabc.Base):
         return (self.date_sold - self.date_purchased) > datetime.timedelta(364)
 
     def __getattr__(self, item):
-        if item == 'gain_or_loss':
+        if item == "gain_or_loss":
             return self.get_gain_or_loss(True)
         raise AttributeError()
 
@@ -172,7 +172,9 @@ class ReportBatch:
     >>> batch_no_rounding.totals()['gain_or_loss'] == decimal.Decimal('3')
     True
     """
+
     KEYS = ["proceeds", "basis", "adjustment", "gain_or_loss"]
+
     def __init__(self, reports, round_dollars=True):
         self.reports = reports
         self.round_dollars = round_dollars
@@ -193,4 +195,3 @@ class ReportBatch:
                 for key in self.KEYS:
                     self._totals[key] += self._round_if_necessary(getattr(r, key))
         return self._totals
-
