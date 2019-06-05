@@ -8,24 +8,13 @@ __author__ = "Robert Karl <robertkarljr@gmail.com>"
 
 import copy
 import csv
-import datetime
 import io
 from decimal import Decimal
 from typing import Sequence
 
-import sqlalchemy
-from sqlalchemy import Boolean
-from sqlalchemy import Column
-from sqlalchemy import DateTime
-from sqlalchemy import ForeignKey
-from sqlalchemy import Integer
-
-import yabc
 from yabc import csv_to_json
 from yabc import transaction
-from yabc.transaction import PreciseDecimalString
 from yabc.costbasisreport import CostBasisReport
-
 
 
 def split_coin_to_add(coin_to_split, amount, trans):

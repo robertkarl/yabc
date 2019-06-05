@@ -17,6 +17,7 @@ from sqlalchemy.orm import sessionmaker
 
 from yabc import Base
 from yabc import basis
+from yabc import costbasisreport
 from yabc import taxdoc
 from yabc import transaction
 from yabc import user
@@ -98,11 +99,9 @@ class SqlBackend:
         return flask.jsonify({"error": "invalid userid"})
 
     def tx_delete(self, userid, txid):
-        docs = (
-            self.session.query(transaction.Transaction)
-            .filter_by(user_id=userid, id=txid)
-            .delete()
-        )
+        self.session.query(transaction.Transaction).filter_by(
+            user_id=userid, id=txid
+        ).delete()
         self.session.commit()
 
     def tx_update(self, userid, txid, values):
@@ -124,7 +123,6 @@ class SqlBackend:
             ans.append(tx_dict)
             for numeric_key in ("usd_subtotal", "fees", "quantity"):
                 tx_dict[numeric_key] = str(tx_dict[numeric_key])
-        # TODO: don't use jsonify as it requires a flask app context and fails in tests.
         for item in ans:
             item["date"] = str(item["date"])
         return json.dumps(ans)
@@ -158,7 +156,7 @@ class SqlBackend:
         """
         sale_dates = self.session.query(
             sqlalchemy.distinct(basis.CostBasisReport.date_sold)
-        )
+        ).filter_by(user_id=userid)
         years = sorted(set([i[0].year for i in sale_dates]))
         result = []
         for ty in years:
@@ -182,7 +180,8 @@ class SqlBackend:
         """
         Add the tx doc for this user.
 
-        Also perform inserts for each of its rows.
+        - Perform inserts for each of its rows.
+        - Recalculate CostBasisReports also.
 
         @param submitted_file: a filelike object
         exchange and userid should be strings.
@@ -203,6 +202,7 @@ class SqlBackend:
             t.user_id = userid
             self.session.add(t)
         self.session.commit()
+        self.run_basis(userid)  # TODO: determine if this is a performance bottleneck.
         return flask.jsonify(
             {
                 "hash": contents_md5_hash,
@@ -215,6 +215,8 @@ class SqlBackend:
 
     def run_basis(self, userid):
         """
+        Clear any CostBasisReports for this user in the database. Then recalculate them.
+
         TODO: There is some impedance mismatch between flask and python's csv
         module.  csv requires CSVs to be written as strings, while flask's
         underlying web server requires applications to write binary responses.
@@ -224,7 +226,9 @@ class SqlBackend:
 
         Returns: just a status
         """
-        docs = self.session.query(taxdoc.TaxDoc).filter_by(user_id=userid)
+        self.session.query(costbasisreport.CostBasisReport).filter_by(
+            user_id=userid
+        ).delete()
         all_txs = list(
             self.session.query(transaction.Transaction).filter_by(user_id=userid)
         )
