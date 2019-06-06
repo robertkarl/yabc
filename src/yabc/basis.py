@@ -3,6 +3,9 @@ Calculating the cost basis.
 
 TODO: Add other accounting methods than FIFO, most notably LIFO.
 """
+import datetime
+
+from yabc.transaction import Transaction
 
 __author__ = "Robert Karl <robertkarljr@gmail.com>"
 
@@ -42,7 +45,7 @@ def split_coin_to_add(coin_to_split, amount, trans):
     return to_add
 
 
-def split_report(coin_to_split, amount, trans):
+def split_report(coin_to_split, amount, trans, wash_sales):
     """
     The cost basis logic. Note that all fees on buy and sell sides are
     subtracted from the taxable result.
@@ -51,14 +54,10 @@ def split_report(coin_to_split, amount, trans):
         income_subtotal = proceeds - fees
         taxable_income = income_subtotal - basis
 
-    parameters:
-
-        coin_to_split (Transaction): part of this will be the cost basis
-        portion of this report
-
-        amount (Float): quantity of the split asset that needs to be sold in this report (not the USD).
-
-        trans (Transaction): the transaction triggering this report
+    :param coin_to_split: part of this will be the cost basis portion of this report
+    :param amount: quantity of the split asset that needs to be sold in this report (not the USD).
+    :param trans: the transaction triggering this report
+    :return: a CostBasisReport
     """
     assert isinstance(amount, Decimal)
     assert isinstance(coin_to_split, transaction.Transaction)
@@ -75,6 +74,7 @@ def split_report(coin_to_split, amount, trans):
     frac_of_sale_tx = amount / trans.quantity
     proceeds = (frac_of_sale_tx * trans.usd_subtotal).quantize(Decimal(".01"))
     sale_fee = (frac_of_sale_tx * trans.fees).quantize(Decimal(".01"))
+    at_least_breakeven = (proceeds - sale_fee) - (purchase_price + purchase_fee) >= 0
     return CostBasisReport(
         trans.user_id,
         purchase_price + purchase_fee,
@@ -83,10 +83,11 @@ def split_report(coin_to_split, amount, trans):
         proceeds - sale_fee,
         trans.date,
         trans.asset_name,
+        adjustment_code=CostBasisReport.WASH_CODE if ((trans in wash_sales) and not at_least_breakeven) else None
     )
 
 
-def process_one(trans, pool):
+def process_one(trans, pool, wash_sales=set()):
     """
     FIFO cost basis calculator for a single transaction. Return the 'diff'
     required to process this one tx.
@@ -113,6 +114,7 @@ def process_one(trans, pool):
     cost_basis_reports = []
     amount = Decimal(0)
     pool_index = -1
+    do_the_wash = trans in wash_sales
 
     if trans.operation == "Buy":
         return {"basis_reports": [], "add": trans, "remove_index": -1}
@@ -131,7 +133,7 @@ def process_one(trans, pool):
         excess = amount - trans.quantity
         portion_of_split_coin_to_sell = coin_to_split.quantity - excess
         cost_basis_reports.append(
-            split_report(coin_to_split, portion_of_split_coin_to_sell, trans)
+            split_report(coin_to_split, portion_of_split_coin_to_sell, trans, wash_sales)
         )
         to_add = split_coin_to_add(coin_to_split, portion_of_split_coin_to_sell, trans)
     needs_remove = pool_index
@@ -217,6 +219,21 @@ def process_all(method, txs):
         return process_all_fifo(txs)
     raise ValueError("Invalid method {}".format(method))
 
+WASH_THRESHOLD = datetime.timedelta(30)
+
+def get_wash_sales(txs):
+    """
+    :param txs: a sequence of transactions
+    :return: a set containing those txs which are wash sales
+    """
+    purchases = filter(lambda x: x.operation == Transaction.BUY, txs)
+    sales = filter(lambda x: x.operation == Transaction.SELL, txs)
+    ans = set()
+    for tx in sales:
+        for purchase in purchases:
+            if abs(purchase.date - tx.date) < WASH_THRESHOLD:
+                ans.add(tx)
+    return ans
 
 def process_all_fifo(txs):
     """
@@ -229,8 +246,9 @@ def process_all_fifo(txs):
     pool = []
     to_process = sorted(txs, key=lambda tx: tx.date)
     irs_reports = []
+    wash_sales = get_wash_sales(txs)
     for tx in to_process:
-        ops = process_one(tx, pool)
+        ops = process_one(tx, pool, wash_sales)
         reports = ops["basis_reports"]
         to_add = ops["add"]
         remove_index = ops["remove_index"]

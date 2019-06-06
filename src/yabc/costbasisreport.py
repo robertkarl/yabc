@@ -99,6 +99,7 @@ class CostBasisReport(yabc.Base):
         date_sold,
         asset,
         adjustment=Decimal(0),
+        adjustment_code=None,
     ):
         """
         Note that when pulling items from a SQL alchemy ORM query, this constructor isn't called.
@@ -115,6 +116,7 @@ class CostBasisReport(yabc.Base):
         self.asset_name = asset
         self.adjustment = adjustment
         self.long_term = self._is_long_term()
+        self.adjustment_code = adjustment_code
 
     def _is_long_term(self):
         return (self.date_sold - self.date_purchased) > datetime.timedelta(364)
@@ -136,6 +138,11 @@ class CostBasisReport(yabc.Base):
         proceeds = round_to_dollar(self.proceeds) if round_dollars else self.proceeds
         basis = round_to_dollar(self.basis) if round_dollars else self.basis
         return proceeds - basis
+
+    def get_adjustment(self, round_dollars=True):
+        if self.adjustment_code == self.WASH_CODE:
+            return -1 * self.get_gain_or_loss(round_dollars)
+        return decimal.Decimal(0)
 
     def description(self):
         return "{:.6f} {}".format(self.quantity, self.asset_name)

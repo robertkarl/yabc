@@ -64,7 +64,7 @@ class TransactionTest(unittest.TestCase):
         proceeds = 100
         buy = make_transaction("Buy", 1.0, 0, 100.0)
         sell = make_transaction("Sell", 1.0, 0, 100.0)
-        report = basis.split_report(buy, Decimal("0.5"), sell)
+        report = basis.split_report(buy, Decimal("0.5"), sell, set())
         self.assertEqual(report.gain_or_loss, 0)
 
     def test_split_report(self):
@@ -72,7 +72,7 @@ class TransactionTest(unittest.TestCase):
         """
         buy = make_transaction("Buy", 1.0, 10, 100.0)
         sell = make_transaction("Sell", 1.0, 10, 200.0)
-        report = basis.split_report(buy, Decimal("0.5"), sell)
+        report = basis.split_report(buy, Decimal("0.5"), sell, set())
         ans_basis = 55.0
         sale_basis = 95.0
         ans_gain_or_loss = 40.0
@@ -87,7 +87,7 @@ class TransactionTest(unittest.TestCase):
         sell = make_transaction("Sell", 2.0, 0, 100.0)
         with self.assertRaises(AssertionError):
             basis.split_report(
-                buy, purchase_quantity, sell
+                buy, purchase_quantity, sell, set()
             )  # Should not split the basis coin, quantity matches
 
     def test_from_coinbase_buy(self):

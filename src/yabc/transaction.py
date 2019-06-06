@@ -36,6 +36,8 @@ class Transaction(yabc.Base):
     """
     Exchange-independent representation of a transaction (buy or sell)
     """
+    SELL = 'Sell'
+    BUY = 'Buy'
 
     __tablename__ = "transaction"
     id = Column(Integer, primary_key=True)
@@ -47,6 +49,7 @@ class Transaction(yabc.Base):
     source = Column(sqlalchemy.String)
     usd_subtotal = Column(PreciseDecimalString)
     user_id = Column(sqlalchemy.Integer, ForeignKey("user.id"))
+    is_wash_sale = Column(sqlalchemy.Boolean)
 
     def __init__(
         self,
@@ -58,6 +61,7 @@ class Transaction(yabc.Base):
         source=None,
         usd_subtotal=0,
         user_id="",
+            is_wash_sale=False,
     ):
         assert operation in ["Buy", "Sell"]
         assert date is not None
@@ -71,6 +75,7 @@ class Transaction(yabc.Base):
         self.asset_name = asset_name
         self.user_id = user_id
         self.fees = Decimal(fees)
+        self.is_wash_sale = is_wash_sale
 
     @staticmethod
     def FromCoinbaseJSON(json):
