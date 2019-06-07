@@ -102,7 +102,6 @@ def from_coinbase(f):
     return USD_and_back
 
 
-
 def get_transactions_to_USD(fname, exchange):
     if exchange == "coinbase":
         return coinbase_to_dict(fname)

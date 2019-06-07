@@ -1,12 +1,6 @@
 """
 Track the sql alchemy session and provide methods for endpoints.
 """
-from yabc.basis import transactions_from_file
-from yabc.costbasisreport import CostBasisReport
-from yabc.user import User
-
-__author__ = "Robert Karl <robertkarljr@gmail.com>"
-
 import datetime
 import hashlib
 import io
@@ -24,6 +18,12 @@ from yabc import costbasisreport
 from yabc import taxdoc
 from yabc import transaction
 from yabc import user
+from yabc.basis import transactions_from_file
+from yabc.costbasisreport import CostBasisReport
+from yabc.user import User
+
+__author__ = "Robert Karl <robertkarljr@gmail.com>"
+
 
 DB_KEY = "yabc_db"
 
@@ -186,7 +186,9 @@ class SqlBackend:
             for key in dollar_keys:
                 year_info[key] = "${}".format(year_info[key])
             year_info["url8949"] = "{}/{}".format(url_prefix, ty)
-            year_info["url8949_label"] = "{}-{}-8949.{}".format(user.username, ty, suffix)
+            year_info["url8949_label"] = "{}-{}-8949.{}".format(
+                user.username, ty, suffix
+            )
             result.append(year_info)
         return flask.jsonify(result)
 
@@ -204,7 +206,11 @@ class SqlBackend:
             except:
                 pass
         if not exchange:
-            raise RuntimeError("Could not autodetect exchange for file {}".format(submitted_file.filename))
+            raise RuntimeError(
+                "Could not autodetect exchange for file {}".format(
+                    submitted_file.filename
+                )
+            )
         return exchange
 
     def taxdoc_create(self, userid, submitted_file):
