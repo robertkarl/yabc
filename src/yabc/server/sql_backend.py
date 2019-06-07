@@ -1,9 +1,6 @@
 """
 Track the sql alchemy session and provide methods for endpoints.
 """
-
-__author__ = "Robert Karl <robertkarljr@gmail.com>"
-
 import datetime
 import hashlib
 import io
@@ -21,6 +18,12 @@ from yabc import costbasisreport
 from yabc import taxdoc
 from yabc import transaction
 from yabc import user
+from yabc.basis import transactions_from_file
+from yabc.costbasisreport import CostBasisReport
+from yabc.user import User
+
+__author__ = "Robert Karl <robertkarljr@gmail.com>"
+
 
 DB_KEY = "yabc_db"
 
@@ -99,9 +102,16 @@ class SqlBackend:
         return flask.jsonify({"error": "invalid userid"})
 
     def tx_delete(self, userid, txid):
+        """
+        Note that we need to clear BasisReports if transactions change.
+        :param userid:
+        :param txid:
+        :return:
+        """
         self.session.query(transaction.Transaction).filter_by(
             user_id=userid, id=txid
         ).delete()
+        self.session.query(CostBasisReport).filter_by(user_id=userid).delete()
         self.session.commit()
 
     def tx_update(self, userid, txid, values):
@@ -154,6 +164,7 @@ class SqlBackend:
         @param url_prefix (str): for each row, a link for downloading is displayed.
         @param suffix (str): file suffix for the downloaded file.
         """
+        user = self.session.query(User).filter_by(id=userid).first()
         sale_dates = self.session.query(
             sqlalchemy.distinct(basis.CostBasisReport.date_sold)
         ).filter_by(user_id=userid)
@@ -162,6 +173,7 @@ class SqlBackend:
         for ty in years:
             year_info = {"year": ty}
             reports = list(self.reports_in_taxyear(userid, ty))
+            dollar_keys = ["taxable_income", "shortterm", "longterm"]
             year_info["taxable_income"] = str(
                 int(sum([i.gain_or_loss for i in reports]))
             )
@@ -171,12 +183,37 @@ class SqlBackend:
             year_info["longterm"] = str(
                 int(sum([i.gain_or_loss for i in reports if i.long_term]))
             )
+            for key in dollar_keys:
+                year_info[key] = "${}".format(year_info[key])
             year_info["url8949"] = "{}/{}".format(url_prefix, ty)
-            year_info["url8949_label"] = "{}-8949.{}".format(ty, suffix)
+            year_info["url8949_label"] = "{}-{}-8949.{}".format(
+                user.username, ty, suffix
+            )
             result.append(year_info)
         return flask.jsonify(result)
 
-    def taxdoc_create(self, exchange, userid, submitted_file):
+    @staticmethod
+    def _detect_exchange(submitted_file):
+        exchanges = set(["coinbase", "gemini"])
+        for exc in exchanges:
+            if exc in submitted_file.filename.lower():
+                return exc
+        for exc in exchanges:
+            submitted_file.seek(0)
+            try:
+                transactions_from_file(submitted_file, exc)
+                exchange = exc
+            except:
+                pass
+        if not exchange:
+            raise RuntimeError(
+                "Could not autodetect exchange for file {}".format(
+                    submitted_file.filename
+                )
+            )
+        return exchange
+
+    def taxdoc_create(self, userid, submitted_file):
         """
         Add the tx doc for this user.
 
@@ -187,6 +224,7 @@ class SqlBackend:
         exchange and userid should be strings.
         """
         submitted_stuff = submitted_file.read()
+        exchange = self._detect_exchange(submitted_file)
         submitted_file.seek(0)
         tx = basis.transactions_from_file(submitted_file, exchange)
         contents_md5_hash = hashlib.md5(submitted_stuff).hexdigest()

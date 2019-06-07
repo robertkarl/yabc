@@ -55,7 +55,6 @@ def txs_from_coinbase(f):
 
 
 def from_gemini(f):
-    fieldnames = []
     rawcsv = [i for i in csv.reader(f)]
     fieldnames = rawcsv[0]
     f.seek(0)
@@ -80,7 +79,7 @@ def from_coinbase(f):
     """
     rawcsv = [i for i in csv.reader(f)]
     if len(rawcsv) < 4:
-        raise ValueError("Invalid CSV file {}, not enough rows.".format(fname))
+        raise ValueError("Invalid CSV file, not enough rows.")
     fieldnames = rawcsv[4]
     assert fieldnames[-2].count("Coinbase") > 0
     fieldnames[-1] = "Bitcoin Hash"
@@ -108,4 +107,4 @@ def get_transactions_to_USD(fname, exchange):
         return coinbase_to_dict(fname)
     elif exchange == "gemini":
         return gemini_to_dict(fname)
-    assert false
+    assert False
