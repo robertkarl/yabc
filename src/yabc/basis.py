@@ -120,9 +120,6 @@ def process_one(trans, pool):
     while amount < trans.quantity:
         pool_index += 1
         amount += pool[pool_index].quantity
-    # TODO we should be using Satoshis for this accounting. We should deal with
-    # edge cases such as "transactions rounding to $0.00" elsewhere (when the
-    # 8949 is generated.
     needs_split = (amount - trans.quantity) > 1e-5
 
     to_add = None

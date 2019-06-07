@@ -1,6 +1,8 @@
 """
 Track the sql alchemy session and provide methods for endpoints.
 """
+from yabc.basis import transactions_from_file
+from yabc.costbasisreport import CostBasisReport
 
 __author__ = "Robert Karl <robertkarljr@gmail.com>"
 
@@ -99,9 +101,16 @@ class SqlBackend:
         return flask.jsonify({"error": "invalid userid"})
 
     def tx_delete(self, userid, txid):
+        """
+        Note that we need to clear BasisReports if transactions change.
+        :param userid:
+        :param txid:
+        :return:
+        """
         self.session.query(transaction.Transaction).filter_by(
             user_id=userid, id=txid
         ).delete()
+        self.session.query(CostBasisReport).filter_by(user_id=userid).delete()
         self.session.commit()
 
     def tx_update(self, userid, txid, values):
@@ -176,7 +185,24 @@ class SqlBackend:
             result.append(year_info)
         return flask.jsonify(result)
 
-    def taxdoc_create(self, exchange, userid, submitted_file):
+    @staticmethod
+    def _detect_exchange(submitted_file):
+        exchanges = set(["coinbase", "gemini"])
+        for exc in exchanges:
+            if exc in submitted_file.filename.lower():
+                return exc
+        for exc in exchanges:
+            submitted_file.seek(0)
+            try:
+                transactions_from_file(submitted_file, exc)
+                exchange = exc
+            except:
+                pass
+        if not exchange:
+            raise RuntimeError("Could not autodetect exchange for file {}".format(submitted_file.filename))
+        return exchange
+
+    def taxdoc_create(self, userid, submitted_file):
         """
         Add the tx doc for this user.
 
@@ -187,6 +213,7 @@ class SqlBackend:
         exchange and userid should be strings.
         """
         submitted_stuff = submitted_file.read()
+        exchange = self._detect_exchange(submitted_file)
         submitted_file.seek(0)
         tx = basis.transactions_from_file(submitted_file, exchange)
         contents_md5_hash = hashlib.md5(submitted_stuff).hexdigest()

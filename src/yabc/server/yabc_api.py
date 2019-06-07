@@ -106,9 +106,8 @@ def taxdocs():
     backend = sql_backend.get_db()
     if flask.request.method == "GET":
         return backend.taxdoc_list(userid)
-    exchange = flask.request.values["exchange"]
     submitted_file = flask.request.files["taxdoc"]
-    return backend.taxdoc_create(exchange, userid, submitted_file)
+    return backend.taxdoc_create(userid, submitted_file)
 
 
 @yabc_api.route("/yabc/v1/transactions/<txid>", methods=["DELETE"])

@@ -9,7 +9,7 @@ import yabc
 class TaxDoc(yabc.Base):
 
     """
-    TODO: Encrypt the contents. And probably the file names.
+    TODO: If we need to store these, do so in an encrypted object storage, not as rows in a databse.
     """
 
     __tablename__ = "taxdoc"
