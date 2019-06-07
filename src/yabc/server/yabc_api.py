@@ -6,6 +6,7 @@ from flask import Blueprint
 
 from yabc import user
 from yabc.server import sql_backend
+from yabc.user import User
 
 yabc_api = Blueprint("yabc_api", __name__)
 bp = yabc_api
@@ -74,11 +75,13 @@ def download_8949(taxyear):
     """
     userid = get_userid()
     backend = sql_backend.get_db()
+    user = backend.session.query(User).filter_by(id=userid).first()
     of = backend.download_8949(userid, int(taxyear))
     result = flask.send_file(
         of,
         mimetype="text/csv",
-        attachment_filename="{}-8949.csv".format(taxyear),
+        cache_timeout=1,
+        attachment_filename="{}-{}-8949.csv".format(user.username, taxyear),
         as_attachment=True,
     )
     return result

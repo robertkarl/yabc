@@ -3,6 +3,7 @@ Track the sql alchemy session and provide methods for endpoints.
 """
 from yabc.basis import transactions_from_file
 from yabc.costbasisreport import CostBasisReport
+from yabc.user import User
 
 __author__ = "Robert Karl <robertkarljr@gmail.com>"
 
@@ -163,6 +164,7 @@ class SqlBackend:
         @param url_prefix (str): for each row, a link for downloading is displayed.
         @param suffix (str): file suffix for the downloaded file.
         """
+        user = self.session.query(User).filter_by(id=userid).first()
         sale_dates = self.session.query(
             sqlalchemy.distinct(basis.CostBasisReport.date_sold)
         ).filter_by(user_id=userid)
@@ -171,6 +173,7 @@ class SqlBackend:
         for ty in years:
             year_info = {"year": ty}
             reports = list(self.reports_in_taxyear(userid, ty))
+            dollar_keys = ["taxable_income", "shortterm", "longterm"]
             year_info["taxable_income"] = str(
                 int(sum([i.gain_or_loss for i in reports]))
             )
@@ -180,8 +183,10 @@ class SqlBackend:
             year_info["longterm"] = str(
                 int(sum([i.gain_or_loss for i in reports if i.long_term]))
             )
+            for key in dollar_keys:
+                year_info[key] = "${}".format(year_info[key])
             year_info["url8949"] = "{}/{}".format(url_prefix, ty)
-            year_info["url8949_label"] = "{}-8949.{}".format(ty, suffix)
+            year_info["url8949_label"] = "{}-{}-8949.{}".format(user.username, ty, suffix)
             result.append(year_info)
         return flask.jsonify(result)
 
