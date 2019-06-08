@@ -174,17 +174,11 @@ class SqlBackend:
             year_info = {"year": ty}
             reports = list(self.reports_in_taxyear(userid, ty))
             dollar_keys = ["taxable_income", "shortterm", "longterm"]
-            year_info["taxable_income"] = str(
-                int(sum([i.gain_or_loss for i in reports]))
-            )
-            year_info["shortterm"] = str(
-                int(sum([i.gain_or_loss for i in reports if not i.long_term]))
-            )
-            year_info["longterm"] = str(
-                int(sum([i.gain_or_loss for i in reports if i.long_term]))
-            )
+            year_info["taxable_income"] = int(sum([i.gain_or_loss for i in reports]))
+            year_info["shortterm"] = int(sum([i.gain_or_loss for i in reports if not i.long_term]))
+            year_info["longterm"] = int(sum([i.gain_or_loss for i in reports if i.long_term]))
             for key in dollar_keys:
-                year_info[key] = "${}".format(year_info[key])
+                year_info[key] = "${:,}".format(year_info[key])
             year_info["url8949"] = "{}/{}".format(url_prefix, ty)
             year_info["url8949_label"] = "{}-{}-8949.{}".format(
                 user.username, ty, suffix
