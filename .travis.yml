@@ -8,3 +8,6 @@ install:
 script:
 - python setup.py test
 - make nuke_db_and_run& sleep 5; make test_all
+branches:
+  only:
+    - master
