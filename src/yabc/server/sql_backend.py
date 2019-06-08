@@ -175,8 +175,12 @@ class SqlBackend:
             reports = list(self.reports_in_taxyear(userid, ty))
             dollar_keys = ["taxable_income", "shortterm", "longterm"]
             year_info["taxable_income"] = int(sum([i.gain_or_loss for i in reports]))
-            year_info["shortterm"] = int(sum([i.gain_or_loss for i in reports if not i.long_term]))
-            year_info["longterm"] = int(sum([i.gain_or_loss for i in reports if i.long_term]))
+            year_info["shortterm"] = int(
+                sum([i.gain_or_loss for i in reports if not i.long_term])
+            )
+            year_info["longterm"] = int(
+                sum([i.gain_or_loss for i in reports if i.long_term])
+            )
             for key in dollar_keys:
                 if year_info[key] >= 0:
                     year_info[key] = "${:,}".format(year_info[key])
