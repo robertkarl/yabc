@@ -164,11 +164,14 @@ class SqlBackend:
         @param url_prefix (str): for each row, a link for downloading is displayed.
         @param suffix (str): file suffix for the downloaded file.
         """
+        current_year = 2019
         user = self.session.query(User).filter_by(id=userid).first()
         sale_dates = self.session.query(
             sqlalchemy.distinct(basis.CostBasisReport.date_sold)
         ).filter_by(user_id=userid)
-        years = sorted(set([i[0].year for i in sale_dates]))
+        years = set([i[0].year for i in sale_dates])
+        years.discard(current_year)
+        years = sorted(years)
         result = []
         for ty in years:
             year_info = {"year": ty}

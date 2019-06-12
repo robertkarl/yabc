@@ -1,0 +1,15 @@
+Transactions,,,,,,,,,,,,,,,,,,,,,
+User,fakeboi@fakeyboi.net,cafebabe,,,,,,,,,,,,,,,,,,,
+Account,BTC Wallet,deadbeef,,,,,,,,,,,,,,,,,,,
+
+Timestamp,Balance,Amount,Currency,To,Notes,Instantly Exchanged,Transfer Total,Transfer Total Currency,Transfer Fee,Transfer Fee Currency,Transfer Payment Method,Transfer ID,Order Price,Order Currency,Order BTC,Order Tracking Code,Order Custom Parameter,Order Paid Out,Recurring Payment ID,Coinbase ID (visit https://www.coinbase.com/transactions/[ID] in your browser),Bitcoin Hash (visit https://www.coinbase.com/tx/[HASH] in your browser for more info)
+5/6/12 1:12,,15,BTC,cafebabe,,FALSE,275,USD,7.46,USD,,,,,,,,,,deadbeef,deadbeef
+4/21/13 1:12,,-1,BTC,cafebabe,,FALSE,1993.93,USD,48.44,USD,,,,,,,,,,deadbeef,deadbeef
+,,,,,,,,,,,,,,,,,,,,,
+4/21/14 1:12,,-1,BTC,cafebabe,,FALSE,1993.93,USD,48.44,USD,,,,,,,,,,deadbeef,deadbeef
+4/21/15,,-1,BTC,cafebabe,,FALSE,1993.93,USD,48.44,USD,,,,,,,,,,deadbeef,deadbeef
+4/21/16 1:12,,-1,BTC,cafebabe,,FALSE,1993.93,USD,48.44,USD,,,,,,,,,,deadbeef,deadbeef
+,,,,,,,,,,,,,,,,,,,,,
+4/21/17 1:12,,-1,BTC,cafebabe,,FALSE,1993.93,USD,48.44,USD,,,,,,,,,,deadbeef,deadbeef
+4/21/18 1:12,,-1,BTC,cafebabe,,FALSE,1993.93,USD,48.44,USD,,,,,,,,,,deadbeef,deadbeef
+4/21/19 23:12,,-1,BTC,cafebabe,,FALSE,1993.93,USD,48.44,USD,,,,,,,,,,deadbeef,deadbeef
