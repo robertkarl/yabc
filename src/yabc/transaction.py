@@ -1,10 +1,8 @@
 """
 Definition of a Transaction, the in-memory version of an asset buy/sell
 """
-
-__author__ = "Robert Karl <robertkarljr@gmail.com>"
-
-
+import datetime
+import enum
 from decimal import Decimal
 
 import dateutil.parser
@@ -16,6 +14,8 @@ from sqlalchemy import Integer
 from sqlalchemy.types import TypeDecorator
 
 import yabc
+
+__author__ = "Robert Karl <robertkarljr@gmail.com>"
 
 
 class PreciseDecimalString(TypeDecorator):
@@ -32,17 +32,41 @@ class PreciseDecimalString(TypeDecorator):
         return Decimal(value)
 
 
+class TransactionOperationString(TypeDecorator):
+    impl = sqlalchemy.String
+
+    def process_bind_param(self, value, dialect):
+        """ Needs to return an object of the underlying impl
+        """
+        assert isinstance(value, Transaction.Operation)
+        return str(value.value)
+
+    def process_result_value(self, value, dialect):
+        """ Load from the DB and turn into an enum """
+        if not value:
+            value = Transaction.Operation.NOOP
+        return Transaction.Operation(value)
+
+
 class Transaction(yabc.Base):
     """
     Exchange-independent representation of a transaction (buy or sell)
     """
+
+    @enum.unique
+    class Operation(enum.Enum):
+        NOOP = "Noop"
+        BUY = "Buy"
+        SELL = "Sell"
+        GIFT = "Gift"
+        SPLIT = "Split"
 
     __tablename__ = "transaction"
     id = Column(Integer, primary_key=True)
     asset_name = Column(sqlalchemy.String)
     date = Column(DateTime)
     fees = Column(PreciseDecimalString)
-    operation = Column(sqlalchemy.String)
+    operation = Column(TransactionOperationString)
     quantity = Column(PreciseDecimalString)
     source = Column(sqlalchemy.String)
     usd_subtotal = Column(PreciseDecimalString)
@@ -51,15 +75,14 @@ class Transaction(yabc.Base):
     def __init__(
         self,
         asset_name,
+        operation: Operation,
         date=None,
         fees=0,
-        operation=None,
         quantity=0,
         source=None,
         usd_subtotal=0,
         user_id="",
     ):
-        assert operation in ["Buy", "Sell"]
         assert date is not None
         for param in (quantity, fees, usd_subtotal):
             assert isinstance(param, (float, str, Decimal, int))
@@ -83,13 +106,13 @@ class Transaction(yabc.Base):
                 - 'Timestamp': 'hour:min:sec.millisecs' formatted timestamp.
         Returns: Transaction instance with important fields populated
         """
-        operation = "Buy"
+        operation = Transaction.Operation.BUY
         proceeds = json["Transfer Total"]
         fee = json["Transfer Fee"]
         asset_name = json["Currency"]
         quantity = Decimal(json["Amount"])
         if quantity < 0:
-            operation = "Sell"
+            operation = Transaction.Operation.SELL
             quantity = abs(quantity)
         timestamp_str = json["Timestamp"]
         return Transaction(
@@ -103,12 +126,23 @@ class Transaction(yabc.Base):
         )
 
     @staticmethod
+    def gemini_type_to_operation(gemini_type: str):
+        if gemini_type == "Buy":
+            return Transaction.Operation.BUY
+        elif gemini_type == "Sell":
+            return Transaction.Operation.SELL
+        raise RuntimeError(
+            "Invalid Gemini transaction type {} encountered.".format(gemini_type)
+        )
+
+    @staticmethod
     def FromGeminiJSON(json):
         """
         Arguments
             json (Dictionary): 
         """
-        operation = json["Type"]
+
+        operation = Transaction.gemini_type_to_operation(json["Type"])
         quantity = json["BTC Amount"]
         usd_total = json["USD Amount"]
         fee = json["USD Fee"]
@@ -133,3 +167,15 @@ class Transaction(yabc.Base):
             self.source,
             self.fees,
         )
+
+
+def make_transaction(kind: Transaction.Operation, quantity, fees, subtotal):
+    sample_date = datetime.datetime(2015, 2, 5, 6, 27, 56, 373000)
+    return Transaction(
+        date=sample_date,
+        operation=kind,
+        asset_name="BTC",
+        fees=fees,
+        quantity=quantity,
+        usd_subtotal=subtotal,
+    )

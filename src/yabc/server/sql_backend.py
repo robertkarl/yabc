@@ -133,6 +133,7 @@ class SqlBackend:
             ans.append(tx_dict)
             for numeric_key in ("usd_subtotal", "fees", "quantity"):
                 tx_dict[numeric_key] = str(tx_dict[numeric_key])
+            tx_dict["operation"] = tx_dict["operation"].value
         for item in ans:
             item["date"] = str(item["date"])
         return json.dumps(ans)

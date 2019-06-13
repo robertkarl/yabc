@@ -3,9 +3,6 @@ Calculating the cost basis.
 
 TODO: Add other accounting methods than FIFO, most notably LIFO.
 """
-
-__author__ = "Robert Karl <robertkarljr@gmail.com>"
-
 import copy
 import csv
 import io
@@ -15,6 +12,9 @@ from typing import Sequence
 from yabc import csv_to_json
 from yabc import transaction
 from yabc.costbasisreport import CostBasisReport
+from yabc.transaction import Transaction
+
+__author__ = "Robert Karl <robertkarljr@gmail.com>"
 
 
 def split_coin_to_add(coin_to_split, amount, trans):
@@ -114,7 +114,7 @@ def process_one(trans, pool):
     amount = Decimal(0)
     pool_index = -1
 
-    if trans.operation == "Buy":
+    if trans.operation == Transaction.Operation.BUY:
         return {"basis_reports": [], "add": trans, "remove_index": -1}
 
     while amount < trans.quantity:
@@ -134,6 +134,21 @@ def process_one(trans, pool):
     needs_remove = pool_index
     if not needs_split:
         pool_index += 1  # Ensures that we report the oldest transaction as a sale.
+    if trans.operation == Transaction.Operation.SELL:
+        # The other option is gift. If it's a gift we don't report any gain or loss.
+        # The coins just magically remove themselves from the pool.
+        # No entry in 8949 for them.
+        cost_basis_reports.extend(_build_sale_reports(pool, pool_index, trans))
+
+    return {
+        "basis_reports": cost_basis_reports,
+        "add": to_add,
+        "remove_index": needs_remove,
+    }
+
+
+def _build_sale_reports(pool, pool_index, trans):
+    ans = []
     for i in range(pool_index):
         # each of these including pool_index will become a sale to be reported to IRS
         # The cost basis is pool[i].proceeds
@@ -151,13 +166,8 @@ def process_one(trans, pool):
             trans.date,
             pool[i].asset_name,
         )
-        cost_basis_reports.append(ir)
-
-    return {
-        "basis_reports": cost_basis_reports,
-        "add": to_add,
-        "remove_index": needs_remove,
-    }
+        ans.append(ir)
+    return ans
 
 
 def transactions_from_file(tx_file, expected_format):
@@ -236,39 +246,10 @@ def process_all_fifo(txs):
         if to_add is not None:
             # This is where FIFO is defined: put the BUY transactions at the end.
             # For split coins, they need to be sold first.
-            if to_add.operation == "Buy":
+            if to_add.operation == Transaction.Operation.BUY:
                 pool.append(to_add)
             else:
-                assert to_add.operation == "Split"
+                assert to_add.operation == Transaction.Operation.SPLIT
                 pool.insert(0, to_add)
         irs_reports.extend(reports)
     return irs_reports
-
-
-def run_basis(pool, transactions, method, userid, tax_year):
-    """
-    Where the magic happens.
-
-    Requirements:
-        - pool is a sequence of purchases or splits (no sales).
-        - Each element in pool needs to have a `purchase date` before
-          `tax_year` begins.
-        - txs should have at least one 'sale' within tax_year and zero sale txs
-          before tax_year.
-    """
-    supported_methods = ["FIFO"]
-    if not method in supported_methods:
-        raise ValueError("Accounting method {} not supported".format(method))
-    for tx in pool:
-        assert tx.operation == "Split" or tx.operation == "Buy"
-    asset_names = set(
-        [i.asset_name for i in txs]
-    )  # We can safely ignore pool's contents
-    reports = []
-    for asset in asset_names:
-        txs = []
-        filter_by_asset = lambda x: x.asset_name == asset
-        txs.extend(filter(filter_by_asset, pool))
-        txs.extend(filter(filter_by_asset, transactions))
-        reports.extend(process_all(method, txs))
-    return reports
