@@ -172,9 +172,9 @@ class Transaction(yabc.Base):
 def make_transaction(kind: Transaction.Operation, quantity, fees, subtotal):
     sample_date = datetime.datetime(2015, 2, 5, 6, 27, 56, 373000)
     return Transaction(
+        "BTC",
         date=sample_date,
         operation=kind,
-        asset_name="BTC",
         fees=fees,
         quantity=quantity,
         usd_subtotal=subtotal,

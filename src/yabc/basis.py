@@ -37,7 +37,7 @@ def split_coin_to_add(coin_to_split, amount, trans):
     to_add = copy.deepcopy(coin_to_split)
     to_add.quantity = split_amount_back_in_pool
     to_add.fee = split_fee_back_in_pool
-    to_add.operation = "Split"
+    to_add.operation = Transaction.Operation.SPLIT
     assert to_add.quantity > 0
     return to_add
 
