@@ -74,8 +74,8 @@ class Transaction(yabc.Base):
 
     def __init__(
         self,
-        asset_name,
         operation: Operation,
+        asset_name="BTC",
         date=None,
         fees=0,
         quantity=0,
