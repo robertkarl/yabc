@@ -169,13 +169,14 @@ class Transaction(yabc.Base):
         )
 
 
-def make_transaction(kind: Transaction.Operation, quantity, fees, subtotal):
-    sample_date = datetime.datetime(2015, 2, 5, 6, 27, 56, 373000)
+def make_transaction(kind: Transaction.Operation, quantity, fees, subtotal, date=datetime.datetime(2015, 2, 5, 6, 27, 56, 373000)):
     return Transaction(
         "BTC",
-        date=sample_date,
+        date=date,
         operation=kind,
         fees=fees,
         quantity=quantity,
         usd_subtotal=subtotal,
     )
+
+Operation = Transaction.Operation

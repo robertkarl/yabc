@@ -31,12 +31,11 @@ def split_coin_to_add(coin_to_split, amount, trans):
     assert isinstance(coin_to_split, transaction.Transaction)
     assert isinstance(trans, transaction.Transaction)
     split_amount_back_in_pool = coin_to_split.quantity - amount
-    split_fee_back_in_pool = coin_to_split.fees * (
-        split_amount_back_in_pool / coin_to_split.quantity
-    )
+    fraction_back_in_pool = split_amount_back_in_pool / coin_to_split.quantity
     to_add = copy.deepcopy(coin_to_split)
+    to_add.usd_subtotal = coin_to_split.usd_subtotal * fraction_back_in_pool
+    to_add.fees = coin_to_split.fees * fraction_back_in_pool
     to_add.quantity = split_amount_back_in_pool
-    to_add.fee = split_fee_back_in_pool
     to_add.operation = Transaction.Operation.SPLIT
     assert to_add.quantity > 0
     return to_add
@@ -127,9 +126,11 @@ def process_one(trans, pool):
         coin_to_split = pool[pool_index]
         excess = amount - trans.quantity
         portion_of_split_coin_to_sell = coin_to_split.quantity - excess
-        cost_basis_reports.append(
-            split_report(coin_to_split, portion_of_split_coin_to_sell, trans)
-        )
+        if trans.operation == Transaction.Operation.SELL:
+            # Gifts would not trigger this.
+            cost_basis_reports.append(
+                split_report(coin_to_split, portion_of_split_coin_to_sell, trans)
+            )
         to_add = split_coin_to_add(coin_to_split, portion_of_split_coin_to_sell, trans)
     needs_remove = pool_index
     if not needs_split:
@@ -157,6 +158,7 @@ def _build_sale_reports(pool, pool_index, trans):
         # NOTE: the entire basis coin will be sold; but for each iteration
         # through we only use a portion of trans.
         portion_of_sale = pool[i].quantity / trans.quantity
+        # The seller is allowed to inflate their cost basis for the BUY fees a bit.
         ir = CostBasisReport(
             pool[i].user_id,
             pool[i].usd_subtotal + pool[i].fees,
