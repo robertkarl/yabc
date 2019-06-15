@@ -10,23 +10,16 @@ from yabc import Base
 from yabc import basis
 from yabc import transaction
 from yabc import user  # noqa
+from yabc.transaction import Transaction
+from yabc.transaction import make_transaction
 
-
-def make_transaction(kind, quantity, fees, subtotal):
-    sample_date = datetime.datetime(2015, 2, 5, 6, 27, 56, 373000)
-    return transaction.Transaction(
-        date=sample_date,
-        operation=kind,
-        asset_name="BTC",
-        fees=fees,
-        quantity=quantity,
-        usd_subtotal=subtotal,
-    )
+BUY = Transaction.Operation.BUY
+SELL = Transaction.Operation.SELL
 
 
 class TransactionTest(unittest.TestCase):
     def setUp(self):
-        self.sample_buy = make_transaction("Buy", 1.0, 10.0, 100.0)
+        self.sample_buy = make_transaction(Transaction.Operation.BUY, 1.0, 10.0, 100.0)
 
     def test_fees_no_proceeds(self):
         """ Test case where fees make a profit of 0.
@@ -34,7 +27,7 @@ class TransactionTest(unittest.TestCase):
         date = datetime.datetime(2015, 2, 5, 6, 27, 56, 373000)
         pool = [
             transaction.Transaction(
-                operation="Buy",
+                operation=BUY,
                 quantity=0.5,
                 source=None,
                 usd_subtotal=990.0,
@@ -44,7 +37,7 @@ class TransactionTest(unittest.TestCase):
             )
         ]
         sale = transaction.Transaction(
-            operation="Sell",
+            operation=SELL,
             quantity=0.5,
             source=None,
             usd_subtotal=1010.0,
@@ -62,16 +55,16 @@ class TransactionTest(unittest.TestCase):
         """ Test simple case with no profit or loss.
         """
         proceeds = 100
-        buy = make_transaction("Buy", 1.0, 0, 100.0)
-        sell = make_transaction("Sell", 1.0, 0, 100.0)
+        buy = make_transaction(BUY, 1.0, 0, 100.0)
+        sell = make_transaction(SELL, 1.0, 0, 100.0)
         report = basis.split_report(buy, Decimal("0.5"), sell)
         self.assertEqual(report.gain_or_loss, 0)
 
     def test_split_report(self):
         """ Test split_report function.
         """
-        buy = make_transaction("Buy", 1.0, 10, 100.0)
-        sell = make_transaction("Sell", 1.0, 10, 200.0)
+        buy = make_transaction(BUY, 1.0, 10, 100.0)
+        sell = make_transaction(SELL, 1.0, 10, 200.0)
         report = basis.split_report(buy, Decimal("0.5"), sell)
         ans_basis = 55.0
         sale_basis = 95.0
@@ -83,8 +76,8 @@ class TransactionTest(unittest.TestCase):
         """
         proceeds = 100
         purchase_quantity = 1.0
-        buy = make_transaction("Buy", purchase_quantity, 0, 100.0)
-        sell = make_transaction("Sell", 2.0, 0, 100.0)
+        buy = make_transaction(BUY, purchase_quantity, 0, 100.0)
+        sell = make_transaction(SELL, 2.0, 0, 100.0)
         with self.assertRaises(AssertionError):
             basis.split_report(
                 buy, purchase_quantity, sell
@@ -103,7 +96,7 @@ class TransactionTest(unittest.TestCase):
 
         trans = transaction.Transaction.FromCoinbaseJSON(coinbase_json_buy)
 
-        self.assertEqual(trans.operation, "Buy")
+        self.assertEqual(trans.operation, BUY)
         self.assertEqual(trans.quantity, coinbase_json_buy["Amount"])
         self.assertEqual(trans.date, datetime.datetime(2015, 2, 5, 6, 27, 56, 373000))
         self.assertEqual(trans.usd_subtotal, 1.05)
@@ -123,7 +116,7 @@ class TransactionTest(unittest.TestCase):
 
         trans = transaction.Transaction.FromCoinbaseJSON(coinbase_json_sell)
 
-        self.assertEqual(trans.operation, "Sell")
+        self.assertEqual(trans.operation, SELL)
         self.assertEqual(trans.quantity, math.fabs(coinbase_json_sell["Amount"]))
         self.assertEqual(trans.date, datetime.datetime(2015, 2, 5, 6, 27, 56, 373000))
         self.assertEqual(trans.usd_subtotal, 1.05)
@@ -145,7 +138,7 @@ class TransactionTest(unittest.TestCase):
 
         trans = transaction.Transaction.FromGeminiJSON(gemini_json_buy)
 
-        self.assertEqual(trans.operation, "Buy")
+        self.assertEqual(trans.operation, BUY)
         self.assertEqual(trans.quantity, 2)
         self.assertEqual(trans.date, datetime.datetime(2015, 2, 5, 0, 0))
         self.assertEqual(trans.usd_subtotal, 1.0)
@@ -168,7 +161,7 @@ class TransactionTest(unittest.TestCase):
 
         trans = transaction.Transaction.FromGeminiJSON(gemini_json_sell)
 
-        self.assertEqual(trans.operation, "Sell")
+        self.assertEqual(trans.operation, SELL)
         self.assertEqual(trans.quantity, 2)
         self.assertEqual(trans.fees, Decimal("0.05"))
         self.assertEqual(trans.date, datetime.datetime(2015, 2, 5, 0, 0))
