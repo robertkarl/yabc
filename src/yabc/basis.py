@@ -248,7 +248,10 @@ def process_all_fifo(txs):
         if to_add is not None:
             # This is where FIFO is defined: put the BUY transactions at the end.
             # For split coins, they need to be sold first.
-            if to_add.operation == Transaction.Operation.BUY:
+            if to_add.operation in [
+                transaction.Operation.BUY,
+                transaction.Operation.MINING,
+            ]:
                 pool.append(to_add)
             else:
                 assert to_add.operation == Transaction.Operation.SPLIT

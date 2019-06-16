@@ -60,6 +60,7 @@ class Transaction(yabc.Base):
         SELL = "Sell"
         GIFT = "Gift"
         SPLIT = "Split"
+        MINING = "Mining"
 
     __tablename__ = "transaction"
     id = Column(Integer, primary_key=True)
@@ -169,14 +170,21 @@ class Transaction(yabc.Base):
         )
 
 
-def make_transaction(kind: Transaction.Operation, quantity, fees, subtotal, date=datetime.datetime(2015, 2, 5, 6, 27, 56, 373000)):
+def make_transaction(
+    kind: Transaction.Operation,
+    quantity,
+    fees,
+    subtotal,
+    date=datetime.datetime(2015, 2, 5, 6, 27, 56, 373000),
+):
     return Transaction(
-        "BTC",
-        date=date,
         operation=kind,
+        asset_name="BTC",
+        date=date,
         fees=fees,
         quantity=quantity,
         usd_subtotal=subtotal,
     )
+
 
 Operation = Transaction.Operation
