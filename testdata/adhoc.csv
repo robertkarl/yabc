@@ -1,0 +1,4 @@
+Coin,Amount,Timestamp,Type,DollarValue
+BTC,1,2018/3/4,GiftReceived,"$4,000.00"
+BTC,0.1,2018/3/6 7:57PM,GiftSent,
+BTC,0.25,2018/1,Mining,1000
