@@ -240,6 +240,9 @@ def process_all_fifo(txs):
     Process a list of transactions (which may have been read from coinbase or
     gemini files).
 
+    TODO: Add the ability to flag potential issues during this process. For
+    example, a sell that has no associated buy should trigger a warning to the user.
+
     @return a list of asset sales, each of which has all information necessary
     to report the cost basis to the IRS.
     """
