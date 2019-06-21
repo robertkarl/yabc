@@ -113,7 +113,7 @@ def process_one(trans, pool):
     amount = Decimal(0)
     pool_index = -1
 
-    if trans.operation == Transaction.Operation.BUY:
+    if trans.operation == Transaction.Operation.BUY or trans.operation == Transaction.Operation.GIFT_RECEIVED:
         return {"basis_reports": [], "add": trans, "remove_index": -1}
 
     while amount < trans.quantity:
@@ -127,7 +127,9 @@ def process_one(trans, pool):
         excess = amount - trans.quantity
         portion_of_split_coin_to_sell = coin_to_split.quantity - excess
         if trans.operation == Transaction.Operation.SELL:
-            # Gifts would not trigger this.
+            # Outgoing gifts would not trigger this.
+            # TODO: Alert the user if the value of a gift exceeds $15,000, in which
+            # case gift taxes may be eligible...
             cost_basis_reports.append(
                 split_report(coin_to_split, portion_of_split_coin_to_sell, trans)
             )
@@ -251,6 +253,7 @@ def process_all_fifo(txs):
             if to_add.operation in [
                 transaction.Operation.BUY,
                 transaction.Operation.MINING,
+                transaction.Operation.GIFT_RECEIVED,
             ]:
                 pool.append(to_add)
             else:

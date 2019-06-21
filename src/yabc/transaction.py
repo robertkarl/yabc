@@ -58,9 +58,11 @@ class Transaction(yabc.Base):
         NOOP = "Noop"
         BUY = "Buy"
         SELL = "Sell"
-        GIFT = "Gift"
+        GIFT_RECEIVED = "GiftReceived"
+        GIFT_SENT = "GiftSent"
         SPLIT = "Split"
         MINING = "Mining"
+        SPENDING = "Spending"
 
     __tablename__ = "transaction"
     id = Column(Integer, primary_key=True)
