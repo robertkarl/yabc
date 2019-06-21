@@ -9,7 +9,9 @@ class GiftsTest(unittest.TestCase):
         start = datetime.datetime.now()
         one_day = datetime.timedelta(1)
         purchase = make_transaction(Operation.BUY, 2, 0, 2000, date=start)
-        gift_given = make_transaction(Operation.GIFT_SENT, 1, 0, 0, date=start + one_day)
+        gift_given = make_transaction(
+            Operation.GIFT_SENT, 1, 0, 0, date=start + one_day
+        )
         # should trigger a short term gain of $1
         sale = make_transaction(Operation.SELL, 1, 0, 1001, date=start + one_day * 2)
         reports = process_all_fifo([purchase, gift_given, sale])

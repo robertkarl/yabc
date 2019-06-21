@@ -20,6 +20,9 @@ __author__ = "Robert Karl <robertkarljr@gmail.com>"
 def split_coin_to_add(coin_to_split, amount, trans):
     """
     Create a coin to be added back to the pool.
+
+    TODO: For creating an audit trail, we should track the origin of the split coin,
+    ie. was it generated from mining or a gift or just purchased?
     
     parameters:
         amount: unsold portion of the asset ie. float(0.5) for a sale of 1 BTC
@@ -113,7 +116,10 @@ def process_one(trans, pool):
     amount = Decimal(0)
     pool_index = -1
 
-    if trans.operation == Transaction.Operation.BUY or trans.operation == Transaction.Operation.GIFT_RECEIVED:
+    if (
+        trans.operation == Transaction.Operation.BUY
+        or trans.operation == Transaction.Operation.GIFT_RECEIVED
+    ):
         return {"basis_reports": [], "add": trans, "remove_index": -1}
 
     while amount < trans.quantity:

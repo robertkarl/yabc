@@ -6,7 +6,6 @@ create a file like this one.
 """
 import csv
 import decimal
-import enum
 
 import delorean
 
@@ -17,11 +16,12 @@ SUBTOTAL_HEADER = "DollarValue"
 field_names = ["Coin", "Amount", "Timestamp", TRANSACTION_TYPE_HEADER, SUBTOTAL_HEADER]
 
 
-SUPPORTED = \
-    [transaction.Transaction.Operation.GIFT_RECEIVED,
+SUPPORTED = [
+    transaction.Transaction.Operation.GIFT_RECEIVED,
     transaction.Transaction.Operation.GIFT_SENT,
     transaction.Transaction.Operation.MINING,
-    transaction.Transaction.Operation.SPENDING,]
+    transaction.Transaction.Operation.SPENDING,
+]
 
 
 class AdhocTransactionGenerator:
@@ -30,6 +30,7 @@ class AdhocTransactionGenerator:
 
     This class translates CSV rows into transaction objects.
     """
+
     def __init__(self, csv_file):
         """
 
@@ -49,12 +50,16 @@ class AdhocTransactionGenerator:
             op = transaction.Transaction.Operation.NOOP
         trans_date = delorean.parse(curr["Timestamp"], dayfirst=False).datetime
 
-        usd_subtotal_str = curr[SUBTOTAL_HEADER].strip('$') if curr[SUBTOTAL_HEADER] else "0"
+        usd_subtotal_str = (
+            curr[SUBTOTAL_HEADER].strip("$").replace(',', '') if curr[SUBTOTAL_HEADER] else "0"
+        )
         trans = transaction.make_transaction(
             op,
             quantity=decimal.Decimal(curr["Amount"]),
             fees=decimal.Decimal(0),
-            subtotal=decimal.Decimal(usd_subtotal_str), #TODO: for mining we need to look up the value on the date mined.
+            subtotal=decimal.Decimal(
+                usd_subtotal_str
+            ),  # TODO: for mining we need to look up the value on the date mined.
             date=trans_date,
         )
         return trans
