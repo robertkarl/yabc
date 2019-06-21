@@ -6,6 +6,7 @@ Test that we can parse data from various CSV sources.
 import unittest
 
 from yabc import csv_to_json
+from yabc.formats import adhoc
 
 
 class CsvTest(unittest.TestCase):
@@ -16,3 +17,8 @@ class CsvTest(unittest.TestCase):
     def test_load_gemini_csv(self):
         """ Test wholesale load of gemini data from CSV"""
         csv_to_json.gemini_to_dict("testdata/synthetic_gemini_csv.csv")
+
+    def test_load_adhoc_csv(self):
+        """ Test wholesale load of gemini data from CSV"""
+        with open("testdata/adhoc.csv") as f:
+            list(adhoc.AdhocTransactionGenerator(f))

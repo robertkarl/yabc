@@ -20,6 +20,9 @@ __author__ = "Robert Karl <robertkarljr@gmail.com>"
 def split_coin_to_add(coin_to_split, amount, trans):
     """
     Create a coin to be added back to the pool.
+
+    TODO: For creating an audit trail, we should track the origin of the split coin,
+    ie. was it generated from mining or a gift or just purchased?
     
     parameters:
         amount: unsold portion of the asset ie. float(0.5) for a sale of 1 BTC
@@ -113,7 +116,10 @@ def process_one(trans, pool):
     amount = Decimal(0)
     pool_index = -1
 
-    if trans.operation == Transaction.Operation.BUY:
+    if (
+        trans.operation == Transaction.Operation.BUY
+        or trans.operation == Transaction.Operation.GIFT_RECEIVED
+    ):
         return {"basis_reports": [], "add": trans, "remove_index": -1}
 
     while amount < trans.quantity:
@@ -127,7 +133,9 @@ def process_one(trans, pool):
         excess = amount - trans.quantity
         portion_of_split_coin_to_sell = coin_to_split.quantity - excess
         if trans.operation == Transaction.Operation.SELL:
-            # Gifts would not trigger this.
+            # Outgoing gifts would not trigger this.
+            # TODO: Alert the user if the value of a gift exceeds $15,000, in which
+            # case gift taxes may be eligible...
             cost_basis_reports.append(
                 split_report(coin_to_split, portion_of_split_coin_to_sell, trans)
             )
@@ -232,6 +240,9 @@ def process_all_fifo(txs):
     Process a list of transactions (which may have been read from coinbase or
     gemini files).
 
+    TODO: Add the ability to flag potential issues during this process. For
+    example, a sell that has no associated buy should trigger a warning to the user.
+
     @return a list of asset sales, each of which has all information necessary
     to report the cost basis to the IRS.
     """
@@ -248,7 +259,11 @@ def process_all_fifo(txs):
         if to_add is not None:
             # This is where FIFO is defined: put the BUY transactions at the end.
             # For split coins, they need to be sold first.
-            if to_add.operation == Transaction.Operation.BUY:
+            if to_add.operation in [
+                transaction.Operation.BUY,
+                transaction.Operation.MINING,
+                transaction.Operation.GIFT_RECEIVED,
+            ]:
                 pool.append(to_add)
             else:
                 assert to_add.operation == Transaction.Operation.SPLIT

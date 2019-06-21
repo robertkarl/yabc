@@ -58,8 +58,11 @@ class Transaction(yabc.Base):
         NOOP = "Noop"
         BUY = "Buy"
         SELL = "Sell"
-        GIFT = "Gift"
+        GIFT_RECEIVED = "GiftReceived"
+        GIFT_SENT = "GiftSent"
         SPLIT = "Split"
+        MINING = "Mining"
+        SPENDING = "Spending"
 
     __tablename__ = "transaction"
     id = Column(Integer, primary_key=True)
@@ -74,8 +77,8 @@ class Transaction(yabc.Base):
 
     def __init__(
         self,
-        asset_name,
         operation: Operation,
+        asset_name="BTC",
         date=None,
         fees=0,
         quantity=0,
@@ -169,14 +172,21 @@ class Transaction(yabc.Base):
         )
 
 
-def make_transaction(kind: Transaction.Operation, quantity, fees, subtotal, date=datetime.datetime(2015, 2, 5, 6, 27, 56, 373000)):
+def make_transaction(
+    kind: Transaction.Operation,
+    quantity,
+    fees,
+    subtotal,
+    date=datetime.datetime(2015, 2, 5, 6, 27, 56, 373000),
+):
     return Transaction(
-        "BTC",
-        date=date,
         operation=kind,
+        asset_name="BTC",
+        date=date,
         fees=fees,
         quantity=quantity,
         usd_subtotal=subtotal,
     )
+
 
 Operation = Transaction.Operation
