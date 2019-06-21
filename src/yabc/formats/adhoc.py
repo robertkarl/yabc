@@ -51,7 +51,9 @@ class AdhocTransactionGenerator:
         trans_date = delorean.parse(curr["Timestamp"], dayfirst=False).datetime
 
         usd_subtotal_str = (
-            curr[SUBTOTAL_HEADER].strip("$").replace(',', '') if curr[SUBTOTAL_HEADER] else "0"
+            curr[SUBTOTAL_HEADER].strip("$").replace(",", "")
+            if curr[SUBTOTAL_HEADER]
+            else "0"
         )
         trans = transaction.make_transaction(
             op,
