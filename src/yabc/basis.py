@@ -230,12 +230,17 @@ def reports_to_csv(reports: Sequence[CostBasisReport]):
 
 
 def handle_add_lifo(pool, to_add: Transaction):
+    """
+    Simply put any new transaction, including splits, at the beginining.
+    """
     pool.insert(0, to_add)
 
 
 def handle_add_fifo(pool, to_add: Transaction):
-    # This is where FIFO is defined: put the BUY transactions at the end.
-    # For split coins, they need to be sold first.
+    """
+    FIFO is defined by putting the BUY transactions at the end.
+    For split coins, they need to be sold first.
+    """
     if to_add.operation == Transaction.Operation.SPLIT:
         pool.insert(0, to_add)
     else:
