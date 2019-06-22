@@ -90,8 +90,11 @@ def split_report(coin_to_split, amount, trans):
 
 def process_one(trans, pool):
     """
-    FIFO cost basis calculator for a single transaction. Return the 'diff'
+    Cost basis calculator for a single transaction. Return the 'diff'
     required to process this one tx.
+
+    It is assumed that the coin to sell is at the front, at `pool[0]`, so this works for both
+    LIFO and FIFO.
 
     - If transaction is a buy, just return the add-to-pool op.
     - Otherwise, for a sale::
@@ -111,7 +114,6 @@ def process_one(trans, pool):
     {'sell': [T1, T1], 'remove_from_pool': 1, 'add_to_pool': [T5]}
     """
     assert type(trans) is transaction.Transaction and type(pool) is list
-    pool = sorted(pool, key=lambda tx: tx.date)
     cost_basis_reports = []
     amount = Decimal(0)
     pool_index = -1
@@ -229,22 +231,35 @@ def reports_to_csv(reports: Sequence[CostBasisReport]):
     return of
 
 
-def process_all(method, txs):
-    if method == "FIFO":
-        return process_all_fifo(txs)
-    raise ValueError("Invalid method {}".format(method))
-
-
-def process_all_fifo(txs):
+def handle_add_lifo(pool, to_add: Transaction):
     """
-    Process a list of transactions (which may have been read from coinbase or
-    gemini files).
+    Simply put any new transaction, including splits, at the beginning.
+    """
+    pool.insert(0, to_add)
 
-    TODO: Add the ability to flag potential issues during this process. For
-    example, a sell that has no associated buy should trigger a warning to the user.
 
-    @return a list of asset sales, each of which has all information necessary
-    to report the cost basis to the IRS.
+def handle_add_fifo(pool, to_add: Transaction):
+    """
+    FIFO is defined by putting the BUY transactions at the end.
+    For split coins, they need to be sold first.
+    """
+    if to_add.operation == Transaction.Operation.SPLIT:
+        pool.insert(0, to_add)
+    else:
+        assert to_add.operation in [
+            transaction.Operation.BUY,
+            transaction.Operation.MINING,
+            transaction.Operation.GIFT_RECEIVED,
+        ]
+        pool.append(to_add)
+
+
+def _process_all(method, txs):
+    """
+    The meat and potatoes
+    :param method:
+    :param txs:
+    :return:
     """
     pool = []
     to_process = sorted(txs, key=lambda tx: tx.date)
@@ -257,16 +272,35 @@ def process_all_fifo(txs):
         if remove_index > -1:
             pool = pool[remove_index + 1 :]
         if to_add is not None:
-            # This is where FIFO is defined: put the BUY transactions at the end.
-            # For split coins, they need to be sold first.
-            if to_add.operation in [
-                transaction.Operation.BUY,
-                transaction.Operation.MINING,
-                transaction.Operation.GIFT_RECEIVED,
-            ]:
-                pool.append(to_add)
+            if method == "FIFO":
+                handle_add_fifo(pool, to_add)
+            elif method == "LIFO":
+                handle_add_lifo(pool, to_add)
             else:
-                assert to_add.operation == Transaction.Operation.SPLIT
-                pool.insert(0, to_add)
+                assert False
         irs_reports.extend(reports)
-    return irs_reports
+    return irs_reports, pool
+
+
+def process_all(method, txs):
+    reports, pool = _process_all(method, txs)
+    return reports
+
+
+class BasisProcessor:
+    """
+    Store state for basis calculations.
+
+    This includes the pool of coins left over at the end of processing the given batch.
+    """
+
+    def __init__(self, method, txs):
+        assert method in "FIFO", "LIFO"
+        self.method = method
+        self.txs = txs
+
+    def process(self):
+        reports, pool = _process_all(method, txs)
+        self.reports = reports
+        self.pool = pool
+        return self.reports

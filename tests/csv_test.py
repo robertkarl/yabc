@@ -1,6 +1,5 @@
 """
 Test that we can parse data from various CSV sources.
-
 """
 
 import unittest

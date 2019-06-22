@@ -1,6 +1,6 @@
 import unittest
 
-from yabc.basis import process_all_fifo
+from yabc.basis import process_all
 from yabc.transaction import *
 
 
@@ -14,7 +14,7 @@ class GiftsTest(unittest.TestCase):
         )
         # should trigger a short term gain of $1
         sale = make_transaction(Operation.SELL, 1, 0, 1001, date=start + one_day * 2)
-        reports = process_all_fifo([purchase, gift_given, sale])
+        reports = process_all("FIFO", [purchase, gift_given, sale])
         print(reports)
         self.assertEqual(len(reports), 1)
         sale_report = reports[0]
