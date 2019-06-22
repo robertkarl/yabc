@@ -229,23 +229,21 @@ def reports_to_csv(reports: Sequence[CostBasisReport]):
     return of
 
 
+def handle_add_lifo(pool, to_add: Transaction):
+    pool.insert(0, to_add)
+
+def handle_add_fifo(pool, to_add: Transaction):
+    # This is where FIFO is defined: put the BUY transactions at the end.
+    # For split coins, they need to be sold first.
+    if to_add.operation == Transaction.Operation.SPLIT:
+        pool.insert(0, to_add)
+    else:
+        assert to_add.operation in [ transaction.Operation.BUY,
+        transaction.Operation.MINING,
+        transaction.Operation.GIFT_RECEIVED,]
+        pool.append(to_add)
+
 def process_all(method, txs):
-    if method == "FIFO":
-        return process_all_fifo(txs)
-    raise ValueError("Invalid method {}".format(method))
-
-
-def process_all_fifo(txs):
-    """
-    Process a list of transactions (which may have been read from coinbase or
-    gemini files).
-
-    TODO: Add the ability to flag potential issues during this process. For
-    example, a sell that has no associated buy should trigger a warning to the user.
-
-    @return a list of asset sales, each of which has all information necessary
-    to report the cost basis to the IRS.
-    """
     pool = []
     to_process = sorted(txs, key=lambda tx: tx.date)
     irs_reports = []
@@ -257,16 +255,9 @@ def process_all_fifo(txs):
         if remove_index > -1:
             pool = pool[remove_index + 1 :]
         if to_add is not None:
-            # This is where FIFO is defined: put the BUY transactions at the end.
-            # For split coins, they need to be sold first.
-            if to_add.operation in [
-                transaction.Operation.BUY,
-                transaction.Operation.MINING,
-                transaction.Operation.GIFT_RECEIVED,
-            ]:
-                pool.append(to_add)
-            else:
-                assert to_add.operation == Transaction.Operation.SPLIT
-                pool.insert(0, to_add)
+            if method == "FIFO":
+                handle_add_fifo(pool, to_add)
+            elif method == "LIFO":
+                handle_add_lifo(pool, to_add)
         irs_reports.extend(reports)
     return irs_reports
