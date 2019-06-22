@@ -90,8 +90,11 @@ def split_report(coin_to_split, amount, trans):
 
 def process_one(trans, pool):
     """
-    FIFO cost basis calculator for a single transaction. Return the 'diff'
+    Cost basis calculator for a single transaction. Return the 'diff'
     required to process this one tx.
+
+    It is assumed that the coin to sell is at the front, at `pool[0]`, so this works for both
+    LIFO and FIFO.
 
     - If transaction is a buy, just return the add-to-pool op.
     - Otherwise, for a sale::
@@ -111,7 +114,6 @@ def process_one(trans, pool):
     {'sell': [T1, T1], 'remove_from_pool': 1, 'add_to_pool': [T5]}
     """
     assert type(trans) is transaction.Transaction and type(pool) is list
-    pool = sorted(pool, key=lambda tx: tx.date)
     cost_basis_reports = []
     amount = Decimal(0)
     pool_index = -1
@@ -231,7 +233,7 @@ def reports_to_csv(reports: Sequence[CostBasisReport]):
 
 def handle_add_lifo(pool, to_add: Transaction):
     """
-    Simply put any new transaction, including splits, at the beginining.
+    Simply put any new transaction, including splits, at the beginning.
     """
     pool.insert(0, to_add)
 
@@ -274,6 +276,8 @@ def _process_all(method, txs):
                 handle_add_fifo(pool, to_add)
             elif method == "LIFO":
                 handle_add_lifo(pool, to_add)
+            else:
+                assert False
         irs_reports.extend(reports)
     return irs_reports, pool
 

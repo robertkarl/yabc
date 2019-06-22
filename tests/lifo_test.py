@@ -51,9 +51,11 @@ class LifoTest(unittest.TestCase):
 
     def test_lifo_simple_basis(self):
         purchase1 = make_transaction(Operation.BUY, 1, 0, subtotal=100, date=self.start)
-        purchase2 = make_transaction(Operation.BUY, 1, 0, subtotal=200, date=self.start)
+        purchase2 = make_transaction(
+            Operation.BUY, 1, 0, subtotal=200, date=self.start + self.one_day
+        )
         sale = make_transaction(
-            Operation.SELL, 1, 0, 1200, date=self.start + self.one_day
+            Operation.SELL, 1, 0, 1200, date=self.start + 2 * self.one_day
         )
         reports = process_all("LIFO", [purchase1, purchase2, sale])
         self.assertEqual(len(reports), 1)
@@ -62,8 +64,11 @@ class LifoTest(unittest.TestCase):
 
     def test_lifo_with_split(self):
         purchase1 = make_transaction(Operation.BUY, 2, 0, subtotal=200, date=self.start)
+        purchase2 = make_transaction(
+            Operation.BUY, 2, 0, subtotal=200, date=self.start + self.one_day
+        )
         sale = make_transaction(
-            Operation.SELL, 1, 0, 1100, date=self.start + self.one_day
+            Operation.SELL, 1, 0, 1100, date=self.start + 2 * self.one_day
         )
         reports = process_all("LIFO", [purchase1, sale])
         self.assertEqual(len(reports), 1)
