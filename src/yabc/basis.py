@@ -232,18 +232,28 @@ def reports_to_csv(reports: Sequence[CostBasisReport]):
 def handle_add_lifo(pool, to_add: Transaction):
     pool.insert(0, to_add)
 
+
 def handle_add_fifo(pool, to_add: Transaction):
     # This is where FIFO is defined: put the BUY transactions at the end.
     # For split coins, they need to be sold first.
     if to_add.operation == Transaction.Operation.SPLIT:
         pool.insert(0, to_add)
     else:
-        assert to_add.operation in [ transaction.Operation.BUY,
-        transaction.Operation.MINING,
-        transaction.Operation.GIFT_RECEIVED,]
+        assert to_add.operation in [
+            transaction.Operation.BUY,
+            transaction.Operation.MINING,
+            transaction.Operation.GIFT_RECEIVED,
+        ]
         pool.append(to_add)
 
-def process_all(method, txs):
+
+def _process_all(method, txs):
+    """
+    The meat and potatoes
+    :param method:
+    :param txs:
+    :return:
+    """
     pool = []
     to_process = sorted(txs, key=lambda tx: tx.date)
     irs_reports = []
@@ -260,4 +270,28 @@ def process_all(method, txs):
             elif method == "LIFO":
                 handle_add_lifo(pool, to_add)
         irs_reports.extend(reports)
-    return irs_reports
+    return irs_reports, pool
+
+
+def process_all(method, txs):
+    reports, pool = _process_all(method, txs)
+    return reports
+
+
+class BasisProcessor:
+    """
+    Store state for basis calculations.
+
+    This includes the pool of coins left over at the end of processing the given batch.
+    """
+
+    def __init__(self, method, txs):
+        assert method in "FIFO", "LIFO"
+        self.method = method
+        self.txs = txs
+
+    def process(self):
+        reports, pool = _process_all(method, txs)
+        self.reports = reports
+        self.pool = pool
+        return self.reports
