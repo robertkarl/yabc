@@ -9,10 +9,11 @@ import io
 from decimal import Decimal
 from typing import Sequence
 
-from yabc import csv_to_json
+from yabc import csv_to_json, transaction_parser, formats
 from yabc import transaction
 from yabc.costbasisreport import CostBasisReport
 from yabc.transaction import Transaction
+from yabc.transaction_parser import TransactionParser, TxFile
 
 __author__ = "Robert Karl <robertkarljr@gmail.com>"
 
@@ -183,11 +184,18 @@ def _build_sale_reports(pool, pool_index, trans):
 
 
 def transactions_from_file(tx_file, expected_format):
+    hint = None
     if expected_format == "gemini":
-        return csv_to_json.txs_from_gemini(io.TextIOWrapper(tx_file))
+        hint = formats.gemini.GeminiParser
+        tx_file = io.TextIOWrapper(tx_file)
     elif expected_format == "coinbase":
-        return csv_to_json.txs_from_coinbase(io.TextIOWrapper(tx_file))
-    raise ValueError("unknown format {}".format(expected_format))
+        hint = formats.coinbase.CoinbaseParser
+        tx_file = io.TextIOWrapper(tx_file)
+    else:
+        tx_file = transaction_parser.TxFile(tx_file, None)
+    tx_file = transaction_parser.TxFile(tx_file, hint)
+    parser = TransactionParser([tx_file])
+    return parser.txs
 
 
 def reports_to_csv(reports: Sequence[CostBasisReport]):

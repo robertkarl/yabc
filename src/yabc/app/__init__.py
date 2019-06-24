@@ -34,4 +34,6 @@ def create_app(test_config=None):
     app.register_blueprint(yabc.server.yabc_api.bp)
     yabc.server.sql_backend.init_app(app)
 
+
     return app
+print('cxreate_app')
