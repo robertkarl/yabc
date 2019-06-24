@@ -24,7 +24,7 @@ SUPPORTED = [
 ]
 
 
-class AdhocTransactionGenerator:
+class AdhocParser:
     """
     Defines an input format for ad-hoc transactions like mining, spending, and gifts.
 
@@ -37,6 +37,7 @@ class AdhocTransactionGenerator:
         :param csv_file: can be a list of rows, each containing a string, or an
         open file-like object.
         """
+        assert not isinstance(csv_file, str)
         self._csv_file = csv_file
         self.reader = csv.DictReader(csv_file)
 

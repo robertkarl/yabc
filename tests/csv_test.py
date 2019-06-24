@@ -20,4 +20,4 @@ class CsvTest(unittest.TestCase):
     def test_load_adhoc_csv(self):
         """ Test wholesale load of gemini data from CSV"""
         with open("testdata/adhoc.csv") as f:
-            list(adhoc.AdhocTransactionGenerator(f))
+            list(adhoc.AdhocParser(f))

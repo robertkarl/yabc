@@ -190,6 +190,8 @@ def transactions_from_file(tx_file, expected_format):
     raise ValueError("unknown format {}".format(expected_format))
 
 
+
+
 def get_all_transactions(coinbase, gemini):
     """
     Get all transactions from a coinbase and a gemini file.
@@ -298,9 +300,10 @@ class BasisProcessor:
         assert method in "FIFO", "LIFO"
         self.method = method
         self.txs = txs
+        self._reports = None
 
     def process(self):
-        reports, pool = _process_all(method, txs)
-        self.reports = reports
+        reports, pool = _process_all(self.method, self.txs)
+        self._reports = reports
         self.pool = pool
-        return self.reports
+        return self._reports

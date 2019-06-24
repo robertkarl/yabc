@@ -6,3 +6,4 @@ Base = declarative_base(sqlalchemy.schema.ThreadLocalMetaData())
 import yabc.server.yabc_api
 
 bp = yabc.server.yabc_api.bp
+
