@@ -4,6 +4,7 @@ Entry point to command line yabc usage.
 import argparse
 
 import yabc.transaction_parser
+from yabc import basis
 
 
 def main():
@@ -14,9 +15,9 @@ def main():
         yabc.transaction_parser.TxFile(open(fname), None) for fname in args.filenames
     ]
     parser = yabc.transaction_parser.TransactionParser(tx_files)
-    for i in parser.txs:
+    processor = basis.BasisProcessor("FIFO", parser.txs)
+    for i in processor.process():
         print(i)
-
 
 print(__name__)
 if __name__ == "__main__":
