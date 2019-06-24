@@ -29,6 +29,8 @@ class AdhocParser:
     Defines an input format for ad-hoc transactions like mining, spending, and gifts.
 
     This class translates CSV rows into transaction objects.
+
+    TODO: When does this stop iteration?
     """
 
     def __init__(self, csv_file):
@@ -43,6 +45,14 @@ class AdhocParser:
 
     def __next__(self):
         curr = next(self.reader)
+        for header_name in field_names:
+            if header_name not in curr:
+                raise RuntimeError(
+                    "Incorrectly formatted adhoc file {}, missing header key {}".format(
+                        self._csv_file, header_name
+                    )
+                )
+
         op = None
         for t in SUPPORTED:
             if curr[TRANSACTION_TYPE_HEADER].upper() == t.value.upper():

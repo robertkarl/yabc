@@ -3,15 +3,19 @@ Entry point to command line yabc usage.
 """
 import argparse
 
-from yabc.transaction_parser import TransactionParser, TxFile
+import yabc.transaction_parser
+
 
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("filenames", nargs="+", metavar="filename")
     args = parser.parse_args()
-    tx_files = [TxFile(open(fname), None) for fname in args.filenames]
-    parser = TransactionParser(tx_files)
-    print(parser.txs)
+    tx_files = [
+        yabc.transaction_parser.TxFile(open(fname), None) for fname in args.filenames
+    ]
+    parser = yabc.transaction_parser.TransactionParser(tx_files)
+    for i in parser.txs:
+        print(i)
 
 
 print(__name__)

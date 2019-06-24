@@ -2,16 +2,23 @@
 Test that we can parse data from various CSV sources.
 """
 
+import glob
 import unittest
 
 from yabc import csv_to_json
 from yabc.formats import adhoc
+from yabc.formats import coinbase
 
 
 class CsvTest(unittest.TestCase):
-    def test_load_coinbase_csv(self):
+    def setUp(self) -> None:
+        self.filenames = glob.glob("testdata/*coinbase*.csv")
+
+    def test_load_coinbase_csvs(self):
         """ Test wholesale load of coinbase data from CSV"""
-        csv_to_json.coinbase_to_dict("testdata/synthetic_coinbase_csv.csv")
+        for fname in self.filenames:
+            with open(fname) as f:
+                coinbase.txs_from_coinbase(f)
 
     def test_load_gemini_csv(self):
         """ Test wholesale load of gemini data from CSV"""

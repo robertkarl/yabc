@@ -106,6 +106,7 @@ class Transaction(yabc.Base):
                 - 'Transfer Total': the total USD price, including fees.
                 - 'Transfer Fee': the USD fee charged by the exchange.
                 - 'Amount': the amount of bitcoin sold. (It's negative for sales.)
+                - 'Currency': which cryptocurrency was involved.
                 - 'Timestamp': 'hour:min:sec.millisecs' formatted timestamp.
         Returns: Transaction instance with important fields populated
         """
@@ -161,7 +162,7 @@ class Transaction(yabc.Base):
         )
 
     def __repr__(self):
-        return "<TX for user '{}': {} {} BTC @ {}, on {} from exchange {}. Fee {}.>".format(
+        return "<TX for user '{}': {} {} {asset_name} @ {}, on {} from exchange {}. Fee {}.>".format(
             self.user_id,
             self.operation,
             self.quantity,
@@ -169,6 +170,7 @@ class Transaction(yabc.Base):
             self.date,
             self.source,
             self.fees,
+            asset_name=self.asset_name,
         )
 
 

@@ -190,32 +190,6 @@ def transactions_from_file(tx_file, expected_format):
     raise ValueError("unknown format {}".format(expected_format))
 
 
-
-
-def get_all_transactions(coinbase, gemini):
-    """
-    Get all transactions from a coinbase and a gemini file.
-
-    TODO: Accept arbitrary (filename, format) pairs
-
-    Arguments:
-        coinbase (str): path to coinbase file
-        gemini (str): path to gemini file
-    """
-    cb = csv_to_json.coinbase_to_dict(coinbase) if coinbase else None
-    gems = csv_to_json.gemini_to_dict(gemini) if gemini else None
-    txs = []
-    if gems:
-        for i in gems:
-            t = transaction.Transaction.FromGeminiJSON(i)
-            txs.append(t)
-    if cb:
-        for i in cb:
-            t = transaction.Transaction.FromCoinbaseJSON(i)
-            txs.append(t)
-    return txs
-
-
 def reports_to_csv(reports: Sequence[CostBasisReport]):
     """ Return a file-like object with a row for each report.
 
