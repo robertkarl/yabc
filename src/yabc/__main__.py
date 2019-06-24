@@ -19,6 +19,7 @@ def main():
     for i in processor.process():
         print(i)
 
+
 print(__name__)
 if __name__ == "__main__":
     main()
