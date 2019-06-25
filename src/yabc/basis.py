@@ -279,7 +279,6 @@ def process_all(method, txs):
     return reports
 
 
-
 class BasisProcessor:
     """
     Store state for basis calculations.

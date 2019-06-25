@@ -10,7 +10,8 @@ from yabc import Base
 from yabc import basis
 from yabc import transaction
 from yabc import user  # noqa
-from yabc.formats import gemini, coinbase
+from yabc.formats import coinbase
+from yabc.formats import gemini
 from yabc.transaction import Transaction
 from yabc.transaction import make_transaction
 

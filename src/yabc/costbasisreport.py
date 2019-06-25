@@ -2,17 +2,18 @@ import datetime
 import decimal
 from collections import defaultdict
 from decimal import Decimal
-from typing import Sequence
 
 import sqlalchemy
-from sqlalchemy import Boolean, orm
+from sqlalchemy import Boolean
 from sqlalchemy import Column
 from sqlalchemy import DateTime
 from sqlalchemy import ForeignKey
 from sqlalchemy import Integer
+from sqlalchemy import orm
 
 import yabc
 from yabc.transaction import PreciseDecimalString
+
 
 class CostBasisReport(yabc.Base):
     """
@@ -169,7 +170,6 @@ class ReportBatch:
         self.round_dollars = round_dollars
         self._totals = None
 
-
     def totals(self):
         """
         :return:  dict with keys ["proceeds", "basis", "adjustment", "gain_or_loss"]
@@ -192,9 +192,12 @@ class ReportBatch:
         ans += "{} transactions to be reported\n\n".format(len(self.reports))
         for i in self.reports:
             ans += "{}\n".format(str(i))
-        ans += "\ntotal gain or loss for above transactions: {}".format(self.totals()["gain_or_loss"])
+        ans += "\ntotal gain or loss for above transactions: {}".format(
+            self.totals()["gain_or_loss"]
+        )
         ans += "\n"
         ans += "\ntotal basis for above transactions: {}".format(self.totals()["basis"])
-        ans += "\ntotal proceeds for above transactions: {}".format(self.totals()["proceeds"])
+        ans += "\ntotal proceeds for above transactions: {}".format(
+            self.totals()["proceeds"]
+        )
         return ans
-

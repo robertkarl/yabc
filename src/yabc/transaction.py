@@ -5,7 +5,6 @@ import datetime
 import enum
 from decimal import Decimal
 
-import dateutil.parser
 import sqlalchemy
 from sqlalchemy import Column
 from sqlalchemy import DateTime
@@ -99,7 +98,6 @@ class Transaction(yabc.Base):
         self.fees = Decimal(fees)
 
     @staticmethod
-
     def __repr__(self):
         return "<TX for user '{}': {} {} {asset_name} @ {}, on {} from exchange {}. Fee {}.>".format(
             self.user_id,

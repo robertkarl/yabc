@@ -70,6 +70,7 @@ class CoinbaseParser:
             raise StopIteration
         return self.txs.pop(0)
 
+
 def FromCoinbaseJSON(json):
     """
     Arguments:
@@ -99,5 +100,6 @@ def FromCoinbaseJSON(json):
         source="coinbase",
         usd_subtotal=proceeds,
     )
+
 
 FORMAT_CLASSES.append(CoinbaseParser)

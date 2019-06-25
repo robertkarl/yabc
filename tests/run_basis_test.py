@@ -2,7 +2,6 @@ import unittest
 
 from yabc import basis
 from yabc.formats import coinbase
-from yabc.transaction import Transaction
 
 
 class RunBasisTest(unittest.TestCase):
