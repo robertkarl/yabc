@@ -5,6 +5,7 @@ import argparse
 
 import yabc.transaction_parser
 from yabc import basis
+from yabc.basis import human_readable_report
 
 
 def main():
@@ -16,10 +17,9 @@ def main():
     ]
     parser = yabc.transaction_parser.TransactionParser(tx_files)
     processor = basis.BasisProcessor("FIFO", parser.txs)
-    for i in processor.process():
-        print(i)
+    txs = processor.process()
+    print(human_readable_report(txs))
 
 
-print(__name__)
 if __name__ == "__main__":
     main()

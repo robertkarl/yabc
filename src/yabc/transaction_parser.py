@@ -1,4 +1,5 @@
 import collections
+import logging
 from typing import Sequence
 
 import yabc
@@ -32,7 +33,7 @@ class TransactionParser:
                 values = list(generator)
                 return values
             except RuntimeError as e:
-                print(e)
+                logging.info(e)
                 continue
         self.flags.append(
             "WARNING: couldn't find any transactions in file {}".format(f)
