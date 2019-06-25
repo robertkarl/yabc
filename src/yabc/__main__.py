@@ -12,6 +12,8 @@ File types are automatically detected.
 """
 import argparse
 
+import sys
+
 import yabc.transaction_parser
 from yabc import basis
 from yabc.costbasisreport import ReportBatch
@@ -25,6 +27,11 @@ def main():
         yabc.transaction_parser.TxFile(open(fname), None) for fname in args.filenames
     ]
     parser = yabc.transaction_parser.TransactionParser(tx_files)
+    if parser.flags:
+        for flag in parser.flags:
+            print(flag, file=sys.stderr)
+        print("Quitting yabc.", file=sys.stderr)
+        sys.exit(1)
     processor = basis.BasisProcessor("FIFO", parser.txs)
     reports = processor.process()
     batch = ReportBatch(reports)

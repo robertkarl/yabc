@@ -36,6 +36,6 @@ class TransactionParser:
                 logging.info(e)
                 continue
         self.flags.append(
-            "WARNING: couldn't find any transactions in file {}".format(f)
+            "ERROR: couldn't find any transactions in file {}".format(f)
         )
         return []
