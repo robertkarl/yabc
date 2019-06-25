@@ -10,6 +10,7 @@ import decimal
 import delorean
 
 from yabc import transaction
+from yabc.formats import FORMAT_CLASSES
 
 TRANSACTION_TYPE_HEADER = "Type"
 SUBTOTAL_HEADER = "DollarValue"
@@ -79,3 +80,6 @@ class AdhocParser:
 
     def __iter__(self):
         return self
+
+
+FORMAT_CLASSES.append(AdhocParser)

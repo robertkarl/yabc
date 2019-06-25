@@ -276,13 +276,14 @@ def human_readable_report(txs: Sequence[CostBasisReport]):
     """
     Given a list of CostBasisReports to be submitted to tax authorities, generate a human
     readable report.
+
     :return str:
     """
     total_proceeds = sum([tx.proceeds for tx in txs])
-    total_basis = sum([tx.basis for tx in txs])
+    total_basis = Decimal.quantize(sum([tx.basis for tx in txs]), Decimal(".01"))
     total_gain_or_loss = sum([tx.gain_or_loss for tx in txs])
     ans = ""
-    ans += "{} transactions found\n\n".format(len(txs))
+    ans += "{} transactions to be reported\n\n".format(len(txs))
     for i in txs:
         ans += "{}\n".format(str(i))
     ans += "\ntotal gain or loss for above transactions: {}".format(total_gain_or_loss)

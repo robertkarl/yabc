@@ -27,7 +27,7 @@ class TransactionParser:
         if hinted_parser is not None:
             return list(hinted_parser(f))
         # Try formats until something works.
-        for constructor in yabc.formats.format_classes:
+        for constructor in yabc.formats.FORMAT_CLASSES:
             try:
                 generator = constructor(f)
                 values = list(generator)

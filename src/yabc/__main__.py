@@ -1,5 +1,14 @@
 """
 Entry point to command line yabc usage.
+
+Example:
+
+```
+pip install yabc
+python -m yabc statement_from_coinbase.csv my_gemini_statement.csv adhoc.csv
+```
+
+File types are automatically detected.
 """
 import argparse
 
