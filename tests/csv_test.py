@@ -4,7 +4,9 @@ Test that we can parse data from various CSV sources.
 
 import glob
 import unittest
+import os
 
+from yabc import transaction
 from yabc.formats import adhoc
 from yabc.formats import coinbase
 from yabc.formats import gemini
@@ -26,5 +28,11 @@ class CsvTest(unittest.TestCase):
 
     def test_load_adhoc_csv(self):
         """ Test wholesale load of gemini data from CSV"""
+        print(os.environ)
         with open("testdata/adhoc.csv") as f:
-            list(adhoc.AdhocParser(f))
+            stuff = list(adhoc.AdhocParser(f))
+            rcvd, sent, mining = stuff
+            self.assertEqual(len(stuff), 3)
+            self.assertEqual(rcvd.operation, transaction.Operation.GIFT_RECEIVED)
+            self.assertEqual(sent.operation, transaction.Operation.GIFT_SENT)
+            self.assertEqual(mining.operation, transaction.Operation.MINING)

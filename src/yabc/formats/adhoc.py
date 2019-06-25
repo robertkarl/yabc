@@ -30,8 +30,6 @@ class AdhocParser:
     Defines an input format for ad-hoc transactions like mining, spending, and gifts.
 
     This class translates CSV rows into transaction objects.
-
-    TODO: When does this stop iteration?
     """
 
     def __init__(self, csv_file):
@@ -42,10 +40,12 @@ class AdhocParser:
         """
         assert not isinstance(csv_file, str)
         self._csv_file = csv_file
-        self.reader = csv.DictReader(csv_file)
+        self.reader = csv.DictReader(self._csv_file)
 
     def __next__(self):
         curr = next(self.reader)
+        if not curr:
+            raise StopIteration
         for header_name in field_names:
             if header_name not in curr:
                 raise RuntimeError(

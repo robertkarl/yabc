@@ -48,8 +48,9 @@ def from_gemini(f):
 
 
 def gemini_to_dict(fname):
-    f = open(fname, "r")
-    return from_gemini(f)
+    with open(fname, "r") as f:
+        return from_gemini(f)
+    return None
 
 
 def fname_to_tx_gemini(fname: str):
