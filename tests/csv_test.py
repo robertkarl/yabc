@@ -3,8 +3,8 @@ Test that we can parse data from various CSV sources.
 """
 
 import glob
-import unittest
 import os
+import unittest
 
 from yabc import transaction
 from yabc.formats import adhoc
