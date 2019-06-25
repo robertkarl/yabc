@@ -5,7 +5,6 @@ import datetime
 import enum
 from decimal import Decimal
 
-import dateutil.parser
 import sqlalchemy
 from sqlalchemy import Column
 from sqlalchemy import DateTime
@@ -98,70 +97,8 @@ class Transaction(yabc.Base):
         self.user_id = user_id
         self.fees = Decimal(fees)
 
-    @staticmethod
-    def FromCoinbaseJSON(json):
-        """
-        Arguments:
-            json (dict): a coinbase-style dictionary with the following fields:
-                - 'Transfer Total': the total USD price, including fees.
-                - 'Transfer Fee': the USD fee charged by the exchange.
-                - 'Amount': the amount of bitcoin sold. (It's negative for sales.)
-                - 'Timestamp': 'hour:min:sec.millisecs' formatted timestamp.
-        Returns: Transaction instance with important fields populated
-        """
-        operation = Transaction.Operation.BUY
-        proceeds = json["Transfer Total"]
-        fee = json["Transfer Fee"]
-        asset_name = json["Currency"]
-        quantity = Decimal(json["Amount"])
-        if quantity < 0:
-            operation = Transaction.Operation.SELL
-            quantity = abs(quantity)
-        timestamp_str = json["Timestamp"]
-        return Transaction(
-            asset_name=asset_name,
-            operation=operation,
-            quantity=quantity,
-            date=dateutil.parser.parse(timestamp_str),
-            fees=fee,
-            source="coinbase",
-            usd_subtotal=proceeds,
-        )
-
-    @staticmethod
-    def gemini_type_to_operation(gemini_type: str):
-        if gemini_type == "Buy":
-            return Transaction.Operation.BUY
-        elif gemini_type == "Sell":
-            return Transaction.Operation.SELL
-        raise RuntimeError(
-            "Invalid Gemini transaction type {} encountered.".format(gemini_type)
-        )
-
-    @staticmethod
-    def FromGeminiJSON(json):
-        """
-        Arguments
-            json (Dictionary): 
-        """
-
-        operation = Transaction.gemini_type_to_operation(json["Type"])
-        quantity = json["BTC Amount"]
-        usd_total = json["USD Amount"]
-        fee = json["USD Fee"]
-        timestamp_str = "{}".format(json["Date"])
-        return Transaction(
-            asset_name="BTC",
-            operation=operation,
-            quantity=quantity,
-            fees=fee,
-            date=dateutil.parser.parse(timestamp_str),
-            source="gemini",
-            usd_subtotal=usd_total,
-        )
-
     def __repr__(self):
-        return "<TX for user '{}': {} {} BTC @ {}, on {} from exchange {}. Fee {}.>".format(
+        return "<TX for user '{}': {} {} {asset_name} @ {}, on {} from exchange {}. Fee {}.>".format(
             self.user_id,
             self.operation,
             self.quantity,
@@ -169,6 +106,7 @@ class Transaction(yabc.Base):
             self.date,
             self.source,
             self.fees,
+            asset_name=self.asset_name,
         )
 
 

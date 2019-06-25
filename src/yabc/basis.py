@@ -9,10 +9,12 @@ import io
 from decimal import Decimal
 from typing import Sequence
 
-from yabc import csv_to_json
+from yabc import formats
 from yabc import transaction
+from yabc import transaction_parser
 from yabc.costbasisreport import CostBasisReport
 from yabc.transaction import Transaction
+from yabc.transaction_parser import TransactionParser
 
 __author__ = "Robert Karl <robertkarljr@gmail.com>"
 
@@ -183,35 +185,25 @@ def _build_sale_reports(pool, pool_index, trans):
 
 
 def transactions_from_file(tx_file, expected_format):
+    """
+    Get a list of transactions from a single file.
+
+    :param tx_file: the name of a csv file
+    :param expected_format: a string, the name of the exchange. (gemini or coinbase)
+    :return:
+    """
+    hint = None
     if expected_format == "gemini":
-        return csv_to_json.txs_from_gemini(io.TextIOWrapper(tx_file))
+        hint = formats.gemini.GeminiParser
+        tx_file = io.TextIOWrapper(tx_file)
     elif expected_format == "coinbase":
-        return csv_to_json.txs_from_coinbase(io.TextIOWrapper(tx_file))
-    raise ValueError("unknown format {}".format(expected_format))
-
-
-def get_all_transactions(coinbase, gemini):
-    """
-    Get all transactions from a coinbase and a gemini file.
-
-    TODO: Accept arbitrary (filename, format) pairs
-
-    Arguments:
-        coinbase (str): path to coinbase file
-        gemini (str): path to gemini file
-    """
-    cb = csv_to_json.coinbase_to_dict(coinbase) if coinbase else None
-    gems = csv_to_json.gemini_to_dict(gemini) if gemini else None
-    txs = []
-    if gems:
-        for i in gems:
-            t = transaction.Transaction.FromGeminiJSON(i)
-            txs.append(t)
-    if cb:
-        for i in cb:
-            t = transaction.Transaction.FromCoinbaseJSON(i)
-            txs.append(t)
-    return txs
+        hint = formats.coinbase.CoinbaseParser
+        tx_file = io.TextIOWrapper(tx_file)
+    else:
+        tx_file = transaction_parser.TxFile(tx_file, None)
+    tx_file = transaction_parser.TxFile(tx_file, hint)
+    parser = TransactionParser([tx_file])
+    return parser.txs
 
 
 def reports_to_csv(reports: Sequence[CostBasisReport]):
@@ -298,9 +290,10 @@ class BasisProcessor:
         assert method in "FIFO", "LIFO"
         self.method = method
         self.txs = txs
+        self._reports = None
 
     def process(self):
-        reports, pool = _process_all(method, txs)
-        self.reports = reports
+        reports, pool = _process_all(self.method, self.txs)
+        self._reports = reports
         self.pool = pool
-        return self.reports
+        return self._reports

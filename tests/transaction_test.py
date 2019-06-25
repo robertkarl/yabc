@@ -10,6 +10,8 @@ from yabc import Base
 from yabc import basis
 from yabc import transaction
 from yabc import user  # noqa
+from yabc.formats import coinbase
+from yabc.formats import gemini
 from yabc.transaction import Transaction
 from yabc.transaction import make_transaction
 
@@ -94,7 +96,7 @@ class TransactionTest(unittest.TestCase):
             "Timestamp": "2015-2-5 06:27:56.373",
         }
 
-        trans = transaction.Transaction.FromCoinbaseJSON(coinbase_json_buy)
+        trans = coinbase.FromCoinbaseJSON(coinbase_json_buy)
 
         self.assertEqual(trans.operation, BUY)
         self.assertEqual(trans.quantity, coinbase_json_buy["Amount"])
@@ -114,7 +116,7 @@ class TransactionTest(unittest.TestCase):
             "Timestamp": "2015-2-5 06:27:56.373",
         }
 
-        trans = transaction.Transaction.FromCoinbaseJSON(coinbase_json_sell)
+        trans = coinbase.FromCoinbaseJSON(coinbase_json_sell)
 
         self.assertEqual(trans.operation, SELL)
         self.assertEqual(trans.quantity, math.fabs(coinbase_json_sell["Amount"]))
@@ -136,7 +138,7 @@ class TransactionTest(unittest.TestCase):
             # "Time": "06:27:56.373",
         }
 
-        trans = transaction.Transaction.FromGeminiJSON(gemini_json_buy)
+        trans = gemini.FromGeminiJSON(gemini_json_buy)
 
         self.assertEqual(trans.operation, BUY)
         self.assertEqual(trans.quantity, 2)
@@ -159,7 +161,7 @@ class TransactionTest(unittest.TestCase):
             # "Time": "06:27:56.373",
         }
 
-        trans = transaction.Transaction.FromGeminiJSON(gemini_json_sell)
+        trans = gemini.FromGeminiJSON(gemini_json_sell)
 
         self.assertEqual(trans.operation, SELL)
         self.assertEqual(trans.quantity, 2)
@@ -180,7 +182,7 @@ class TransactionTest(unittest.TestCase):
             "Date": "2015-2-5",
         }
 
-        trans = transaction.Transaction.FromGeminiJSON(sell_json_gemini)
+        trans = gemini.FromGeminiJSON(sell_json_gemini)
         engine = sqlalchemy.create_engine("sqlite:///:memory:", echo=True)
         Session = sessionmaker(bind=engine)
         session = Session()

@@ -10,6 +10,7 @@ import decimal
 import delorean
 
 from yabc import transaction
+from yabc.formats import FORMAT_CLASSES
 
 TRANSACTION_TYPE_HEADER = "Type"
 SUBTOTAL_HEADER = "DollarValue"
@@ -24,7 +25,7 @@ SUPPORTED = [
 ]
 
 
-class AdhocTransactionGenerator:
+class AdhocParser:
     """
     Defines an input format for ad-hoc transactions like mining, spending, and gifts.
 
@@ -37,11 +38,22 @@ class AdhocTransactionGenerator:
         :param csv_file: can be a list of rows, each containing a string, or an
         open file-like object.
         """
+        assert not isinstance(csv_file, str)
         self._csv_file = csv_file
-        self.reader = csv.DictReader(csv_file)
+        self.reader = csv.DictReader(self._csv_file)
 
     def __next__(self):
         curr = next(self.reader)
+        if not curr:
+            raise StopIteration
+        for header_name in field_names:
+            if header_name not in curr:
+                raise RuntimeError(
+                    "Incorrectly formatted adhoc file {}, missing header key {}".format(
+                        self._csv_file, header_name
+                    )
+                )
+
         op = None
         for t in SUPPORTED:
             if curr[TRANSACTION_TYPE_HEADER].upper() == t.value.upper():
@@ -68,3 +80,6 @@ class AdhocTransactionGenerator:
 
     def __iter__(self):
         return self
+
+
+FORMAT_CLASSES.append(AdhocParser)

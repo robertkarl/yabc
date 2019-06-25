@@ -18,7 +18,7 @@ class CsvAdhocTest(unittest.TestCase):
             ["BTC", "0.1", "2019/5/11", "GiftSent"],
         ]
         csv_module_importable = [",".join(i) for i in lists_per_row]
-        atg = adhoc.AdhocTransactionGenerator(csv_module_importable)
+        atg = adhoc.AdhocParser(csv_module_importable)
         l = list(atg)
         self.assertEqual(len(l), 3)
         mining = l[0]

@@ -118,24 +118,6 @@ def get_suffix():
     return ["end tell"]
 
 
-def human_readable_report(txs):
-    """
-    Given a list of CostBasisReports to be submitted to tax authorities, generate a human
-    readable report.
-    """
-    total_proceeds = sum([tx.proceeds for tx in txs])
-    total_basis = sum([tx.basis for tx in txs])
-    total_gain_or_loss = sum([tx.gain_or_loss for tx in txs])
-    ans = ""
-    ans += "{} transactions for ty {}\n\n".format(len(txs), TAX_YEAR)
-    for i in txs:
-        ans += "{}\n".format(str(i))
-    ans += "\ntotal gain or loss for above transactions: {}".format(total_gain_or_loss)
-    ans += "\n"
-    ans += "\ntotal basis for above transactions: {}".format(total_basis)
-    ans += "\ntotal proceeds for above transactions: {}".format(total_proceeds)
-    return ans
-
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
