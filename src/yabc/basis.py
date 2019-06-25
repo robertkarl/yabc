@@ -185,6 +185,13 @@ def _build_sale_reports(pool, pool_index, trans):
 
 
 def transactions_from_file(tx_file, expected_format):
+    """
+    Get a list of transactions from a single file.
+
+    :param tx_file: the name of a csv file
+    :param expected_format: a string, the name of the exchange. (gemini or coinbase)
+    :return:
+    """
     hint = None
     if expected_format == "gemini":
         hint = formats.gemini.GeminiParser
@@ -271,26 +278,6 @@ def process_all(method, txs):
     reports, pool = _process_all(method, txs)
     return reports
 
-
-def human_readable_report(txs: Sequence[CostBasisReport]):
-    """
-    Given a list of CostBasisReports to be submitted to tax authorities, generate a human
-    readable report.
-
-    :return str:
-    """
-    total_proceeds = sum([tx.proceeds for tx in txs])
-    total_basis = Decimal.quantize(sum([tx.basis for tx in txs]), Decimal(".01"))
-    total_gain_or_loss = sum([tx.gain_or_loss for tx in txs])
-    ans = ""
-    ans += "{} transactions to be reported\n\n".format(len(txs))
-    for i in txs:
-        ans += "{}\n".format(str(i))
-    ans += "\ntotal gain or loss for above transactions: {}".format(total_gain_or_loss)
-    ans += "\n"
-    ans += "\ntotal basis for above transactions: {}".format(total_basis)
-    ans += "\ntotal proceeds for above transactions: {}".format(total_proceeds)
-    return ans
 
 
 class BasisProcessor:

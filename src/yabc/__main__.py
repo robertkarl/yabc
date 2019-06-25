@@ -14,7 +14,7 @@ import argparse
 
 import yabc.transaction_parser
 from yabc import basis
-from yabc.basis import human_readable_report
+from yabc.costbasisreport import ReportBatch
 
 
 def main():
@@ -26,8 +26,9 @@ def main():
     ]
     parser = yabc.transaction_parser.TransactionParser(tx_files)
     processor = basis.BasisProcessor("FIFO", parser.txs)
-    txs = processor.process()
-    print(human_readable_report(txs))
+    reports = processor.process()
+    batch = ReportBatch(reports)
+    print(batch.human_readable_report())
 
 
 if __name__ == "__main__":

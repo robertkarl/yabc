@@ -35,6 +35,3 @@ def create_app(test_config=None):
     yabc.server.sql_backend.init_app(app)
 
     return app
-
-
-print("cxreate_app")

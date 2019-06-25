@@ -18,7 +18,7 @@ class CsvTest(unittest.TestCase):
         """ Test wholesale load of coinbase data from CSV"""
         for fname in self.filenames:
             with open(fname) as f:
-                coinbase.txs_from_coinbase(f)
+                coinbase.from_coinbase(f)
 
     def test_load_gemini_csv(self):
         """ Test wholesale load of gemini data from CSV"""

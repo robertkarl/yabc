@@ -20,6 +20,7 @@ from yabc import transaction
 from yabc import user
 from yabc.basis import transactions_from_file
 from yabc.costbasisreport import CostBasisReport
+from yabc.formats import coinbase
 from yabc.user import User
 
 __author__ = "Robert Karl <robertkarljr@gmail.com>"
@@ -81,7 +82,7 @@ class SqlBackend:
 
     def add_tx(self, userid, tx):
         assert tx
-        loaded_tx = transaction.Transaction.FromCoinbaseJSON(json.loads(tx))
+        loaded_tx = coinbase.FromCoinbaseJSON(json.loads(tx))
         loaded_tx.user_id = userid
         self.session.add(loaded_tx)
         self.session.commit()

@@ -2,9 +2,10 @@ import datetime
 import decimal
 from collections import defaultdict
 from decimal import Decimal
+from typing import Sequence
 
 import sqlalchemy
-from sqlalchemy import Boolean
+from sqlalchemy import Boolean, orm
 from sqlalchemy import Column
 from sqlalchemy import DateTime
 from sqlalchemy import ForeignKey
@@ -12,26 +13,6 @@ from sqlalchemy import Integer
 
 import yabc
 from yabc.transaction import PreciseDecimalString
-
-
-def round_to_dollar(dec: decimal.Decimal):
-    return dec.quantize(1)
-
-
-def round_to_dollar_str(dec):
-    """
-    Convert an arbitrary precision decimal object to a string rounded to the
-    NEAREST dollar.
-
-    >>> round_to_dollar_str(decimal.Decimal("1.500001"))
-    '2.'
-    >>> round_to_dollar_str(decimal.Decimal("1.499999"))
-    '1.'
-    >>> round_to_dollar_str(decimal.Decimal("-1.499999"))
-    '-1.'
-    """
-    return "{:.0f}.".format(round_to_dollar(dec))
-
 
 class CostBasisReport(yabc.Base):
     """
@@ -103,11 +84,12 @@ class CostBasisReport(yabc.Base):
         assert isinstance(date_sold, datetime.datetime)
         assert isinstance(date_purchased, datetime.datetime)
         assert isinstance(asset, str)
+        self._round_to_dollar = True
         self.user_id = userid
-        self.basis = basis
+        self.basis = self._round_as_needed(basis)
         self.quantity = quantity
         self.date_purchased = date_purchased
-        self.proceeds = proceeds
+        self.proceeds = self._round_as_needed(proceeds)
         self.date_sold = date_sold
         self.asset_name = asset
         self.adjustment = adjustment
@@ -130,9 +112,12 @@ class CostBasisReport(yabc.Base):
         :param round_dollars: We only support True so far.
         :return:
         """
-        proceeds = round_to_dollar(self.proceeds) if round_dollars else self.proceeds
-        basis = round_to_dollar(self.basis) if round_dollars else self.basis
-        return proceeds - basis
+        return self._round_as_needed(self.proceeds - self.basis)
+
+    def _round_as_needed(self, amount: decimal.Decimal):
+        if self._round_to_dollar:
+            return amount.quantize(1)
+        return amount.quantize(Decimal(".01"))
 
     def description(self):
         return "{:.6f} {}".format(self.quantity, self.asset_name)
@@ -151,6 +136,10 @@ class CostBasisReport(yabc.Base):
     @staticmethod
     def field_names():
         return CostBasisReport._fields
+
+    @orm.reconstructor
+    def init_on_load(self):
+        self._round_to_dollar = True
 
 
 class ReportBatch:
@@ -180,10 +169,6 @@ class ReportBatch:
         self.round_dollars = round_dollars
         self._totals = None
 
-    def _round_if_necessary(self, amount: decimal.Decimal):
-        if self.round_dollars:
-            return round_to_dollar(amount)
-        return amount
 
     def totals(self):
         """
@@ -193,5 +178,23 @@ class ReportBatch:
             self._totals = defaultdict(decimal.Decimal)
             for r in self.reports:
                 for key in self.KEYS:
-                    self._totals[key] += self._round_if_necessary(getattr(r, key))
+                    self._totals[key] += getattr(r, key)
         return self._totals
+
+    def human_readable_report(self):
+        """
+        Given a list of CostBasisReports to be submitted to tax authorities, generate a human
+        readable report.
+
+        :return str:
+        """
+        ans = ""
+        ans += "{} transactions to be reported\n\n".format(len(self.reports))
+        for i in self.reports:
+            ans += "{}\n".format(str(i))
+        ans += "\ntotal gain or loss for above transactions: {}".format(self.totals()["gain_or_loss"])
+        ans += "\n"
+        ans += "\ntotal basis for above transactions: {}".format(self.totals()["basis"])
+        ans += "\ntotal proceeds for above transactions: {}".format(self.totals()["proceeds"])
+        return ans
+

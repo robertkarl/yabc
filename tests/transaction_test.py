@@ -10,7 +10,7 @@ from yabc import Base
 from yabc import basis
 from yabc import transaction
 from yabc import user  # noqa
-from yabc.formats import gemini
+from yabc.formats import gemini, coinbase
 from yabc.transaction import Transaction
 from yabc.transaction import make_transaction
 
@@ -95,7 +95,7 @@ class TransactionTest(unittest.TestCase):
             "Timestamp": "2015-2-5 06:27:56.373",
         }
 
-        trans = transaction.Transaction.FromCoinbaseJSON(coinbase_json_buy)
+        trans = coinbase.FromCoinbaseJSON(coinbase_json_buy)
 
         self.assertEqual(trans.operation, BUY)
         self.assertEqual(trans.quantity, coinbase_json_buy["Amount"])
@@ -115,7 +115,7 @@ class TransactionTest(unittest.TestCase):
             "Timestamp": "2015-2-5 06:27:56.373",
         }
 
-        trans = transaction.Transaction.FromCoinbaseJSON(coinbase_json_sell)
+        trans = coinbase.FromCoinbaseJSON(coinbase_json_sell)
 
         self.assertEqual(trans.operation, SELL)
         self.assertEqual(trans.quantity, math.fabs(coinbase_json_sell["Amount"]))

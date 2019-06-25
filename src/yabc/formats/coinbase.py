@@ -22,7 +22,7 @@ def from_coinbase(f):
     if len(rawcsv) < 4:
         raise RuntimeError("Invalid CSV file, not enough rows.")
     fieldnames = rawcsv[4]
-    if not fieldnames[-2].count("Coinbase") > 0:
+    if not len(fieldnames) >= 2 or not fieldnames[-2].count("Coinbase") > 0:
         raise RuntimeError("Invalid coinbase file encountered")
     fieldnames[-1] = "Bitcoin Hash"
     fieldnames[-2] = "Coinbase ID"
@@ -47,7 +47,7 @@ def from_coinbase(f):
 def txs_from_coinbase(f):
     """
     :param f: a filelike object with CSV data
-    :return:
+    :return: a list of transaction.Transaction
     """
     dicts = from_coinbase(f)
     return [FromCoinbaseJSON(i) for i in dicts]
@@ -59,7 +59,8 @@ class CoinbaseParser:
         if isinstance(file_or_fname, str):
             with open(file_or_fname) as f:
                 self.txs = txs_from_coinbase(f)
-        self.txs = txs_from_coinbase(file_or_fname)
+        else:
+            self.txs = txs_from_coinbase(file_or_fname)
 
     def __iter__(self):
         return self
