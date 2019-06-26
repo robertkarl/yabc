@@ -11,6 +11,7 @@ import delorean
 
 from yabc import transaction
 from yabc.formats import FORMAT_CLASSES
+from yabc.formats import Format
 
 TRANSACTION_TYPE_HEADER = "Type"
 SUBTOTAL_HEADER = "DollarValue"
@@ -25,7 +26,7 @@ SUPPORTED = [
 ]
 
 
-class AdhocParser:
+class AdhocParser(Format):
     """
     Defines an input format for ad-hoc transactions like mining, spending, and gifts.
 
@@ -39,8 +40,8 @@ class AdhocParser:
         open file-like object.
         """
         assert not isinstance(csv_file, str)
-        self._csv_file = csv_file
-        self.reader = csv.DictReader(self._csv_file)
+        self._file = csv_file
+        self.reader = csv.DictReader(self._file)
 
     def __next__(self):
         curr = next(self.reader)
@@ -50,7 +51,7 @@ class AdhocParser:
             if header_name not in curr:
                 raise RuntimeError(
                     "Incorrectly formatted adhoc file {}, missing header key {}".format(
-                        self._csv_file, header_name
+                        self._file, header_name
                     )
                 )
 

@@ -10,6 +10,7 @@ import dateutil
 
 from yabc import transaction
 from yabc.formats import FORMAT_CLASSES
+from yabc.formats import Format
 
 
 def from_coinbase(f):
@@ -53,22 +54,24 @@ def txs_from_coinbase(f):
     return [FromCoinbaseJSON(i) for i in dicts]
 
 
-class CoinbaseParser:
+class CoinbaseParser(Format):
     def __init__(self, file_or_fname):
-        self.txs = []
+        self._file = file_or_fname
+        self._reports = []
         if isinstance(file_or_fname, str):
             with open(file_or_fname) as f:
-                self.txs = txs_from_coinbase(f)
+                self._reports = txs_from_coinbase(f)
         else:
-            self.txs = txs_from_coinbase(file_or_fname)
+            self._reports = txs_from_coinbase(file_or_fname)
+        self.cleanup()
 
     def __iter__(self):
         return self
 
     def __next__(self):
-        if not self.txs:
+        if not self._reports:
             raise StopIteration
-        return self.txs.pop(0)
+        return self._reports.pop(0)
 
 
 def FromCoinbaseJSON(json):
