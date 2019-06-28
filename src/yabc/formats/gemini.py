@@ -4,7 +4,8 @@ import decimal
 import dateutil
 
 from yabc import transaction
-from yabc.formats import FORMAT_CLASSES, Format
+from yabc.formats import FORMAT_CLASSES
+from yabc.formats import Format
 
 
 def gem_int_from_dollar_string(s):

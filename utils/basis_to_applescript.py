@@ -44,7 +44,6 @@ import argparse
 
 from yabc import basis
 
-
 NUM_ENTRIES_IN_8949 = 14
 TAX_YEAR = "2018"
 GENERATED_FNAME_FMT = "populate_8949-{}.script"
@@ -116,7 +115,6 @@ def get_preamble():
 
 def get_suffix():
     return ["end tell"]
-
 
 
 if __name__ == "__main__":

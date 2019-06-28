@@ -1,10 +1,12 @@
 # Copyright (c) Seattle Blockchain Solutions. All rights reserved.
 # Licensed under the MIT License. See LICENSE in the project root for license information.
 
+
 class Format:
     """
     Base class for formats from various exchanges.
     """
+
     def has_next(self):
         if not self._reports:
             return False
@@ -18,7 +20,6 @@ class Format:
             except AttributeError:
                 pass
             del self._file
-
 
 
 FORMAT_CLASSES = []

@@ -5,7 +5,8 @@
 # catch unused imports.
 
 set -e
+DIRS="src/ tests/ utils/"
 python setup.py test
-autoflake -r -i --remove-all-unused-imports src/ tests/
-isort -rc src/ tests/ --skip src/yabc/__init__.py
-black src/ tests/
+autoflake -r -i --remove-all-unused-imports $DIRS
+isort -rc $DIRS --skip src/yabc/__init__.py
+black $DIRS
