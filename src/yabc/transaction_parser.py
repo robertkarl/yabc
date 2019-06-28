@@ -35,7 +35,5 @@ class TransactionParser:
             except RuntimeError as e:
                 logging.info(e)
                 continue
-        self.flags.append(
-            "ERROR: couldn't find any transactions in file {}".format(f)
-        )
+        self.flags.append("ERROR: couldn't find any transactions in file {}".format(f))
         return []

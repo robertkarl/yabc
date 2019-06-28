@@ -5,6 +5,7 @@ import dateutil
 
 from yabc import transaction
 from yabc.formats import FORMAT_CLASSES
+from yabc.formats import Format
 
 
 def gem_int_from_dollar_string(s):
@@ -62,15 +63,17 @@ def fname_to_tx_gemini(fname: str):
     return txs
 
 
-class GeminiParser:
+class GeminiParser(Format):
     def __init__(self, fname_or_file):
         self.txs = []
         self.flags = []
+        self._file = fname_or_file
         if isinstance(fname_or_file, str):
             self.txs = fname_to_tx_gemini(fname_or_file)
         else:
             tx_dicts = from_gemini(fname_or_file)
             self.txs = [FromGeminiJSON(i) for i in tx_dicts]
+        self.cleanup()
 
     def __iter__(self):
         return self
