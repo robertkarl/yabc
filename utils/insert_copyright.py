@@ -1,23 +1,5 @@
 # Copyright (c) Seattle Blockchain Solutions. All rights reserved.
 # Licensed under the MIT License. See LICENSE in the project root for license information.
-# Copyright (c) Seattle Blockchain Solutions. All rights reserved.
-# Licensed under the MIT License. See LICENSE in the project root for license information.
-# Copyright (c) Seattle Blockchain Solutions. All rights reserved.
-# Licensed under the MIT License. See LICENSE in the project root for license information.
-# Copyright (c) Seattle Blockchain Solutions. All rights reserved.
-# Licensed under the MIT License. See LICENSE in the project root for license information.
-# Copyright (c) Seattle Blockchain Solutions. All rights reserved.
-# Licensed under the MIT License. See LICENSE in the project root for license information.
-# Copyright (c) Seattle Blockchain Solutions. All rights reserved.
-# Licensed under the MIT License. See LICENSE in the project root for license information.
-# Copyright (c) Seattle Blockchain Solutions. All rights reserved.
-# Licensed under the MIT License. See LICENSE in the project root for license information.
-# Copyright (c) Seattle Blockchain Solutions. All rights reserved.
-# Licensed under the MIT License. See LICENSE in the project root for license information.
-# Copyright (c) Seattle Blockchain Solutions. All rights reserved.
-# Licensed under the MIT License. See LICENSE in the project root for license information.
-# Copyright (c) Seattle Blockchain Solutions. All rights reserved.
-# Licensed under the MIT License. See LICENSE in the project root for license information.
 import tempfile
 import os
 
@@ -34,7 +16,11 @@ if __name__ == "__main__":
 
     with open(args.file) as input:
         stuff = input.readlines()
-        if stuff[0] != copyright.strip().split('\n')[0] or stuff[1] != copyright.strip().split('\n')[1]:
+        valid = True
+        for i in range(len(copyright.strip().split('\n'))):
+            if stuff[i].strip('\n') != copyright.strip('\n').split('\n')[i]:
+                valid = False
+        if not valid:
             result = tempfile.NamedTemporaryFile('w')
             result.file.writelines(copyright)
             result.file.writelines(stuff)

@@ -1,3 +1,5 @@
+# Copyright (c) Seattle Blockchain Solutions. All rights reserved.
+# Licensed under the MIT License. See LICENSE in the project root for license information.
 """
 Imports binance exchange data into yabc's exchange-independent format.
 
