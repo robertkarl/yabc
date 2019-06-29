@@ -2,8 +2,6 @@
 # Licensed under the MIT License. See LICENSE in the project root for license information.
 import logging
 
-from . import *
-
 
 class Format:
     """
@@ -37,5 +35,19 @@ class Format:
 
 
 FORMAT_CLASSES = []
-# TODO: add binance. See comment in binance file.
+
+
+def add_supported_exchanges():
+    """
+    This is in a function mostly so our automated reformatting scripts don't place these imports above all statements
+
+    #noqa should stop our unused import zapper from zapping.
+    TODO: add binance. See comment in binance file.
+    """
+    from . import gemini  # noqa
+    from . import coinbase  # noqa
+    from . import adhoc  # noqa
+
+
+add_supported_exchanges()
 __all__ = ["adhoc", "gemini", "coinbase"]
