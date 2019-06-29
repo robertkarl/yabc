@@ -35,6 +35,15 @@ class AdhocParser(Format):
 
     EXCHANGE_NAME = "adhoc transactions"
 
+    def validate_headers(self, curr):
+        for header_name in field_names:
+            if header_name not in curr:
+                raise RuntimeError(
+                    "Incorrectly formatted adhoc file {}, missing header key {}".format(
+                        self._file, header_name
+                    )
+                )
+
     def __init__(self, csv_file):
         """
 
@@ -42,6 +51,23 @@ class AdhocParser(Format):
         open file-like object.
         """
         assert not isinstance(csv_file, str)
+        if isinstance(csv_file, (list, tuple)):
+            self.validate_headers(self._file[0])
+        else:
+            csv_file.seek(0)
+            contents = []
+            while True:
+                line = csv_file.readline()
+                if line:
+                    contents.append(line)
+                else:
+                    break
+            rawcsv = list(csv.reader(contents))
+            if not rawcsv:
+                raise RuntimeError("not enough rows in adhoc file {}".format(csv_file))
+            fieldnames = rawcsv[0]
+            self.validate_headers(fieldnames)
+            csv_file.seek(0)
         self._file = csv_file
         self.reader = csv.DictReader(self._file)
 
