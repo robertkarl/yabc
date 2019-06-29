@@ -5,10 +5,13 @@ import datetime
 import hashlib
 import io
 import json
+import logging
+from io import TextIOWrapper
 
 import click
 import flask
 import sqlalchemy
+from flask import make_response
 from flask.cli import with_appcontext
 from sqlalchemy.orm import sessionmaker
 
@@ -21,6 +24,7 @@ from yabc import user
 from yabc.basis import transactions_from_file
 from yabc.costbasisreport import CostBasisReport
 from yabc.formats import coinbase
+from yabc.transaction_parser import TransactionParser, TxFile
 from yabc.user import User
 
 __author__ = "Robert Karl <robertkarljr@gmail.com>"
@@ -205,11 +209,13 @@ class SqlBackend:
             if exc in submitted_file.filename.lower():
                 return exc
         for exc in exchanges:
+            print("trying exchange {}".format(exc))
             submitted_file.seek(0)
             try:
                 transactions_from_file(submitted_file, exc)
                 exchange = exc
-            except:
+            except RuntimeError as e:
+                logging.info("Autodetect is skipping due to {}".format(e))
                 pass
         if not exchange:
             raise RuntimeError(
@@ -219,7 +225,7 @@ class SqlBackend:
             )
         return exchange
 
-    def taxdoc_create(self, userid, submitted_file):
+    def import_transaction_document(self, userid, submitted_file):
         """
         Add the tx doc for this user.
 
@@ -230,12 +236,18 @@ class SqlBackend:
         exchange and userid should be strings.
         """
         submitted_stuff = submitted_file.read()
-        exchange = self._detect_exchange(submitted_file)
+        text_mode_file = TextIOWrapper(submitted_file)
         submitted_file.seek(0)
-        tx = basis.transactions_from_file(submitted_file, exchange)
+        tx_file = TxFile(text_mode_file, None)
+        parser = TransactionParser([tx_file])
+        parser.parse()
+        if not parser.succeeded():
+            val = flask.jsonify({'result': 'failure', 'flags': parser.flags})
+            return make_response(val, 400)
+        tx = parser.txs
         contents_md5_hash = hashlib.md5(submitted_stuff).hexdigest()
         taxdoc_obj = taxdoc.TaxDoc(
-            exchange=exchange,
+            exchange=parser.get_exchange_name(),
             user_id=userid,
             file_hash=contents_md5_hash,
             contents=submitted_stuff,
@@ -246,12 +258,17 @@ class SqlBackend:
             t.user_id = userid
             self.session.add(t)
         self.session.commit()
-        self.run_basis(userid)  # TODO: determine if this is a performance bottleneck.
+        try:
+            # It's possible for this to fail if the user uploads documents out of order (sells before buys)
+            # TODO: gracefully handle transaction histories where a user reports SELL txs with no basis.
+            self.run_basis(userid)  # TODO: determine if this is a performance bottleneck.
+        except Exception as e:
+            logging.warn("Failed to run basis ")
         return flask.jsonify(
             {
                 "hash": contents_md5_hash,
                 "result": "success",
-                "exchange": exchange,
+                "exchange": parser.get_exchange_name(),
                 "file_name": taxdoc_obj.file_name,
                 "preview": str(submitted_stuff[:20]),
             }

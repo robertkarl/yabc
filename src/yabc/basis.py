@@ -119,10 +119,12 @@ def process_one(trans, pool):
     cost_basis_reports = []
     amount = Decimal(0)
     pool_index = -1
-
+    # TODO: refactor so that a function figures out whether a transaction is an input.
+    #       Also add tests  for that.
     if (
         trans.operation == Transaction.Operation.BUY
         or trans.operation == Transaction.Operation.GIFT_RECEIVED
+        or trans.operation == Transaction.Operation.MINING
     ):
         return {"basis_reports": [], "add": trans, "remove_index": -1}
 

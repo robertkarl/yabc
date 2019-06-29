@@ -20,7 +20,7 @@ def from_coinbase(f):
     """
     f.seek(0)
     rawcsv = [i for i in csv.reader(f)]
-    if len(rawcsv) < 4:
+    if len(rawcsv) < 5:
         raise RuntimeError("Invalid CSV file, not enough rows.")
     fieldnames = rawcsv[4]
     if not len(fieldnames) >= 2 or not fieldnames[-2].count("Coinbase") > 0:
@@ -55,6 +55,7 @@ def txs_from_coinbase(f):
 
 
 class CoinbaseParser(Format):
+    EXCHANGE_NAME = "Coinbase"
     def __init__(self, file_or_fname):
         self._file = file_or_fname
         self._reports = []
@@ -63,7 +64,6 @@ class CoinbaseParser(Format):
                 self._reports = txs_from_coinbase(f)
         else:
             self._reports = txs_from_coinbase(file_or_fname)
-        self.cleanup()
 
     def __iter__(self):
         return self

@@ -32,6 +32,7 @@ class AdhocParser(Format):
 
     This class translates CSV rows into transaction objects.
     """
+    EXCHANGE_NAME = "adhoc transactions"
 
     def __init__(self, csv_file):
         """

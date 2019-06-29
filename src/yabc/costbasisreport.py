@@ -57,6 +57,10 @@ class CostBasisReport(yabc.Base):
     user_id = Column(sqlalchemy.Integer, ForeignKey("user.id"))
 
     @staticmethod
+    def round_to_dollar_str():
+        pass
+
+    @staticmethod
     def make_random_report():
         return CostBasisReport(
             1,
