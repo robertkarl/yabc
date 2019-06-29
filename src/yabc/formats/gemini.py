@@ -50,7 +50,9 @@ def from_gemini(f):
 
 
 def valid_gemini_headers(fieldnames):
-    required_fields = "Type,Date,BTC Amount BTC,USD Amount USD,Trading Fee (USD) USD".split(',')
+    required_fields = "Type,Date,BTC Amount BTC,USD Amount USD,Trading Fee (USD) USD".split(
+        ","
+    )
     for field in required_fields:
         if field not in fieldnames:
             raise RuntimeError("Not a valid gemini file.")
@@ -73,6 +75,7 @@ def fname_to_tx_gemini(fname: str):
 
 class GeminiParser(Format):
     EXCHANGE_NAME = "Gemini"
+
     def __init__(self, fname_or_file):
         self.txs = []
         self.flags = []

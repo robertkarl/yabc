@@ -2,11 +2,14 @@
 # Licensed under the MIT License. See LICENSE in the project root for license information.
 import logging
 
+from . import *
+
 
 class Format:
     """
     Base class for formats from various exchanges.
     """
+
     EXCHANGE_NAME = "Unknown exchange"
 
     @classmethod
@@ -36,4 +39,3 @@ class Format:
 FORMAT_CLASSES = []
 # TODO: add binance. See comment in binance file.
 __all__ = ["adhoc", "gemini", "coinbase"]
-from . import *

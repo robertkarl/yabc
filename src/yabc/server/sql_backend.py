@@ -24,7 +24,8 @@ from yabc import user
 from yabc.basis import transactions_from_file
 from yabc.costbasisreport import CostBasisReport
 from yabc.formats import coinbase
-from yabc.transaction_parser import TransactionParser, TxFile
+from yabc.transaction_parser import TransactionParser
+from yabc.transaction_parser import TxFile
 from yabc.user import User
 
 __author__ = "Robert Karl <robertkarljr@gmail.com>"
@@ -216,7 +217,6 @@ class SqlBackend:
                 exchange = exc
             except RuntimeError as e:
                 logging.info("Autodetect is skipping due to {}".format(e))
-                pass
         if not exchange:
             raise RuntimeError(
                 "Could not autodetect exchange for file {}".format(
@@ -242,7 +242,7 @@ class SqlBackend:
         parser = TransactionParser([tx_file])
         parser.parse()
         if not parser.succeeded():
-            val = flask.jsonify({'result': 'failure', 'flags': parser.flags})
+            val = flask.jsonify({"result": "failure", "flags": parser.flags})
             return make_response(val, 400)
         tx = parser.txs
         contents_md5_hash = hashlib.md5(submitted_stuff).hexdigest()
@@ -261,7 +261,9 @@ class SqlBackend:
         try:
             # It's possible for this to fail if the user uploads documents out of order (sells before buys)
             # TODO: gracefully handle transaction histories where a user reports SELL txs with no basis.
-            self.run_basis(userid)  # TODO: determine if this is a performance bottleneck.
+            self.run_basis(
+                userid
+            )  # TODO: determine if this is a performance bottleneck.
         except Exception as e:
             logging.warn("Failed to run basis ")
         return flask.jsonify(
