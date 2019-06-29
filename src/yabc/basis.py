@@ -6,6 +6,7 @@ TODO: Add other accounting methods than FIFO, most notably LIFO.
 import copy
 import csv
 import io
+import typing
 from decimal import Decimal
 from typing import Sequence
 
@@ -90,7 +91,7 @@ def split_report(coin_to_split, amount, trans):
     )
 
 
-def process_one(trans, pool):
+def process_one(trans: transaction.Transaction, pool: typing.Sequence):
     """
     Cost basis calculator for a single transaction. Return the 'diff'
     required to process this one tx.
@@ -109,23 +110,17 @@ def process_one(trans, pool):
             - ans['basis_reports']: The list of coins to sell, with cost basis filled.
             - ans['add']: At most one coin to add to the pool, if there was a partial sale.
 
-    @param transaction (transaction.Transaction): a buy or sell with fields filled
-    @param pool: a sequence containing transaction.Transaction instances.
+    :param trans: a buy or sell with fields filled
+    :param pool: a sequence containing transaction.Transaction instances.
+    :param trans
 
-    @return json describing the transaction:
+    :return json describing the transaction:
     {'sell': [T1, T1], 'remove_from_pool': 1, 'add_to_pool': [T5]}
     """
-    assert type(trans) is transaction.Transaction and type(pool) is list
     cost_basis_reports = []
     amount = Decimal(0)
     pool_index = -1
-    # TODO: refactor so that a function figures out whether a transaction is an input.
-    #       Also add tests  for that.
-    if (
-        trans.operation == Transaction.Operation.BUY
-        or trans.operation == Transaction.Operation.GIFT_RECEIVED
-        or trans.operation == Transaction.Operation.MINING
-    ):
+    if trans.is_input():
         return {"basis_reports": [], "add": trans, "remove_index": -1}
 
     while amount < trans.quantity:

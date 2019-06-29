@@ -97,6 +97,12 @@ class Transaction(yabc.Base):
         self.user_id = user_id
         self.fees = Decimal(fees)
 
+    def is_input(self):
+        """
+        :return: True if this transaction is an input (like mining, a gift received, or a purchase)
+        """
+        return self.operation in {Operation.MINING, Operation.GIFT_RECEIVED, Operation.SPLIT, Operation.BUY}
+
     def __repr__(self):
         return "<TX for user '{}': {} {} {asset_name} @ {}, on {} from exchange {}. Fee {}.>".format(
             self.user_id,
