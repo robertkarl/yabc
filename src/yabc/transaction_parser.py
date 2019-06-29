@@ -18,10 +18,21 @@ class TransactionParser:
             self.txs.extend(self._get_txs(f, hinted_parser))
 
     def __init__(self, files: Sequence[TxFile]):
+        """
+
+        :param files: a sequence of TxFile objects.
+        """
         self.txs = []
         self.flags = []
         self.files = files
-        self.parse()
+        self._exchange = None
+        self._success = False
+
+    def get_exchange_name(self):
+        return self._exchange.exchange_name()
+
+    def succeeded(self):
+        return self._success
 
     def _get_txs(self, f, hinted_parser):
         if hinted_parser is not None:
@@ -31,9 +42,12 @@ class TransactionParser:
             try:
                 generator = constructor(f)
                 values = list(generator)
+                self._exchange = constructor
+                self._success = True
                 return values
             except RuntimeError as e:
                 logging.info(e)
                 continue
-        self.flags.append("ERROR: couldn't find any transactions in file {}".format(f))
+        self._success = False
+        self.flags.append("Couldn't find any transactions in file.")
         return []

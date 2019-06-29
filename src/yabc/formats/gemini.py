@@ -37,6 +37,7 @@ def from_gemini(f):
     if not rawcsv:
         raise RuntimeError("not enough rows in gemini file {}".format(f))
     fieldnames = rawcsv[0]
+    valid_gemini_headers(fieldnames)
     f.seek(0)
     ts = [i for i in csv.DictReader(f, fieldnames)]
     ts = ts[1:]
@@ -46,6 +47,15 @@ def from_gemini(f):
         if item is not None:
             ans.append(item)
     return [i for i in ans if i["Type"] == "Buy" or i["Type"] == "Sell"]
+
+
+def valid_gemini_headers(fieldnames):
+    required_fields = "Type,Date,BTC Amount BTC,USD Amount USD,Trading Fee (USD) USD".split(
+        ","
+    )
+    for field in required_fields:
+        if field not in fieldnames:
+            raise RuntimeError("Not a valid gemini file.")
 
 
 def gemini_to_dict(fname):
@@ -64,6 +74,8 @@ def fname_to_tx_gemini(fname: str):
 
 
 class GeminiParser(Format):
+    EXCHANGE_NAME = "Gemini"
+
     def __init__(self, fname_or_file):
         self.txs = []
         self.flags = []
@@ -73,7 +85,6 @@ class GeminiParser(Format):
         else:
             tx_dicts = from_gemini(fname_or_file)
             self.txs = [FromGeminiJSON(i) for i in tx_dicts]
-        self.cleanup()
 
     def __iter__(self):
         return self
