@@ -203,28 +203,6 @@ class SqlBackend:
             result.append(year_info)
         return flask.jsonify(result)
 
-    @staticmethod
-    def _detect_exchange(submitted_file):
-        exchanges = set(["coinbase", "gemini"])
-        for exc in exchanges:
-            if exc in submitted_file.filename.lower():
-                return exc
-        for exc in exchanges:
-            print("trying exchange {}".format(exc))
-            submitted_file.seek(0)
-            try:
-                transactions_from_file(submitted_file, exc)
-                exchange = exc
-            except RuntimeError as e:
-                logging.info("Autodetect is skipping due to {}".format(e))
-        if not exchange:
-            raise RuntimeError(
-                "Could not autodetect exchange for file {}".format(
-                    submitted_file.filename
-                )
-            )
-        return exchange
-
     def import_transaction_document(self, userid, submitted_file):
         """
         Add the tx doc for this user.
