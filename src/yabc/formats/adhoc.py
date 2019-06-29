@@ -52,7 +52,7 @@ class AdhocParser(Format):
         """
         assert not isinstance(csv_file, str)
         if isinstance(csv_file, (list, tuple)):
-            self.validate_headers(self._file[0])
+            self.validate_headers(csv_file[0])
         else:
             csv_file.seek(0)
             contents = []
