@@ -6,20 +6,28 @@ import datetime
 import decimal
 import unittest
 
-from yabc.formats import binance, localbitcoins
-from yabc.transaction import Transaction
+from yabc.formats import localbitcoins
+from yabc.transaction import Operation
 
 
 class LocalbitcoinsCsvTest(unittest.TestCase):
     def test_load_from_csv(self):
-        parser = localbitcoins.LocalBitcoinsParser(filename="testdata/localbitcoins-sample.csv")
+        parser = localbitcoins.LocalBitcoinsParser(
+            filename="testdata/localbitcoins-sample.csv"
+        )
         reports = list(parser)
-        self.assertEqual(len(reports), 5)
-        sell_to_eth = reports[0]
-        self.assertEqual(sell_to_eth.operation, Transaction.Operation.SELL)
-        self.assertEqual(sell_to_eth.usd_subtotal, 1000)
-        self.assertEqual(sell_to_eth.date.date, datetime.date(2017, 1, 1))
-        self.assertEqual(sell_to_eth.source, "binance")
-        # For this transaction, the fee was paid as .01 ETH. Convert that to USD to get:
-        eth_val_on_jan1 = 8  # TODO: update if we get better data for tests
-        self.assertEqual(sell_to_eth.fees, decimal.Decimal(".01") * eth_val_on_jan1)
+        self.assertEqual(len(reports), 2)
+        buy_tx = reports[0]
+        self.assertEqual(buy_tx.asset_name, "BTC")
+        self.assertEqual(buy_tx.fees, 0)
+        self.assertEqual(buy_tx.quantity, 0.5)
+        self.assertEqual(buy_tx.operation, Operation.SELL)
+        self.assertEqual(buy_tx.date.date, datetime.date(2015, 4, 14))
+
+        sell = reports[1]
+        self.assertEqual(sell.asset_name, "BTC")
+        self.assertEqual(sell.fees, 0)
+        self.assertEqual(sell.quantity, decimal.Decimal(".6"))
+        self.assertEqual(sell.operation, Operation.BUY)
+        self.assertEqual(sell.date.date, datetime.date(2015, 4, 14))
+        parser.cleanup()

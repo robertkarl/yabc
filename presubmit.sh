@@ -8,5 +8,5 @@ set -e
 DIRS="src/ tests/ utils/ setup.py"
 python setup.py test
 autoflake -r -i --remove-all-unused-imports $DIRS
-isort -rc $DIRS --skip src/yabc/__init__.py
+isort --thirdparty flask -rc $DIRS --skip src/yabc/__init__.py
 black $DIRS
