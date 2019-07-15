@@ -21,7 +21,6 @@ from yabc import costbasisreport
 from yabc import taxdoc
 from yabc import transaction
 from yabc import user
-from yabc.basis import transactions_from_file
 from yabc.costbasisreport import CostBasisReport
 from yabc.formats import coinbase
 from yabc.transaction_parser import TransactionParser

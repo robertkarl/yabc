@@ -1,11 +1,10 @@
-[![yabc on PyPI](https://img.shields.io/pypi/v/yabc.svg)](https://pypi.org/project/yabc/) ![MIT License badge](https://img.shields.io/badge/license-MIT-green.svg) [![yabc on TravisCI](https://travis-ci.org/robertkarl/yabc.svg?branch=master)](https://travis-ci.org/robertkarl/yabc)
+[![yabc on PyPI](https://img.shields.io/pypi/v/yabc.svg)](https://pypi.org/project/yabc/) ![MIT License badge](https://img.shields.io/badge/license-MIT-green.svg) [![yabc on TravisCI](https://travis-ci.org/robertkarl/yabc.svg?branch=master)](https://travis-ci.org/robertkarl/yabc) ![Supported Python versions](https://img.shields.io/pypi/pyversions/yabc.svg)
 
 # yabc - a bitcoin tax calculator
 yabc translates cryptocurrency trades, mining, and spending data into a list of
 reports that can be sent to tax authorities.  
 
-In the following sample usage yabc autodetects the exchange formats of two test
-files in this repo.
+yabc is the tax calculator behind [https://costbasis.report/](https://costbasis.report/).
 
 ```
 $ pip install yabc
@@ -32,10 +31,10 @@ total basis for above transactions: 1400
 total proceeds for above transactions: 16643
 ```
 
-An adhoc format is supported for non-exchange transactions like mining and purchases.
+An adhoc CSV format is supported for non-exchange transactions like mining and purchases.
 
-yabc also includes a set of HTTP endpoints that store data more permanently in
-a database, sqlite by default.
+yabc also includes a set of HTTP endpoints that allow for storing data more
+permanently in a database, sqlite by default. Postgres as a backend is also supported.
 
 # TODO
 
