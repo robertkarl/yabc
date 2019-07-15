@@ -44,10 +44,10 @@ def add_supported_exchanges():
     #noqa should stop our unused import zapper from zapping.
     TODO: add binance. See comment in binance file.
     """
-    from . import gemini  # noqa
-    from . import coinbase  # noqa
     from . import adhoc  # noqa
+    from . import coinbase  # noqa
+    from . import gemini  # noqa
+    # TODO: Add localbitcoins when we have daily price data for bitcoin.
 
 
 add_supported_exchanges()
-__all__ = ["adhoc", "gemini", "coinbase"]
