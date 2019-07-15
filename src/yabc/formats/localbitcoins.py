@@ -4,7 +4,8 @@ import decimal
 import delorean
 
 from yabc import transaction
-from yabc.formats import Format, FORMAT_CLASSES
+from yabc.formats import FORMAT_CLASSES
+from yabc.formats import Format
 from yabc.transaction import Operation
 
 """
@@ -59,5 +60,6 @@ class LocalBitcoinsParser(Format):
         if not self.txs:
             raise StopIteration
         return self.txs.pop(0)
+
 
 FORMAT_CLASSES.append(LocalBitcoinsParser)

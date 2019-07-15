@@ -11,7 +11,6 @@ python -m yabc statement_from_coinbase.csv my_gemini_statement.csv adhoc.csv
 File types are automatically detected.
 """
 import argparse
-import logging
 import sys
 
 import yabc.transaction_parser

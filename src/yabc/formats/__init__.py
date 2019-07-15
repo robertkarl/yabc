@@ -47,6 +47,7 @@ def add_supported_exchanges():
     from . import adhoc  # noqa
     from . import coinbase  # noqa
     from . import gemini  # noqa
+
     # TODO: Add localbitcoins when we have daily price data for bitcoin.
 
 
