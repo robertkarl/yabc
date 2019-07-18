@@ -25,10 +25,8 @@ def main():
     tx_files = [
         yabc.transaction_parser.TxFile(open(fname), None) for fname in args.filenames
     ]
-    print(tx_files)
     parser = yabc.transaction_parser.TransactionParser(tx_files)
     parser.parse()
-    print(parser.txs)
     if parser.flags:
         for flag in parser.flags:
             print(flag, file=sys.stderr)
