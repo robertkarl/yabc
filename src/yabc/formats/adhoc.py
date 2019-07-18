@@ -50,6 +50,7 @@ class AdhocParser(Format):
         :param csv_file: can be a list of rows, each containing a string, or an
         open file-like object.
         """
+        self._file = None
         assert not isinstance(csv_file, str)
         if isinstance(csv_file, (list, tuple)):
             self.validate_headers(csv_file[0])
