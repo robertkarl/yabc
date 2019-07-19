@@ -51,7 +51,8 @@ def get_userid():
     userid = flask.request.args.get(USER_ID_KEY)
     if not userid:
         userid = flask.session.get(USER_ID_KEY)
-    assert userid
+    if not userid:
+        raise RuntimeError("User is not logged in. get_userid() failed.")
     return userid
 
 
