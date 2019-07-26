@@ -18,7 +18,6 @@ from yabc.transaction import PreciseDecimalString
 class CostBasisReport(yabc.Base):
     """
     Represents a row in form 8949.
-    TODO: Add wash sales.
     TODO: Check that long term results match expected in leap years.
 
     >>> r = CostBasisReport.make_random_report()
