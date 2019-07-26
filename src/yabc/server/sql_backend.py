@@ -40,6 +40,12 @@ def init_db_command():
     db.create_tables()
     click.echo("Initialized the database.")
 
+@click.command("show-db-config")
+@with_appcontext
+def show_db_command():
+    db = get_db()
+    click.echo(db._db_url)
+
 
 def get_db():
     if DB_KEY not in flask.g:
@@ -55,6 +61,7 @@ def close_db(e=None):
 
 def init_app(app):
     app.cli.add_command(init_db_command)
+    app.cli.add_command(show_db_command)
     app.teardown_appcontext(close_db)
 
 
@@ -73,6 +80,7 @@ class SqlBackend:
     def __init__(self, db_url=None):
         if db_url is None:
             db_url = flask.current_app.config["DATABASE"]
+        self._db_url = db_url
         # Note: some web servers (aka Flask) will create a new instance of this
         # class for each request.
         self.engine = sqlalchemy.create_engine(

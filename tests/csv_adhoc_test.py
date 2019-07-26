@@ -16,18 +16,20 @@ class CsvAdhocTest(unittest.TestCase):
     def test_load_gifts_mining(self):
         lists_per_row = [
             adhoc.field_names,
-            ["BTC", "1.1", "2019/5/6", "Mining"],
+            ["BTC", "3.1", "2019/5/6", "Mining"],
             ["BTC", "0.1", "2019/5/18", "GiftReceived"],
             ["BTC", "0.1", "2019/5/11", "GiftSent"],
+            ["BTC", "0.12", "2019/5/12", "Spending"],
         ]
         csv_module_importable = [",".join(i) for i in lists_per_row]
         atg = adhoc.AdhocParser(csv_module_importable)
         l = list(atg)
-        self.assertEqual(len(l), 3)
+        self.assertEqual(len(l), 4)
         mining = l[0]
         gift = l[1]
         gift_sent = l[2]
-        self.assertEqual(mining.quantity, Decimal("1.1"))
+        spending = l[3]
+        self.assertEqual(mining.quantity, Decimal("3.1"))
         self.assertEqual(mining.operation, transaction.Operation.MINING)
         self.assertEqual(mining.date, datetime.datetime(2019, 5, 6))
         self.assertEqual(mining.asset_name, "BTC")
@@ -39,6 +41,8 @@ class CsvAdhocTest(unittest.TestCase):
         self.assertEqual(gift_sent.operation, transaction.Operation.GIFT_SENT)
         self.assertEqual(gift_sent.date, datetime.datetime(2019, 5, 11))
         self.assertEqual(gift_sent.quantity, Decimal("0.1"))
+
+        self.assertEqual(spending.operation, transaction.Operation.SPENDING)
 
     def setUp(self) -> None:
         self.start = datetime.datetime.now()
