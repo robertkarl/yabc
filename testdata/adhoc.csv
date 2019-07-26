@@ -1,4 +1,5 @@
 Coin,Amount,Timestamp,Type,DollarValue
-BTC,1,2018/3/4,GiftReceived,"$4,000.00"
+BTC,3,2018/3/4,GiftReceived,"$4,000.00"
 BTC,0.1,2018/3/6 7:57PM,GiftSent,
-BTC,0.25,2018/1/1,Mining,1000
+BTC,0.25,2018/4/1,Mining,1000
+BTC,0.33,2018/5/1,Spending,1000

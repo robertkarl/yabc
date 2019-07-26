@@ -31,8 +31,9 @@ class CsvTest(unittest.TestCase):
         print(os.environ)
         with open("testdata/adhoc.csv") as f:
             stuff = list(adhoc.AdhocParser(f))
-            rcvd, sent, mining = stuff
-            self.assertEqual(len(stuff), 3)
+            rcvd, sent, mining, spending = stuff
+            self.assertEqual(len(stuff), 4)
             self.assertEqual(rcvd.operation, transaction.Operation.GIFT_RECEIVED)
             self.assertEqual(sent.operation, transaction.Operation.GIFT_SENT)
             self.assertEqual(mining.operation, transaction.Operation.MINING)
+            self.assertEqual(spending.operation, transaction.Operation.SPENDING)
