@@ -133,7 +133,7 @@ def process_one(trans: transaction.Transaction, pool: typing.Sequence):
         coin_to_split = pool[pool_index]
         excess = amount - trans.quantity
         portion_of_split_coin_to_sell = coin_to_split.quantity - excess
-        if trans.operation == Transaction.Operation.SELL:
+        if trans.is_taxable_output():
             # Outgoing gifts would not trigger this.
             # TODO: Alert the user if the value of a gift exceeds $15,000, in which
             # case gift taxes may be eligible...
@@ -144,7 +144,7 @@ def process_one(trans: transaction.Transaction, pool: typing.Sequence):
     needs_remove = pool_index
     if not needs_split:
         pool_index += 1  # Ensures that we report the oldest transaction as a sale.
-    if trans.operation == Transaction.Operation.SELL:
+    if trans.is_taxable_output():
         # The other option is gift. If it's a gift we don't report any gain or loss.
         # The coins just magically remove themselves from the pool.
         # No entry in 8949 for them.

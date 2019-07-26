@@ -108,6 +108,9 @@ class Transaction(yabc.Base):
             Operation.BUY,
         }
 
+    def is_taxable_output(self):
+        return self.operation in {Operation.SPENDING, Operation.SELL}
+
     def __repr__(self):
         return "<TX for user '{}': {} {} {asset_name} @ {}, on {} from exchange {}. Fee {}.>".format(
             self.user_id,
