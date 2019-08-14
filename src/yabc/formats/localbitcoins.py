@@ -9,6 +9,7 @@ from yabc.formats import FORMAT_CLASSES
 from yabc.formats import Format
 from yabc.transaction import Operation
 
+
 """
 TXID, Created, Received, Sent, TXtype, TXdesc, TXNotes
 ,2015-04-05T02:03:47+00:00,1.50000000,,Deposit,
@@ -25,7 +26,10 @@ class LocalBitcoinTradeTypes(enum.Enum):
 
 
 def _is_sell(trade_type: LocalBitcoinTradeTypes):
-    return trade_type in {LocalBitcoinTradeTypes.LOCAL_SELL, LocalBitcoinTradeTypes.ONLINE_BUY}
+    return trade_type in {
+        LocalBitcoinTradeTypes.LOCAL_SELL,
+        LocalBitcoinTradeTypes.ONLINE_BUY,
+    }
 
 
 class LocalBitcoinsParser(Format):
@@ -34,7 +38,9 @@ class LocalBitcoinsParser(Format):
     def attempt_read_transaction(self, line):
         try:
             kind = LocalBitcoinTradeTypes[line["trade_type"]]
-            date = delorean.parse(line["transaction_released_at"], dayfirst=False).datetime
+            date = delorean.parse(
+                line["transaction_released_at"], dayfirst=False
+            ).datetime
             btc_amount = line["btc_traded"]
             fiat = decimal.Decimal(line["fiat_amount"])
             fiat_fee = decimal.Decimal(line["fiat_fee"])
@@ -42,9 +48,15 @@ class LocalBitcoinsParser(Format):
                 tx_type = Operation.SELL
             else:
                 tx_type = Operation.BUY
-            return transaction.Transaction(operation=tx_type, asset_name="BTC", date=date, fees=fiat_fee,
-                                           quantity=btc_amount,
-                                           source=LocalBitcoinsParser.EXCHANGE_NAME, usd_subtotal=fiat)
+            return transaction.Transaction(
+                operation=tx_type,
+                asset_name="BTC",
+                date=date,
+                fees=fiat_fee,
+                quantity=btc_amount,
+                source=LocalBitcoinsParser.EXCHANGE_NAME,
+                usd_subtotal=fiat,
+            )
         except RuntimeError:
             raise RuntimeError("Could not parse localbitcoins data.")
 
