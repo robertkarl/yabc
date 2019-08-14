@@ -129,7 +129,7 @@ class CostBasisReport(yabc.Base):
             self.proceeds,
             self.gain_or_loss,
             date=self.date_sold,
-            longterm=self.long_term
+            longterm=self.long_term,
         )
 
     def fields(self):
