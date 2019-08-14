@@ -123,12 +123,13 @@ class CostBasisReport(yabc.Base):
         return "{:.6f} {}".format(self.quantity, self.asset_name)
 
     def __repr__(self):
-        return "<Sold {} {} for {} total profiting {}. Adjustment {adjustment}>".format(
+        return "<Sold {} {} on {date} for {} total profiting {}. Long term: {longterm}.>".format(
             self.quantity,
             self.asset_name,
             self.proceeds,
             self.gain_or_loss,
-            adjustment=self.adjustment,
+            date=self.date_sold,
+            longterm=self.long_term
         )
 
     def fields(self):
