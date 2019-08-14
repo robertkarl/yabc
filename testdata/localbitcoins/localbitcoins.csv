@@ -1,0 +1,4 @@
+id,created_at,buyer,seller,trade_type,btc_amount,btc_traded,fee_btc,btc_amount_less_fee,btc_final,fiat_amount,fiat_fee,fiat_per_btc,currency,exchange_rate,transaction_released_at,online_provider,reference
+10000000,2016-01-01 23:34:04+00:00,userid2,userid3,ONLINE_SELL,1,1,0.01,0.03194888,0.03194888,400,0,400,USD,1565,2017-01-02 23:46:29+00:00,GIFT_CARD_CODE,
+10000000,2017-01-01 23:34:04+00:00,userid2,userid3,ONLINE_BUY,0.03194888,0.03194888,0,0.03194888,0.03194888,50,0,1565,USD,1565,2017-01-11 23:46:29+00:00,GIFT_CARD_CODE,
+10000001,2017-01-01 13:48:57+00:00,userid1,userid4,LOCAL_SELL,0.1467183,0.145132,0.0015863,0.145132,0.1467183,250,2.7,1722.57,USD,1722.57,2017-01-19 19:55:24+00:00,,

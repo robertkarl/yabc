@@ -112,15 +112,15 @@ class Transaction(yabc.Base):
         return self.operation in {Operation.SPENDING, Operation.SELL}
 
     def __repr__(self):
-        return "<TX for user '{}': {} {} {asset_name} @ {}, on {} from exchange {}. Fee {}.>".format(
+        return "<TX for user '{}': {} {} {asset_name} for {subtotal}, on {} from exchange {}. Fee {fee}.>".format(
             self.user_id,
             self.operation,
             self.quantity,
-            self.usd_subtotal,
             self.date,
             self.source,
-            self.fees,
             asset_name=self.asset_name,
+            subtotal=self.usd_subtotal,
+            fee=self.fees,
         )
 
 

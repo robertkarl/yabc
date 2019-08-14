@@ -1,5 +1,6 @@
 import csv
 import decimal
+import enum
 
 import delorean
 
@@ -13,11 +14,39 @@ TXID, Created, Received, Sent, TXtype, TXdesc, TXNotes
 ,2015-04-05T02:03:47+00:00,1.50000000,,Deposit,
 """
 
-HEADERS = "TXID, Created, Received, Sent, TXtype, TXdesc, TXNotes".split(",")
+
+class LocalBitcoinTradeTypes(enum.Enum):
+    # Sales (for tax purposes)
+    LOCAL_SELL = "LOCAL_SELL"
+    ONLINE_BUY = "ONLINE_BUY"
+    # Purchasing bitcoin (for tax purposes)
+    ONLINE_SELL = "ONLINE_SELL"
+    LOCAL_BUY = "LOCAL_BUY"
+
+
+def _is_sell(trade_type: LocalBitcoinTradeTypes):
+    return trade_type in {LocalBitcoinTradeTypes.LOCAL_SELL, LocalBitcoinTradeTypes.ONLINE_BUY}
 
 
 class LocalBitcoinsParser(Format):
     EXCHANGE_NAME = "localbitcoins"
+
+    def attempt_read_transaction(self, line):
+        try:
+            kind = LocalBitcoinTradeTypes[line["trade_type"]]
+            date = delorean.parse(line["transaction_released_at"], dayfirst=False).datetime
+            btc_amount = line["btc_traded"]
+            fiat = decimal.Decimal(line["fiat_amount"])
+            fiat_fee = decimal.Decimal(line["fiat_fee"])
+            if _is_sell(kind):
+                tx_type = Operation.SELL
+            else:
+                tx_type = Operation.BUY
+            return transaction.Transaction(operation=tx_type, asset_name="BTC", date=date, fees=fiat_fee,
+                                           quantity=btc_amount,
+                                           source=LocalBitcoinsParser.EXCHANGE_NAME, usd_subtotal=fiat)
+        except RuntimeError:
+            raise RuntimeError("Could not parse localbitcoins data.")
 
     def __init__(self, csv_content=None, filename=None):
         if csv_content:
@@ -28,30 +57,11 @@ class LocalBitcoinsParser(Format):
         else:
             assert not csv_content
             self._file = open(filename, "r")
-            self._reader = csv.DictReader(self._file, HEADERS)
+            self._reader = csv.DictReader(self._file)
         self.txs = []
         for line in self._reader:
-            if " TXtype" not in line:
-                raise ValueError("Invalid LBC, need TXtype header.")
-            kind = line[" TXtype"]
-            if kind != "Trade":
-                continue
-            date = delorean.parse(line[" Created"]).datetime
-            sent = line[" Sent"]
-            rcvd = line[" Received"]
-            if sent:
-                tx_type = Operation.SELL
-                quantity = decimal.Decimal(sent)
-            elif rcvd:
-                tx_type = Operation.BUY
-                quantity = decimal.Decimal(rcvd)
-            else:
-                raise ValueError("Invalid LBC CSV found.")
-            self.txs.append(
-                transaction.Transaction(
-                    asset_name="BTC", quantity=quantity, operation=tx_type, date=date
-                )
-            )
+            tx = self.attempt_read_transaction(line)
+            self.txs.append(tx)
 
     def __iter__(self):
         return self
