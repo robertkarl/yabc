@@ -59,6 +59,8 @@ class LocalBitcoinsParser(Format):
             )
         except RuntimeError:
             raise RuntimeError("Could not parse localbitcoins data.")
+        except KeyError as e:
+            raise RuntimeError("Unknown key in localbitcoins file: {}".format(e))
 
     def __init__(self, csv_content=None, filename=None):
         if csv_content:
