@@ -40,6 +40,7 @@ def init_db_command():
     db.create_tables()
     click.echo("Initialized the database.")
 
+
 @click.command("show-db-config")
 @with_appcontext
 def show_db_command():
