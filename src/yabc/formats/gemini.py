@@ -26,7 +26,7 @@ def clean_gemini_row(tx):
     ans["BTC Amount"] = tx["BTC Amount BTC"].strip("(").split(" ")[0]
     usd_str = gem_int_from_dollar_string(tx["USD Amount USD"])
     ans["USD Amount"] = usd_str
-    ans["USD Fee"] = gem_int_from_dollar_string(tx["Trading Fee (USD) USD"])
+    ans["USD Fee"] = gem_int_from_dollar_string(tx["Fee (USD) USD"])
     ans["Site"] = "Gemini"
     return ans
 
@@ -50,12 +50,12 @@ def from_gemini(f):
 
 
 def valid_gemini_headers(fieldnames):
-    required_fields = "Type,Date,BTC Amount BTC,USD Amount USD,Trading Fee (USD) USD".split(
-        ","
-    )
+    required_fields = "Type,Date,BTC Amount BTC,USD Amount USD,Fee (USD) USD".split(",")
     for field in required_fields:
         if field not in fieldnames:
-            raise RuntimeError("Not a valid gemini file.")
+            raise RuntimeError(
+                "Not a valid gemini file. Requires header '{}'".format(field)
+            )
 
 
 def gemini_to_dict(fname):
