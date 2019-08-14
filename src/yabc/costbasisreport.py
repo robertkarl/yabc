@@ -77,6 +77,7 @@ class CostBasisReport(yabc.Base):
         date_sold,
         asset,
         adjustment=Decimal(0),
+        triggering_transaction=None,
     ):
         """
         Note that when pulling items from a SQL alchemy ORM query, this constructor isn't called.
@@ -94,6 +95,7 @@ class CostBasisReport(yabc.Base):
         self.asset_name = asset
         self.adjustment = adjustment
         self.long_term = self._is_long_term()
+        self.triggering_transaction = triggering_transaction
 
     def _is_long_term(self):
         return (self.date_sold - self.date_purchased) > datetime.timedelta(364)
@@ -123,13 +125,14 @@ class CostBasisReport(yabc.Base):
         return "{:.6f} {}".format(self.quantity, self.asset_name)
 
     def __repr__(self):
-        return "<Sold {} {} on {date} for {} total profiting {}. Long term: {longterm}.>".format(
+        return "<Sold {} {} on {date} for ${}. Exchange: {exchange}. Profit:${profit}.{longterm}>".format(
             self.quantity,
             self.asset_name,
             self.proceeds,
-            self.gain_or_loss,
+            profit=self.gain_or_loss,
             date=self.date_sold,
-            longterm=self.long_term,
+            longterm=" Long term." if self.long_term else "",
+            exchange=self.triggering_transaction.source if self.triggering_transaction else "Unknown",
         )
 
     def fields(self):
