@@ -24,7 +24,7 @@ class CsvTest(unittest.TestCase):
 
     def test_load_gemini_csv(self):
         """ Test wholesale load of gemini data from CSV"""
-        gemini.gemini_to_dict("testdata/synthetic_gemini_csv.csv")
+        gemini.gemini_to_dict("testdata/gemini/synthetic_gemini_csv.csv")
 
     def test_load_adhoc_csv(self):
         """ Test wholesale load of gemini data from CSV"""
