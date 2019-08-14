@@ -132,7 +132,9 @@ class CostBasisReport(yabc.Base):
             profit=self.gain_or_loss,
             date=self.date_sold,
             longterm=" Long term." if self.long_term else "",
-            exchange=self.triggering_transaction.source if self.triggering_transaction else "Unknown",
+            exchange=self.triggering_transaction.source
+            if self.triggering_transaction
+            else "Unknown",
         )
 
     def fields(self):

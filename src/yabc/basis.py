@@ -88,7 +88,7 @@ def split_report(coin_to_split: Transaction, amount, trans: Transaction):
         proceeds - sale_fee,
         trans.date,
         trans.asset_name,
-        triggering_transaction=trans
+        triggering_transaction=trans,
     )
 
 
@@ -158,7 +158,7 @@ def process_one(trans: transaction.Transaction, pool: typing.Sequence):
     }
 
 
-def _build_sale_reports(pool, pool_index, trans:Transaction):
+def _build_sale_reports(pool, pool_index, trans: Transaction):
     ans = []
     for i in range(pool_index):
         # each of these including pool_index will become a sale to be reported to IRS
@@ -177,7 +177,7 @@ def _build_sale_reports(pool, pool_index, trans:Transaction):
             portion_of_sale * (trans.usd_subtotal - trans.fees),
             trans.date,
             pool[i].asset_name,
-            triggering_transaction=trans
+            triggering_transaction=trans,
         )
         ans.append(ir)
     return ans
