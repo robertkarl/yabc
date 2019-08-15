@@ -139,9 +139,17 @@ class SqlBackend:
         self.session.commit()
 
     def tx_list(self, userid):
-        docs = self.session.query(transaction.Transaction).filter_by(user_id=userid)
+        """
+        Generate a list of all transactions (buys / sells / gifts) for this user.
+
+        They should be sorted by date.
+
+        :param userid:
+        :return: json list, one tx for each item
+        """
+        txs = self.session.query(transaction.Transaction).filter_by(user_id=userid).order_by(transaction.Transaction.date.asc())
         ans = []
-        for tx in docs.all():
+        for tx in txs.all():
             tx_dict = dict(tx.__dict__)
             tx_dict.pop("_sa_instance_state")
             ans.append(tx_dict)
