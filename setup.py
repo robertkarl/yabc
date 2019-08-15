@@ -3,7 +3,7 @@
 import setuptools
 
 setuptools.setup(
-    version="0.1.6",
+    version="0.1.7",
     name="yabc",
     python_requires=">=3.5,<3.8",
     author="Seattle Blockchain Solutions",
