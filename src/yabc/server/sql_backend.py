@@ -138,9 +138,7 @@ class SqlBackend:
         :param txid:
         :return:
         """
-        self.session.query(transaction.Transaction).filter_by(
-            user_id=userid
-        ).delete()
+        self.session.query(transaction.Transaction).filter_by(user_id=userid).delete()
         self.session.query(CostBasisReport).filter_by(user_id=userid).delete()
         self.session.commit()
         self.run_basis(userid)
