@@ -133,10 +133,6 @@ class SqlBackend:
     def transactions_clear_all(self, userid):
         """
         Clear all transactions and re-run basis.
-
-        :param userid:
-        :param txid:
-        :return:
         """
         self.session.query(transaction.Transaction).filter_by(user_id=userid).delete()
         self.session.query(CostBasisReport).filter_by(user_id=userid).delete()
