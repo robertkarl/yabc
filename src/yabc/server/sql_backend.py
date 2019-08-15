@@ -118,6 +118,7 @@ class SqlBackend:
     def tx_delete(self, userid, txid):
         """
         Note that we need to clear BasisReports if transactions change.
+
         :param userid:
         :param txid:
         :return:
@@ -127,6 +128,17 @@ class SqlBackend:
         ).delete()
         self.session.query(CostBasisReport).filter_by(user_id=userid).delete()
         self.session.commit()
+        self.run_basis(userid)
+
+    def transactions_clear_all(self, userid):
+        """
+        Clear all transactions and re-run basis.
+        """
+        self.session.query(transaction.Transaction).filter_by(user_id=userid).delete()
+        self.session.query(CostBasisReport).filter_by(user_id=userid).delete()
+        self.session.commit()
+        self.run_basis(userid)
+        return "success"
 
     def tx_update(self, userid, txid, values):
         docs = self.session.query(transaction.Transaction).filter_by(
@@ -147,7 +159,11 @@ class SqlBackend:
         :param userid:
         :return: json list, one tx for each item
         """
-        txs = self.session.query(transaction.Transaction).filter_by(user_id=userid).order_by(transaction.Transaction.date.asc())
+        txs = (
+            self.session.query(transaction.Transaction)
+            .filter_by(user_id=userid)
+            .order_by(transaction.Transaction.date.asc())
+        )
         ans = []
         for tx in txs.all():
             tx_dict = dict(tx.__dict__)
@@ -275,11 +291,11 @@ class SqlBackend:
         Clear any CostBasisReports for this user in the database. Then recalculate them.
 
         TODO: There is some impedance mismatch between flask and python's csv
-        module.  csv requires CSVs to be written as strings, while flask's
-        underlying web server requires applications to write binary responses.
-        Currently we write to the CSV with strings, and then read the entire
-        contents into memory and write to an in-memory binary file-like object
-        which is handed off to flask. Fix.
+            module.  csv requires CSVs to be written as strings, while flask's
+            underlying web server requires applications to write binary responses.
+            Currently we write to the CSV with strings, and then read the entire
+            contents into memory and write to an in-memory binary file-like object
+            which is handed off to flask. Fix.
 
         Returns: just a status
         """

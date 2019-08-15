@@ -131,13 +131,15 @@ def transaction_update(txid):
     return flask.jsonify({"result": "Deleted transaction with id {}".format(txid)})
 
 
-@yabc_api.route("/yabc/v1/transactions", methods=["GET", "POST"])
+@yabc_api.route("/yabc/v1/transactions", methods=["GET", "POST", "DELETE"])
 @check_authorized
 def transactions():
     userid = get_userid()
     backend = sql_backend.get_db()
     if flask.request.method == "GET":
         return backend.tx_list(userid)
+    elif flask.request.method == "DELETE":
+        return backend.transactions_clear_all(userid)
     tx = flask.request.values["tx"]
     assert tx
     return backend.add_tx(userid, tx)
