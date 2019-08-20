@@ -46,10 +46,27 @@ class TransactionOperationString(TypeDecorator):
             value = Transaction.Operation.NOOP
         return Transaction.Operation(value)
 
+@enum.unique
+class Market(enum.Enum):
+    BTCUSD = enum.auto()
+    ETHUSD = enum.auto()
+    BCHUSD = enum.auto()
+    ZECUSD = enum.auto()
+    LTCUSD = enum.auto()
+    BTCETH = enum.auto()
+
 
 class Transaction(yabc.Base):
     """
-    Exchange-independent representation of a transaction (buy or sell)
+    Exchange-independent representation of a transaction (buy or sell).
+
+    Each transaction is something that the user actually clicked a button to do. For example, trading BTC for ETH is one
+    transaction.
+
+    On Binance, a single trade can result in several events that affect taxes. Consider the BTCETH market, and a single SELL order executed there:
+    - coins can be used to pay fees. this means the coins need to be subtracted from the pool.
+    - BTC needs to be removed from the pool
+    - ETH needs to be added (less fees)
     """
 
     @enum.unique
@@ -65,61 +82,74 @@ class Transaction(yabc.Base):
 
     __tablename__ = "transaction"
     id = Column(Integer, primary_key=True)
-    asset_name = Column(sqlalchemy.String)
+    # Column asset_name deleted.
+    market_name = Column(sqlalchemy.String) # column added example: "BTCUSD"
     date = Column(DateTime)
     fees = Column(PreciseDecimalString)
     operation = Column(TransactionOperationString)
-    quantity = Column(PreciseDecimalString)
+    first_quantity= Column(PreciseDecimalString) # column added
+    second_quantity = Column(PreciseDecimalString) # column added
     source = Column(sqlalchemy.String)
-    usd_subtotal = Column(PreciseDecimalString)
+    usd_subtotal = Column(PreciseDecimalString) # deprecated
     user_id = Column(sqlalchemy.Integer, ForeignKey("user.id"))
 
     def __init__(
         self,
         operation: Operation,
-        asset_name="BTC",
+        market: Market=Market.BTCUSD,
         date=None,
         fees=0,
-        quantity=0,
+        first_quantity=0,
         source=None,
-        usd_subtotal=0,
+        second_quantity=0,
         user_id="",
     ):
-        for param in (quantity, fees, usd_subtotal):
+        for param in (first_quantity, fees, second_quantity):
             assert isinstance(param, (float, str, Decimal, int))
-        self.quantity = Decimal(quantity)
+        self.first_quantity = Decimal(first_quantity)
         self.operation = operation
         if date:
             self.date = date.replace(tzinfo=None)
-        self.usd_subtotal = Decimal(usd_subtotal)
+        if not market in Market:
+            raise RuntimeError("Unsuppored market {}".format(market))
+        self.second_quantity = Decimal(second_quantity)
         self.source = source
-        self.asset_name = asset_name
+        self.market_name = market.name
         self.user_id = user_id
         self.fees = Decimal(fees)
+
+    def to_fiat(self):
+        return 'USD' in self.market_name
 
     def is_input(self):
         """
         :return: True if this transaction is an input (like mining, a gift received, or a purchase)
         """
-        return self.operation in {
+        if self.operation in {
             Operation.MINING,
             Operation.GIFT_RECEIVED,
             Operation.SPLIT,
             Operation.BUY,
-        }
+        }:
+            return True
+        elif self.operation == Operation.SELL and not self.to_fiat():
+            # This means it was a BTC/ETH sale for example
+            return True
+        return False
 
     def is_taxable_output(self):
         return self.operation in {Operation.SPENDING, Operation.SELL}
 
     def __repr__(self):
-        return "<TX for user '{}': {} {} {asset_name} for {subtotal}, on {} from exchange {}. Fee {fee}.>".format(
-            self.user_id,
-            self.operation,
-            self.quantity,
-            self.date,
-            self.source,
+        return "<{user} - {operation} {first} on {market} for {second}, on {date} from {exchange}. Fee {fee}.>".format(
+            exchange=self.source,
+            date=self.date,
+            operation=self.operation,
+            market = self.market_name,
+            first=self.first_quantity,
+            user=self.user_id,
             asset_name=self.asset_name,
-            subtotal=self.usd_subtotal,
+            second=self.second_quantity,
             fee=self.fees,
         )
 
@@ -133,11 +163,11 @@ def make_transaction(
 ):
     return Transaction(
         operation=kind,
-        asset_name="BTC",
+        market=Market.BTCUSD,
         date=date,
         fees=fees,
-        quantity=quantity,
-        usd_subtotal=subtotal,
+        first_quantity=quantity,
+        second_quantity=subtotal,
     )
 
 

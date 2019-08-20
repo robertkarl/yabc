@@ -1,7 +1,5 @@
 """
 Calculating the cost basis.
-
-TODO: Add other accounting methods than FIFO, most notably LIFO.
 """
 import copy
 import csv
@@ -68,17 +66,17 @@ def split_report(coin_to_split: Transaction, amount, trans: Transaction):
     assert isinstance(amount, Decimal)
     assert isinstance(coin_to_split, transaction.Transaction)
     assert isinstance(trans, transaction.Transaction)
-    assert amount < coin_to_split.quantity
-    assert not (amount - trans.quantity > 1e-5)  # allowed to be equal
+    assert amount < coin_to_split.first_quantity
+    assert not (amount - trans.first_quantity > 1e-5)  # allowed to be equal
 
     # basis and fee (partial amounts of coin_to_split)
-    frac_of_basis_coin = amount / coin_to_split.quantity
-    purchase_price = frac_of_basis_coin * coin_to_split.usd_subtotal
+    frac_of_basis_coin = amount / coin_to_split.second_quantity
+    purchase_price = frac_of_basis_coin * coin_to_split.second_quantity
     purchase_fee = frac_of_basis_coin * coin_to_split.fees
 
     # sale proceeds and fee (again, partial amounts of trans)
-    frac_of_sale_tx = amount / trans.quantity
-    proceeds = (frac_of_sale_tx * trans.usd_subtotal).quantize(Decimal(".01"))
+    frac_of_sale_tx = amount / trans.first_quantity
+    proceeds = (frac_of_sale_tx * trans.second_quantity).quantize(Decimal(".01"))
     sale_fee = (frac_of_sale_tx * trans.fees).quantize(Decimal(".01"))
     return CostBasisReport(
         trans.user_id,
@@ -87,10 +85,12 @@ def split_report(coin_to_split: Transaction, amount, trans: Transaction):
         coin_to_split.date,
         proceeds - sale_fee,
         trans.date,
-        trans.asset_name,
+        trans.market_name,
         triggering_transaction=trans,
     )
 
+def make_tx_from_coin_to_coin_trade(trans: transaction.Transaction):
+    return trans
 
 def process_one(trans: transaction.Transaction, pool: typing.Sequence):
     """
@@ -107,41 +107,49 @@ def process_one(trans: transaction.Transaction, pool: typing.Sequence):
                    One: Sell 0.25 with a basis of $1
                    Two: Sell 0.25 with a basis of $2
         - Return:
-            - ans['remove_index']: The coins up to and including this index will be REMOVED from the pool.
-            - ans['basis_reports']: The list of coins to sell, with cost basis filled.
-            - ans['add']: At most one coin to add to the pool, if there was a partial sale.
+
 
     :param trans: a buy or sell with fields filled
     :param pool: a sequence containing transaction.Transaction instances.
     :param trans
 
-    :return json describing the transaction:
-    {'sell': [T1, T1], 'remove_from_pool': 1, 'add_to_pool': [T5]}
+    :return dictionary describing the transaction:
+        {'sell': [T1, T1], 'remove_index': 1, 'add': [T5]}
+
+            - ans['remove_index']: The coins up to and including this index will be REMOVED from the pool.
+            - ans['basis_reports']: The list of coins to sell, with cost basis filled.
+            - ans['add']: At most two coins to add to the pool, if there was a partial sale.
+                          additionally a sale in a coin/coin market can cause an add.
     """
     cost_basis_reports = []
     amount = Decimal(0)
     pool_index = -1
+    to_add = []
+
     if trans.is_input():
-        return {"basis_reports": [], "add": trans, "remove_index": -1}
+        if not trans.is_taxable_output():
+            # This is the case for buying BTC with fiat.
+            return {"basis_reports": [], "add": [trans], "remove_index": -1}
+        else:
+            to_add.append(make_tx_from_coin_to_coin_trade(trans))
 
-    while amount < trans.quantity:
+    while amount < trans.first_quantity:
         pool_index += 1
-        amount += pool[pool_index].quantity
-    needs_split = (amount - trans.quantity) > 1e-5
+        amount += pool[pool_index].first_quantity
+    needs_split = (amount - trans.first_quantity) > 1e-5
 
-    to_add = None
     if needs_split:
         coin_to_split = pool[pool_index]
-        excess = amount - trans.quantity
-        portion_of_split_coin_to_sell = coin_to_split.quantity - excess
+        excess = amount - trans.first_quantity
+        portion_of_split_coin_to_sell = coin_to_split.first_quantity - excess
         if trans.is_taxable_output():
             # Outgoing gifts would not trigger this.
             # TODO: Alert the user if the value of a gift exceeds $15,000, in which
-            # case gift taxes may be eligible...
+            #       case gift taxes may be eligible...
             cost_basis_reports.append(
                 split_report(coin_to_split, portion_of_split_coin_to_sell, trans)
             )
-        to_add = split_coin_to_add(coin_to_split, portion_of_split_coin_to_sell, trans)
+        to_add.append(split_coin_to_add(coin_to_split, portion_of_split_coin_to_sell, trans))
     needs_remove = pool_index
     if not needs_split:
         pool_index += 1  # Ensures that we report the oldest transaction as a sale.
@@ -226,7 +234,8 @@ def handle_add_lifo(pool, to_add: Transaction):
     """
     Simply put any new transaction, including splits, at the beginning.
     """
-    pool.insert(0, to_add)
+    for add in to_add:
+        pool.insert(0, add)
 
 
 def handle_add_fifo(pool, to_add: Transaction):
@@ -247,10 +256,7 @@ def handle_add_fifo(pool, to_add: Transaction):
 
 def _process_all(method, txs):
     """
-    The meat and potatoes
-    :param method:
-    :param txs:
-    :return:
+    Given a method and a sequence of transactions, Generate the reports and return the items still in the pool.
     """
     pool = []
     to_process = sorted(txs, key=lambda tx: tx.date)

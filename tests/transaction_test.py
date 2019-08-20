@@ -11,7 +11,7 @@ from yabc import basis
 from yabc import transaction
 from yabc import user  # noqa
 from yabc.formats import coinbase
-from yabc.transaction import Transaction
+from yabc.transaction import Transaction, Market
 from yabc.transaction import make_transaction
 
 BUY = Transaction.Operation.BUY
@@ -23,11 +23,11 @@ class TransactionTest(unittest.TestCase):
         self.sample_buy_date = datetime.datetime(2015, 2, 5, 6, 27, 56, 373000)
         self.sample_buy = transaction.Transaction(
             operation=BUY,
-            quantity=0.5,
+            market=Market.BTCUSD,
+            first_quantity=0.5,
             source=None,
-            usd_subtotal=990.0,
+            second_quantity=990.0,
             date=self.sample_buy_date,
-            asset_name="BTC",
             fees=10,
         )
 
@@ -37,9 +37,9 @@ class TransactionTest(unittest.TestCase):
         pool = [self.sample_buy]
         sale = transaction.Transaction(
             operation=SELL,
-            quantity=0.5,
+            first_quantity=0.5,
             source=None,
-            usd_subtotal=1010.0,
+            second_quantity=1010.0,
             date=self.sample_buy_date,
             asset_name="BTC",
             fees=10,
@@ -89,7 +89,7 @@ class TransactionTest(unittest.TestCase):
             "Timestamp": "2015-2-5 06:27:56.373",
         }
 
-        trans = coinbase.FromCoinbaseJSON(coinbase_json_buy)
+        trans = coinbase.transaction_from_coinbase_json(coinbase_json_buy)
 
         self.assertEqual(trans.operation, BUY)
         self.assertEqual(trans.quantity, coinbase_json_buy["Amount"])
@@ -110,7 +110,7 @@ class TransactionTest(unittest.TestCase):
             "Timestamp": "2015-2-5 06:27:56.373",
         }
 
-        trans = coinbase.FromCoinbaseJSON(coinbase_json_sell)
+        trans = coinbase.transaction_from_coinbase_json(coinbase_json_sell)
 
         self.assertEqual(trans.operation, SELL)
         self.assertEqual(trans.quantity, math.fabs(coinbase_json_sell["Amount"]))

@@ -95,7 +95,7 @@ class SqlBackend:
 
     def add_tx(self, userid, tx):
         assert tx
-        loaded_tx = coinbase.FromCoinbaseJSON(json.loads(tx))
+        loaded_tx = coinbase.transaction_from_coinbase_json(json.loads(tx))
         loaded_tx.user_id = userid
         self.session.add(loaded_tx)
         self.session.commit()

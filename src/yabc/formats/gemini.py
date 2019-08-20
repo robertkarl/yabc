@@ -31,7 +31,7 @@ def _quantity(tx_row):
         raise RuntimeError("Currency {} not supported!".format(currency))
 
     column_name = "{} Amount {}".format(currency, currency)
-    return (decimal.Decimal(tx_row[column_name].strip("(").split(" ")[0]), currency)
+    return decimal.Decimal(tx_row[column_name].strip("(").split(" ")[0])
 
 
 def _tx_from_gemini_row(tx_row):
@@ -49,11 +49,10 @@ def _tx_from_gemini_row(tx_row):
     tx.date = delorean.parse(
         "{} {}".format(tx_row["Date"], tx_row[_TIME_HEADER]), dayfirst=False
     ).datetime
-    tx.usd_subtotal = _gem_int_from_dollar_string(tx_row["USD Amount USD"])
+    tx.second_quantity = _gem_int_from_dollar_string(tx_row["USD Amount USD"])
     tx.fees = _gem_int_from_dollar_string(tx_row["Fee (USD) USD"])
-    quantity, currency = _quantity(tx_row)
-    tx.quantity = quantity
-    tx.asset_name = currency
+    tx.first_quantity = _quantity(tx_row)
+    tx.market_name = tx_row['Symbol']
     tx.source = _SOURCE_NAME
     return tx
 

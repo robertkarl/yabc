@@ -11,6 +11,7 @@ import dateutil
 from yabc import transaction
 from yabc.formats import FORMAT_CLASSES
 from yabc.formats import Format
+from yabc.transaction import Market
 
 
 def from_coinbase(f):
@@ -45,13 +46,13 @@ def from_coinbase(f):
     return USD_and_back
 
 
-def txs_from_coinbase(f):
+def _txs_from_coinbase(f):
     """
     :param f: a filelike object with CSV data
     :return: a list of transaction.Transaction
     """
     dicts = from_coinbase(f)
-    return [FromCoinbaseJSON(i) for i in dicts]
+    return [transaction_from_coinbase_json(i) for i in dicts]
 
 
 class CoinbaseParser(Format):
@@ -62,9 +63,9 @@ class CoinbaseParser(Format):
         self._reports = []
         if isinstance(file_or_fname, str):
             with open(file_or_fname) as f:
-                self._reports = txs_from_coinbase(f)
+                self._reports = _txs_from_coinbase(f)
         else:
-            self._reports = txs_from_coinbase(file_or_fname)
+            self._reports = _txs_from_coinbase(file_or_fname)
 
     def __iter__(self):
         return self
@@ -75,14 +76,14 @@ class CoinbaseParser(Format):
         return self._reports.pop(0)
 
 
-def FromCoinbaseJSON(json):
+def transaction_from_coinbase_json(json):
     """
     Arguments:
         json (dict): a coinbase-style dictionary with the following fields:
             - 'Transfer Total': the total USD price, including fees.
             - 'Transfer Fee': the USD fee charged by the exchange.
             - 'Amount': the amount of bitcoin sold. (It's negative for sales.)
-            - 'Currency': which cryptocurrency was involved.
+            - 'Currency': which cryptocurrency was involved. All trading pairs are to USD.
             - 'Timestamp': 'hour:min:sec.millisecs' formatted timestamp.
     Returns: Transaction instance with important fields populated
     """
@@ -90,19 +91,26 @@ def FromCoinbaseJSON(json):
     proceeds = json["Transfer Total"]
     fee = json["Transfer Fee"]
     asset_name = json["Currency"]
+    if not len(asset_name) ==3:
+        raise RuntimeError("Unsupported Coinbase coin {}".format(asset_name))
+    try:
+        market = Market["{}USD".format(asset_name)]
+    except Exception:
+        raise RuntimeError("Unsupported market {}".format(asset_name))
+
     quantity = decimal.Decimal(json["Amount"])
     if quantity < 0:
         operation = transaction.Transaction.Operation.SELL
         quantity = abs(quantity)
     timestamp_str = json["Timestamp"]
     return transaction.Transaction(
-        asset_name=asset_name,
+        market=market,
         operation=operation,
-        quantity=quantity,
         date=dateutil.parser.parse(timestamp_str),
         fees=fee,
         source="coinbase",
-        usd_subtotal=proceeds,
+        first_quantity=quantity,
+        second_quantity=proceeds,
     )
 
 

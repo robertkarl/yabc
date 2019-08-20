@@ -46,8 +46,8 @@ def _transaction_from_binance_dict(
         asset_name=coin_sold,
         source="binance",
         date=date,
-        quantity=decimal.Decimal(amount),
-        usd_subtotal=usd_subtotal,
+        first_quantity=decimal.Decimal(amount),
+        second_quantity=usd_subtotal,
         fees=fee,
     )
 

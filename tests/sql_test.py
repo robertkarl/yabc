@@ -14,8 +14,8 @@ def make_transaction(kind, quantity, fees, subtotal):
         operation=kind,
         asset_name="BTC",
         fees=fees,
-        quantity=quantity,
-        usd_subtotal=subtotal,
+        first_quantity=quantity,
+        second_quantity=subtotal,
     )
 
 
