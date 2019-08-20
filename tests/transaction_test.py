@@ -11,7 +11,6 @@ from yabc import basis
 from yabc import transaction
 from yabc import user  # noqa
 from yabc.formats import coinbase
-from yabc.formats import gemini
 from yabc.transaction import Transaction
 from yabc.transaction import make_transaction
 
@@ -125,64 +124,17 @@ class TransactionTest(unittest.TestCase):
         self.assertEqual(trans.source, "coinbase")
         self.assertEqual(trans.asset_name, "BTC")
 
-    def test_from_gemini_buy(self):
-        """ Test loading a gemini buy from json.
-        """
-        gemini_json_buy = {
-            "Type": "Buy",
-            "BTC Amount": 2,
-            "USD Amount": 1,
-            "USD Fee": "0.05",
-            "Date": "2015-2-5",
-            # TODO (robertkarl) fix this. Gemini currently ignores the time of day.
-            # "Time": "06:27:56.373",
-        }
-
-        trans = gemini.FromGeminiJSON(gemini_json_buy)
-
-        self.assertEqual(trans.operation, BUY)
-        self.assertEqual(trans.quantity, 2)
-        self.assertEqual(trans.date, datetime.datetime(2015, 2, 5, 0, 0))
-        self.assertEqual(trans.usd_subtotal, 1.0)
-        self.assertEqual(trans.fees, Decimal("0.05"))
-        self.assertEqual(trans.source, "gemini")
-        self.assertEqual(trans.asset_name, "BTC")
-
-    def test_from_gemini_sell(self):
-        """ Test loading a gemini sell from json.
-        """
-        gemini_json_sell = {
-            "Type": "Sell",
-            "BTC Amount": 2,
-            "USD Amount": 1,
-            "USD Fee": "0.05",
-            "Date": "2015-2-5",
-            # TODO (robertkarl) fix this. Gemini currently ignores the time of day.
-            # "Time": "06:27:56.373",
-        }
-
-        trans = gemini.FromGeminiJSON(gemini_json_sell)
-
-        self.assertEqual(trans.operation, SELL)
-        self.assertEqual(trans.quantity, 2)
-        self.assertEqual(trans.fees, Decimal("0.05"))
-        self.assertEqual(trans.date, datetime.datetime(2015, 2, 5, 0, 0))
-        self.assertEqual(trans.usd_subtotal, Decimal("1.0"))
-        self.assertEqual(trans.source, "gemini")
-        self.assertEqual(trans.asset_name, "BTC")
-
     def test_sql_create(self):
         """ Test modifying SQL db via ORM.
         """
-        sell_json_gemini = {
-            "Type": "Sell",
-            "BTC Amount": 2,
-            "USD Amount": 1,
-            "USD Fee": Decimal("0.05"),
-            "Date": "2015-2-5",
+        coinbase_json_sell = {
+            "Transfer Total": 1.05,
+            "Transfer Fee": 0.05,
+            "Amount": -2,
+            "Currency": "BTC",
+            "Timestamp": "2015-2-5 06:27:56.373",
         }
-
-        trans = gemini.FromGeminiJSON(sell_json_gemini)
+        trans = coinbase.FromCoinbaseJSON(coinbase_json_sell)
         engine = sqlalchemy.create_engine("sqlite:///:memory:", echo=True)
         Session = sessionmaker(bind=engine)
         session = Session()

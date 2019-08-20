@@ -6,32 +6,32 @@ import decimal
 
 import dateutil
 
+from yabc import formats
 from yabc import transaction
-from yabc.formats import FORMAT_CLASSES
-from yabc.formats import Format
-from yabc.transaction import Transaction
-
 
 _CURRENCIES = ["BCH", "BTC", "ZEC", "ETH", "LTC"]
 _TYPE_HEADER = "Type"
 _SOURCE_NAME = "gemini"
+
 
 def _gem_int_from_dollar_string(s):
     s = s.strip(" $()")
     s = s.replace(",", "")
     return decimal.Decimal(s)
 
+
 def _quantity(tx_row):
     """
     :return: a decimal.Decimal with the quantity of eth, btc, etc traded.
     """
     # Currency field looks like 'BTCUSD'
-    currency = tx_row["Symbol"].rstrip('USD')
+    currency = tx_row["Symbol"].rstrip("USD")
     if currency not in _CURRENCIES:
         raise RuntimeError("Currency {} not supported!".format(currency))
 
     column_name = "{} Amount {}".format(currency, currency)
-    return (decimal.Decimal(tx_row[column_name].strip('(').split(' ')[0]), currency)
+    return (decimal.Decimal(tx_row[column_name].strip("(").split(" ")[0]), currency)
+
 
 def _tx_from_gemini_row(tx_row):
     """
@@ -44,7 +44,7 @@ def _tx_from_gemini_row(tx_row):
         raise RuntimeError("Not a valid gemini file.")
     if tx_row[_TYPE_HEADER] not in ("Buy", "Sell"):
         return None
-    tx = Transaction(_gemini_type_to_operation(tx_row["Type"]))
+    tx = transaction.Transaction(_gemini_type_to_operation(tx_row["Type"]))
     tx.date = dateutil.parser.parse(tx_row["Date"])
     tx.usd_subtotal = _gem_int_from_dollar_string(tx_row["USD Amount USD"])
     tx.fees = _gem_int_from_dollar_string(tx_row["Fee (USD) USD"])
@@ -53,6 +53,7 @@ def _tx_from_gemini_row(tx_row):
     tx.asset_name = currency
     tx.source = _SOURCE_NAME
     return tx
+
 
 def _read_txs_from_file(f):
     """
@@ -80,7 +81,9 @@ def _valid_gemini_headers(fieldnames):
     """
     Make sure we have the required headers to be sure this is a gemini file.
     """
-    required_fields = "Type,Date,Symbol,BTC Amount BTC,USD Amount USD,Fee (USD) USD".split(",")
+    required_fields = "Type,Date,Symbol,BTC Amount BTC,USD Amount USD,Fee (USD) USD".split(
+        ","
+    )
     for field in required_fields:
         if field not in fieldnames:
             raise RuntimeError(
@@ -88,7 +91,7 @@ def _valid_gemini_headers(fieldnames):
             )
 
 
-class GeminiParser(Format):
+class GeminiParser(formats.Format):
     def __init__(self, fname_or_file):
         self.txs = []
         self.flags = []
@@ -119,4 +122,4 @@ def _gemini_type_to_operation(gemini_type: str):
     )
 
 
-FORMAT_CLASSES.append(GeminiParser)
+formats.FORMAT_CLASSES.append(GeminiParser)
