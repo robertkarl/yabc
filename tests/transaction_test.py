@@ -20,29 +20,27 @@ SELL = Transaction.Operation.SELL
 
 class TransactionTest(unittest.TestCase):
     def setUp(self):
-        self.sample_buy = make_transaction(Transaction.Operation.BUY, 1.0, 10.0, 100.0)
+        self.sample_buy_date = datetime.datetime(2015, 2, 5, 6, 27, 56, 373000)
+        self.sample_buy = transaction.Transaction(
+            operation=BUY,
+            quantity=0.5,
+            source=None,
+            usd_subtotal=990.0,
+            date=self.sample_buy_date,
+            asset_name="BTC",
+            fees=10,
+        )
 
     def test_fees_no_proceeds(self):
         """ Test case where fees make a profit of 0.
         """
-        date = datetime.datetime(2015, 2, 5, 6, 27, 56, 373000)
-        pool = [
-            transaction.Transaction(
-                operation=BUY,
-                quantity=0.5,
-                source=None,
-                usd_subtotal=990.0,
-                date=date,
-                asset_name="BTC",
-                fees=10,
-            )
-        ]
+        pool = [self.sample_buy]
         sale = transaction.Transaction(
             operation=SELL,
             quantity=0.5,
             source=None,
             usd_subtotal=1010.0,
-            date=date,
+            date=self.sample_buy_date,
             asset_name="BTC",
             fees=10,
         )
@@ -55,7 +53,6 @@ class TransactionTest(unittest.TestCase):
     def test_split_report_no_gain(self):
         """ Test simple case with no profit or loss.
         """
-        proceeds = 100
         buy = make_transaction(BUY, 1.0, 0, 100.0)
         sell = make_transaction(SELL, 1.0, 0, 100.0)
         report = basis.split_report(buy, Decimal("0.5"), sell)
@@ -67,15 +64,12 @@ class TransactionTest(unittest.TestCase):
         buy = make_transaction(BUY, 1.0, 10, 100.0)
         sell = make_transaction(SELL, 1.0, 10, 200.0)
         report = basis.split_report(buy, Decimal("0.5"), sell)
-        ans_basis = 55.0
-        sale_basis = 95.0
         ans_gain_or_loss = 40.0
         self.assertEqual(report.gain_or_loss, ans_gain_or_loss)
 
     def test_split_report_bad_input(self):
         """ Test where function split_report gets bad inputs and should throw / assert.
         """
-        proceeds = 100
         purchase_quantity = 1.0
         buy = make_transaction(BUY, purchase_quantity, 0, 100.0)
         sell = make_transaction(SELL, 2.0, 0, 100.0)
@@ -106,6 +100,7 @@ class TransactionTest(unittest.TestCase):
 
     def test_from_coinbase_sell(self):
         """ Test loading a coinbase sell from json.
+        TODO: Consider moving this to a Coinbase specific test.
         """
         coinbase_json_sell = {
             "Transfer Total": 1.05,
@@ -127,14 +122,7 @@ class TransactionTest(unittest.TestCase):
     def test_sql_create(self):
         """ Test modifying SQL db via ORM.
         """
-        coinbase_json_sell = {
-            "Transfer Total": 1.05,
-            "Transfer Fee": 0.05,
-            "Amount": -2,
-            "Currency": "BTC",
-            "Timestamp": "2015-2-5 06:27:56.373",
-        }
-        trans = coinbase.FromCoinbaseJSON(coinbase_json_sell)
+        trans = self.sample_buy
         engine = sqlalchemy.create_engine("sqlite:///:memory:", echo=True)
         Session = sessionmaker(bind=engine)
         session = Session()

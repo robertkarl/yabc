@@ -18,9 +18,9 @@ class GeminiCsvTest(unittest.TestCase):
             self.assertEqual(zec_or_eth_tx.quantity, 1)
             self.assertEqual(zec_or_eth_tx.source, "gemini")
         for eth_tx in txs[2:4]:
-            self.assertEqual(eth_tx.asset_name, 'ETH')
+            self.assertEqual(eth_tx.asset_name, "ETH")
         for zec_tx in txs[4:6]:
-            self.assertEqual(zec_tx.asset_name, 'ZEC')
+            self.assertEqual(zec_tx.asset_name, "ZEC")
 
         self.assertEqual(btc_buy.date.date(), datetime.date(2015, 10, 16))
         self.assertEqual(btc_sell.date.date(), datetime.date(2018, 1, 2))
