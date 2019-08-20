@@ -14,7 +14,7 @@ from yabc.transaction import Transaction
 
 _CURRENCIES = ["BCH", "BTC", "ZEC", "ETH", "LTC"]
 _TYPE_HEADER = "Type"
-_SOURCE_NAME = "Gemini"
+_SOURCE_NAME = "gemini"
 
 def _gem_int_from_dollar_string(s):
     s = s.strip(" $()")
@@ -30,7 +30,7 @@ def _quantity(tx_row):
     if currency not in _CURRENCIES:
         raise RuntimeError("Currency {} not supported!".format(currency))
 
-    column_name = "{currency} Amount {currency}".format(currency)
+    column_name = "{} Amount {}".format(currency, currency)
     return (decimal.Decimal(tx_row[column_name].strip('(').split(' ')[0]), currency)
 
 def _tx_from_gemini_row(tx_row):
@@ -45,10 +45,10 @@ def _tx_from_gemini_row(tx_row):
     if tx_row[_TYPE_HEADER] not in ("Buy", "Sell"):
         return None
     tx = Transaction(_gemini_type_to_operation(tx_row["Type"]))
-    tx.date = dateutil.parser.parse(tx["Date"])
-    tx.usd_subtotal = _gem_int_from_dollar_string(tx["USD Amount USD"])
-    tx.fees = _gem_int_from_dollar_string(tx["Fee (USD) USD"])
-    quantity, currency = _quantity(tx)
+    tx.date = dateutil.parser.parse(tx_row["Date"])
+    tx.usd_subtotal = _gem_int_from_dollar_string(tx_row["USD Amount USD"])
+    tx.fees = _gem_int_from_dollar_string(tx_row["Fee (USD) USD"])
+    quantity, currency = _quantity(tx_row)
     tx.quantity = quantity
     tx.asset_name = currency
     tx.source = _SOURCE_NAME

@@ -89,7 +89,8 @@ class Transaction(yabc.Base):
             assert isinstance(param, (float, str, Decimal, int))
         self.quantity = Decimal(quantity)
         self.operation = operation
-        self.date = date.replace(tzinfo=None)
+        if date:
+            self.date = date.replace(tzinfo=None)
         self.usd_subtotal = Decimal(usd_subtotal)
         self.source = source
         self.asset_name = asset_name
