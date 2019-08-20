@@ -9,7 +9,7 @@ setuptools.setup(
     author="Seattle Blockchain Solutions",
     maintainer="Robert Karl",
     maintainer_email="robertkarljr@gmail.com",
-    install_requires=["flask==1.0.2", "sqlalchemy", "delorean==1.0.0"],
+    install_requires=["flask==1.0.2", "sqlalchemy", "delorean==1.0.0","openpyxl", "defusedxml"],
     test_suite="tests",
     url="https://github.com/robertkarl/yabc",
     description="A tax estimator for cryptocurrencies.",

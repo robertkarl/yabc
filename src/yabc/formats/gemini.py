@@ -1,3 +1,8 @@
+"""
+Gemini gives report data in .xlsx format.
+
+
+"""
 import csv
 import decimal
 
@@ -6,71 +11,87 @@ import dateutil
 from yabc import transaction
 from yabc.formats import FORMAT_CLASSES
 from yabc.formats import Format
+from yabc.transaction import Transaction
 
 
-def gem_int_from_dollar_string(s):
+_CURRENCIES = ["BCH", "BTC", "ZEC", "ETH", "LTC"]
+_TYPE_HEADER = "Type"
+_SOURCE_NAME = "Gemini"
+
+def _gem_int_from_dollar_string(s):
     s = s.strip(" $()")
     s = s.replace(",", "")
     return decimal.Decimal(s)
 
+def _quantity(tx_row):
+    """
+    :return: a decimal.Decimal with the quantity of eth, btc, etc traded.
+    """
+    # Currency field looks like 'BTCUSD'
+    currency = tx_row["Symbol"].rstrip('USD')
+    if currency not in _CURRENCIES:
+        raise RuntimeError("Currency {} not supported!".format(currency))
 
-def clean_gemini_row(tx):
-    # assert type(tx) is OrderedDict # not true with python3.5.2
-    if "Type" not in tx:
+    column_name = "{currency} Amount {currency}".format(currency)
+    return (decimal.Decimal(tx_row[column_name].strip('(').split(' ')[0]), currency)
+
+def _tx_from_gemini_row(tx_row):
+    """
+    Create a Transaction based on a row.
+
+    May return None.
+
+    :param tx: a dictionary with keys from a gemini transaction history spreadsheet.
+    :return:  None if not a transaction needed for taxes.
+    Otherwise returns a dictionary with relevant keys.
+
+    """
+    if _TYPE_HEADER not in tx_row:
         raise RuntimeError("Not a valid gemini file.")
-    if tx["Type"] not in ("Buy", "Sell"):
+    if tx_row[_TYPE_HEADER] not in ("Buy", "Sell"):
         return None
-    ans = {}
-    ans["Type"] = tx["Type"]
-    ans["Date"] = dateutil.parser.parse(tx["Date"])
-    ans["BTC Amount"] = tx["BTC Amount BTC"].strip("(").split(" ")[0]
-    usd_str = gem_int_from_dollar_string(tx["USD Amount USD"])
-    ans["USD Amount"] = usd_str
-    ans["USD Fee"] = gem_int_from_dollar_string(tx["Fee (USD) USD"])
-    ans["Site"] = "Gemini"
-    return ans
+    tx = Transaction(_gemini_type_to_operation(tx_row["Type"]))
+    tx.date = dateutil.parser.parse(tx["Date"])
+    tx.usd_subtotal = _gem_int_from_dollar_string(tx["USD Amount USD"])
+    tx.fees = _gem_int_from_dollar_string(tx["Fee (USD) USD"])
+    quantity, currency = _quantity(tx)
+    tx.quantity = quantity
+    tx.asset_name = currency
+    tx.source = _SOURCE_NAME
+    return tx
 
-
-def from_gemini(f):
+def _read_txs_from_file(f):
+    """
+    Validate headers and read buy/sell transactions from the open file 'f'
+    """
     f.seek(0)
     rawcsv = [i for i in csv.reader(f)]
     if not rawcsv:
         raise RuntimeError("not enough rows in gemini file {}".format(f))
     fieldnames = rawcsv[0]
-    valid_gemini_headers(fieldnames)
+    _valid_gemini_headers(fieldnames)
     f.seek(0)
-    ts = [i for i in csv.DictReader(f, fieldnames)]
-    ts = ts[1:]
+    transactions = [i for i in csv.DictReader(f, fieldnames)][1:]
     ans = []
-    for tx in ts:
-        item = clean_gemini_row(tx)
+    for row in transactions:
+        item = _tx_from_gemini_row(row)
         if item is not None:
             ans.append(item)
-    return [i for i in ans if i["Type"] == "Buy" or i["Type"] == "Sell"]
+    return ans
 
 
-def valid_gemini_headers(fieldnames):
-    required_fields = "Type,Date,BTC Amount BTC,USD Amount USD,Fee (USD) USD".split(",")
+def _valid_gemini_headers(fieldnames):
+    """
+    Make sure we have the required headers
+    :param fieldnames:
+    :return:
+    """
+    required_fields = "Type,Date,Symbol,BTC Amount BTC,USD Amount USD,Fee (USD) USD".split(",")
     for field in required_fields:
         if field not in fieldnames:
             raise RuntimeError(
                 "Not a valid gemini file. Requires header '{}'".format(field)
             )
-
-
-def gemini_to_dict(fname):
-    with open(fname, "r") as f:
-        return from_gemini(f)
-    return None
-
-
-def fname_to_tx_gemini(fname: str):
-    gems = gemini_to_dict(fname) if fname else None
-    txs = []
-    for g in gems:
-        t = FromGeminiJSON(g)
-        txs.append(t)
-    return txs
 
 
 class GeminiParser(Format):
@@ -81,10 +102,11 @@ class GeminiParser(Format):
         self.flags = []
         self._file = fname_or_file
         if isinstance(fname_or_file, str):
-            self.txs = fname_to_tx_gemini(fname_or_file)
+            with open(fname_or_file) as f:
+                self.txs = _read_txs_from_file(f)
         else:
-            tx_dicts = from_gemini(fname_or_file)
-            self.txs = [FromGeminiJSON(i) for i in tx_dicts]
+            # it must be an open file
+            self.txs = _read_txs_from_file(fname_or_file)
 
     def __iter__(self):
         return self
@@ -95,40 +117,13 @@ class GeminiParser(Format):
         return self.txs.pop(0)
 
 
-def txs_from_gemini(f):
-    dicts = from_gemini(f)
-    return [FromGeminiJSON(i) for i in dicts]
-
-
-def gemini_type_to_operation(gemini_type: str):
+def _gemini_type_to_operation(gemini_type: str):
     if gemini_type == "Buy":
         return transaction.Transaction.Operation.BUY
     elif gemini_type == "Sell":
         return transaction.Transaction.Operation.SELL
     raise RuntimeError(
         "Invalid Gemini transaction type {} encountered.".format(gemini_type)
-    )
-
-
-def FromGeminiJSON(json):
-    """
-    Arguments
-        json (Dictionary):
-    """
-
-    operation = gemini_type_to_operation(json["Type"])
-    quantity = json["BTC Amount"]
-    usd_total = json["USD Amount"]
-    fee = json["USD Fee"]
-    timestamp_str = "{}".format(json["Date"])
-    return transaction.Transaction(
-        asset_name="BTC",
-        operation=operation,
-        quantity=quantity,
-        fees=fee,
-        date=dateutil.parser.parse(timestamp_str),
-        source="gemini",
-        usd_subtotal=usd_total,
     )
 
 

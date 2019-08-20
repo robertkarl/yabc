@@ -85,7 +85,6 @@ class Transaction(yabc.Base):
         usd_subtotal=0,
         user_id="",
     ):
-        assert date is not None
         for param in (quantity, fees, usd_subtotal):
             assert isinstance(param, (float, str, Decimal, int))
         self.quantity = Decimal(quantity)
