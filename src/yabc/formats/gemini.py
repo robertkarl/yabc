@@ -1,7 +1,5 @@
 """
-Gemini gives report data in .xlsx format.
-
-
+TODO: Accept Gemini .xlsx files. Do not require the user to convert to CSV.
 """
 import csv
 import decimal
@@ -37,14 +35,10 @@ def _quantity(tx_row):
 
 def _tx_from_gemini_row(tx_row):
     """
-    Create a Transaction based on a row.
-
-    May return None.
+    Create a Transaction based on a row. May return None.
 
     :param tx: a dictionary with keys from a gemini transaction history spreadsheet.
-    :return:  None if not a transaction needed for taxes.
-    Otherwise returns a dictionary with relevant keys.
-
+    :return:  None if not a transaction needed for taxes. Otherwise a Transaction object.
     """
     if _TYPE_HEADER not in tx_row:
         raise RuntimeError("Not a valid gemini file.")
@@ -62,7 +56,9 @@ def _tx_from_gemini_row(tx_row):
 
 def _read_txs_from_file(f):
     """
-    Validate headers and read buy/sell transactions from the open file 'f'
+    Validate headers and read buy/sell transactions from the open file-like object 'f'.
+
+    Note: we use the seek method on f.
     """
     f.seek(0)
     rawcsv = [i for i in csv.reader(f)]
@@ -82,9 +78,7 @@ def _read_txs_from_file(f):
 
 def _valid_gemini_headers(fieldnames):
     """
-    Make sure we have the required headers
-    :param fieldnames:
-    :return:
+    Make sure we have the required headers to be sure this is a gemini file.
     """
     required_fields = "Type,Date,Symbol,BTC Amount BTC,USD Amount USD,Fee (USD) USD".split(",")
     for field in required_fields:
@@ -95,8 +89,6 @@ def _valid_gemini_headers(fieldnames):
 
 
 class GeminiParser(Format):
-    EXCHANGE_NAME = "Gemini"
-
     def __init__(self, fname_or_file):
         self.txs = []
         self.flags = []
