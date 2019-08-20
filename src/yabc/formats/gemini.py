@@ -4,7 +4,7 @@ TODO: Accept Gemini .xlsx files. Do not require the user to convert to CSV.
 import csv
 import decimal
 
-import dateutil
+import delorean
 
 from yabc import formats
 from yabc import transaction
@@ -45,7 +45,9 @@ def _tx_from_gemini_row(tx_row):
     if tx_row[_TYPE_HEADER] not in ("Buy", "Sell"):
         return None
     tx = transaction.Transaction(_gemini_type_to_operation(tx_row["Type"]))
-    tx.date = dateutil.parser.parse(tx_row["Date"])
+    tx.date = delorean.parse(
+        "{} {}".format(tx_row["Date"], tx_row["Time (UTC)"]), dayfirst=False
+    ).datetime
     tx.usd_subtotal = _gem_int_from_dollar_string(tx_row["USD Amount USD"])
     tx.fees = _gem_int_from_dollar_string(tx_row["Fee (USD) USD"])
     quantity, currency = _quantity(tx_row)
