@@ -10,8 +10,9 @@ from yabc import formats
 from yabc import transaction
 
 _CURRENCIES = ["BCH", "BTC", "ZEC", "ETH", "LTC"]
-_TYPE_HEADER = "Type"
 _SOURCE_NAME = "gemini"
+_TIME_HEADER = "Time (UTC)"
+_TYPE_HEADER = "Type"
 
 
 def _gem_int_from_dollar_string(s):
@@ -46,7 +47,7 @@ def _tx_from_gemini_row(tx_row):
         return None
     tx = transaction.Transaction(_gemini_type_to_operation(tx_row["Type"]))
     tx.date = delorean.parse(
-        "{} {}".format(tx_row["Date"], tx_row["Time (UTC)"]), dayfirst=False
+        "{} {}".format(tx_row["Date"], tx_row[_TIME_HEADER]), dayfirst=False
     ).datetime
     tx.usd_subtotal = _gem_int_from_dollar_string(tx_row["USD Amount USD"])
     tx.fees = _gem_int_from_dollar_string(tx_row["Fee (USD) USD"])
@@ -83,7 +84,7 @@ def _valid_gemini_headers(fieldnames):
     """
     Make sure we have the required headers to be sure this is a gemini file.
     """
-    required_fields = "Type,Date,Symbol,BTC Amount BTC,USD Amount USD,Fee (USD) USD".split(
+    required_fields = "Type,Date,Time (UTC),Symbol,BTC Amount BTC,USD Amount USD,Fee (USD) USD".split(
         ","
     )
     for field in required_fields:
