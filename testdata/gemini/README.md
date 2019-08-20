@@ -1,8 +1,7 @@
 Gemini download steps
 - log in
-- https://exchange.gemini.com/history
-- Download History (xlsx)
-- Open in Excel or Libreoffice and save as CSV
+- visit https://exchange.gemini.com/history
+- Click "Download History (xlsx)"
 - Import
 
 TODO: yabc should import the xlsx file directly.

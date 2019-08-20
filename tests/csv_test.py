@@ -9,7 +9,6 @@ import unittest
 from yabc import transaction
 from yabc.formats import adhoc
 from yabc.formats import coinbase
-from yabc.formats import gemini
 
 
 class CsvTest(unittest.TestCase):
@@ -21,10 +20,6 @@ class CsvTest(unittest.TestCase):
         for fname in self.filenames:
             with open(fname) as f:
                 coinbase.from_coinbase(f)
-
-    def test_load_gemini_csv(self):
-        """ Test wholesale load of gemini data from CSV"""
-        gemini.gemini_to_dict("testdata/gemini/synthetic_gemini_csv.csv")
 
     def test_load_adhoc_csv(self):
         """ Test wholesale load of gemini data from CSV"""
