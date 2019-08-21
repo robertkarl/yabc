@@ -66,17 +66,17 @@ def split_report(coin_to_split: Transaction, amount, trans: Transaction):
     assert isinstance(amount, Decimal)
     assert isinstance(coin_to_split, transaction.Transaction)
     assert isinstance(trans, transaction.Transaction)
-    assert amount < coin_to_split.first_quantity
-    assert not (amount - trans.first_quantity > 1e-5)  # allowed to be equal
+    assert amount < coin_to_split.quantity_traded
+    assert not (amount - trans.quantity_traded > 1e-5)  # allowed to be equal
 
     # basis and fee (partial amounts of coin_to_split)
-    frac_of_basis_coin = amount / coin_to_split.second_quantity
-    purchase_price = frac_of_basis_coin * coin_to_split.second_quantity
+    frac_of_basis_coin = amount / coin_to_split.quantity_received
+    purchase_price = frac_of_basis_coin * coin_to_split.quantity_received
     purchase_fee = frac_of_basis_coin * coin_to_split.fees
 
     # sale proceeds and fee (again, partial amounts of trans)
-    frac_of_sale_tx = amount / trans.first_quantity
-    proceeds = (frac_of_sale_tx * trans.second_quantity).quantize(Decimal(".01"))
+    frac_of_sale_tx = amount / trans.quantity_traded
+    proceeds = (frac_of_sale_tx * trans.quantity_received).quantize(Decimal(".01"))
     sale_fee = (frac_of_sale_tx * trans.fees).quantize(Decimal(".01"))
     return CostBasisReport(
         trans.user_id,
@@ -90,7 +90,7 @@ def split_report(coin_to_split: Transaction, amount, trans: Transaction):
     )
 
 def make_tx_from_coin_to_coin_trade(trans: transaction.Transaction):
-    return trans
+    assert False
 
 def process_one(trans: transaction.Transaction, pool: typing.Sequence):
     """
@@ -133,15 +133,15 @@ def process_one(trans: transaction.Transaction, pool: typing.Sequence):
         else:
             to_add.append(make_tx_from_coin_to_coin_trade(trans))
 
-    while amount < trans.first_quantity:
+    while amount < trans.quantity_traded:
         pool_index += 1
-        amount += pool[pool_index].first_quantity
-    needs_split = (amount - trans.first_quantity) > 1e-5
+        amount += pool[pool_index].quantity_traded
+    needs_split = (amount - trans.quantity_traded) > 1e-5
 
     if needs_split:
         coin_to_split = pool[pool_index]
-        excess = amount - trans.first_quantity
-        portion_of_split_coin_to_sell = coin_to_split.first_quantity - excess
+        excess = amount - trans.quantity_traded
+        portion_of_split_coin_to_sell = coin_to_split.quantity_traded - excess
         if trans.is_taxable_output():
             # Outgoing gifts would not trigger this.
             # TODO: Alert the user if the value of a gift exceeds $15,000, in which

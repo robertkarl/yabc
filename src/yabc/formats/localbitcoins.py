@@ -53,9 +53,9 @@ class LocalBitcoinsParser(Format):
                 asset_name="BTC",
                 date=date,
                 fees=fiat_fee,
-                first_quantity=btc_amount,
+                quantity_traded=btc_amount,
                 source=LocalBitcoinsParser.EXCHANGE_NAME,
-                second_quantity=fiat,
+                quantity_received=fiat,
             )
         except RuntimeError:
             raise RuntimeError("Could not parse localbitcoins data.")

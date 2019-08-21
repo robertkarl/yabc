@@ -2,14 +2,13 @@
 Definition of a Transaction, the in-memory version of an asset buy/sell
 """
 import datetime
+import decimal
 import enum
 from decimal import Decimal
 
 import sqlalchemy
-from sqlalchemy import Column
 from sqlalchemy import DateTime
 from sqlalchemy import ForeignKey
-from sqlalchemy import Integer
 from sqlalchemy.types import TypeDecorator
 
 import yabc
@@ -55,6 +54,17 @@ class Market(enum.Enum):
     LTCUSD = enum.auto()
     BTCETH = enum.auto()
 
+@enum.unique
+class Symbol(enum.Enum):
+    BTC = enum.auto()
+    ETH = enum.auto()
+    BCH = enum.auto()
+    USD = enum.auto()
+    LTC = enum.auto()
+    ZEC = enum.auto()
+
+
+
 
 class Transaction(yabc.Base):
     """
@@ -79,47 +89,56 @@ class Transaction(yabc.Base):
         SPLIT = "Split"
         MINING = "Mining"
         SPENDING = "Spending"
+        TRADE_INPUT = "TradeInput"
 
     __tablename__ = "transaction"
-    id = Column(Integer, primary_key=True)
-    # Column asset_name deleted.
-    market_name = Column(sqlalchemy.String) # column added example: "BTCUSD"
-    date = Column(DateTime)
-    fees = Column(PreciseDecimalString)
-    operation = Column(TransactionOperationString)
-    first_quantity= Column(PreciseDecimalString) # column added
-    second_quantity = Column(PreciseDecimalString) # column added
-    source = Column(sqlalchemy.String)
-    usd_subtotal = Column(PreciseDecimalString) # deprecated
-    user_id = Column(sqlalchemy.Integer, ForeignKey("user.id"))
+    id = sqlalchemy.Column(sqlalchemy.Integer, primary_key=True)
+    # Column "asset_name" deleted.
+    date = sqlalchemy.Column(DateTime)
+    fees = sqlalchemy.Column(PreciseDecimalString)
+    fee_symbol = sqlalchemy.Column(sqlalchemy.String)
+    operation = sqlalchemy.Column(TransactionOperationString)
+
+    quantity_traded= sqlalchemy.Column(PreciseDecimalString) # column added
+    symbol_traded = sqlalchemy.Column(sqlalchemy.String) # column added
+
+    quantity_received = sqlalchemy.Column(PreciseDecimalString) # column added
+    symbol_received = sqlalchemy.Column(sqlalchemy.String) # column added
+
+    source = sqlalchemy.Column(sqlalchemy.String)
+    usd_subtotal = sqlalchemy.Column(PreciseDecimalString) # deprecated
+    user_id = sqlalchemy.Column(sqlalchemy.Integer, ForeignKey("user.id"))
 
     def __init__(
         self,
         operation: Operation,
-        market: Market=Market.BTCUSD,
         date=None,
         fees=0,
-        first_quantity=0,
+        quantity_traded=0,
         source=None,
-        second_quantity=0,
+        quantity_received=0,
         user_id="",
+            symbol_traded="",
+            symbol_received="",
+            fee_symbol="USD",
     ):
-        for param in (first_quantity, fees, second_quantity):
+        for param in (quantity_traded, fees, quantity_received):
             assert isinstance(param, (float, str, Decimal, int))
-        self.first_quantity = Decimal(first_quantity)
+        self.quantity_traded = Decimal(quantity_traded)
+        self.symbol_traded = symbol_traded
+        self.quantity_received = Decimal(quantity_received)
+        self.symbol_received = symbol_received
         self.operation = operation
         if date:
             self.date = date.replace(tzinfo=None)
-        if not market in Market:
-            raise RuntimeError("Unsuppored market {}".format(market))
-        self.second_quantity = Decimal(second_quantity)
+        self.quantity_received = Decimal(quantity_received)
         self.source = source
-        self.market_name = market.name
         self.user_id = user_id
-        self.fees = Decimal(fees)
+        self.fees = decimal.Decimal(fees)
+        self.fee_symbol = fee_symbol
 
-    def to_fiat(self):
-        return 'USD' in self.market_name
+    def is_to_fiat(self):
+        return self.symbol_received == 'USD'
 
     def is_input(self):
         """
@@ -132,7 +151,7 @@ class Transaction(yabc.Base):
             Operation.BUY,
         }:
             return True
-        elif self.operation == Operation.SELL and not self.to_fiat():
+        elif self.operation == Operation.SELL and not self.is_to_fiat():
             # This means it was a BTC/ETH sale for example
             return True
         return False
@@ -141,33 +160,34 @@ class Transaction(yabc.Base):
         return self.operation in {Operation.SPENDING, Operation.SELL}
 
     def __repr__(self):
-        return "<{user} - {operation} {first} on {market} for {second}, on {date} from {exchange}. Fee {fee}.>".format(
+        return "<{user} - {operation} {quantity_traded} {symbol_received} on {} for {quantity_received}, on {date} from {exchange}. Fee {fee}.>".format(
             exchange=self.source,
             date=self.date,
             operation=self.operation,
-            market = self.market_name,
-            first=self.first_quantity,
+            quantity_traded=self.quantity_traded,
             user=self.user_id,
             asset_name=self.asset_name,
-            second=self.second_quantity,
+            quantity_received=self.quantity_received,
             fee=self.fees,
+            symbol_received=self.symbol_received
         )
 
 
 def make_transaction(
     kind: Transaction.Operation,
-    quantity,
+    quantity_received,
+        symbol_received,
+    quantity_traded,
     fees,
-    subtotal,
     date=datetime.datetime(2015, 2, 5, 6, 27, 56, 373000),
 ):
     return Transaction(
         operation=kind,
-        market=Market.BTCUSD,
         date=date,
         fees=fees,
-        first_quantity=quantity,
-        second_quantity=subtotal,
+        quantity_traded=quantity_traded,
+        symbol_received=symbol_received,
+        quantity_received=quantity_received,
     )
 
 

@@ -49,9 +49,9 @@ def _tx_from_gemini_row(tx_row):
     tx.date = delorean.parse(
         "{} {}".format(tx_row["Date"], tx_row[_TIME_HEADER]), dayfirst=False
     ).datetime
-    tx.second_quantity = _gem_int_from_dollar_string(tx_row["USD Amount USD"])
+    tx.quantity_received = _gem_int_from_dollar_string(tx_row["USD Amount USD"])
     tx.fees = _gem_int_from_dollar_string(tx_row["Fee (USD) USD"])
-    tx.first_quantity = _quantity(tx_row)
+    tx.quantity_traded = _quantity(tx_row)
     tx.market_name = tx_row['Symbol']
     tx.source = _SOURCE_NAME
     return tx

@@ -24,9 +24,9 @@ class TransactionTest(unittest.TestCase):
         self.sample_buy = transaction.Transaction(
             operation=BUY,
             market=Market.BTCUSD,
-            first_quantity=0.5,
+            quantity_traded=0.5,
             source=None,
-            second_quantity=990.0,
+            quantity_received=990.0,
             date=self.sample_buy_date,
             fees=10,
         )
@@ -37,9 +37,9 @@ class TransactionTest(unittest.TestCase):
         pool = [self.sample_buy]
         sale = transaction.Transaction(
             operation=SELL,
-            first_quantity=0.5,
+            quantity_traded=0.5,
             source=None,
-            second_quantity=1010.0,
+            quantity_received=1010.0,
             date=self.sample_buy_date,
             asset_name="BTC",
             fees=10,

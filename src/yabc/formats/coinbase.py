@@ -109,8 +109,8 @@ def transaction_from_coinbase_json(json):
         date=dateutil.parser.parse(timestamp_str),
         fees=fee,
         source="coinbase",
-        first_quantity=quantity,
-        second_quantity=proceeds,
+        quantity_traded=quantity,
+        quantity_received=proceeds,
     )
 
 
