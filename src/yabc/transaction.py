@@ -113,8 +113,8 @@ class Transaction(yabc.Base):
     def __init__(
         self,
         operation: Operation,
+        date,
         asset_name="BTC",  # deprecated
-        date=None,
         fees=0,
         quantity=0,
         source=None,
@@ -131,8 +131,8 @@ class Transaction(yabc.Base):
         self.quantity = Decimal(quantity)
         self.operation = operation
         self.date = date
-        if date and isinstance(date, datetime.datetime):
-            self.date = date.replace(tzinfo=None)
+        assert isinstance(date, datetime.datetime)
+        self.date = date.replace(tzinfo=None)
         self.usd_subtotal = Decimal(usd_subtotal)
         self.source = source
         self.asset_name = asset_name
