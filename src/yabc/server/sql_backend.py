@@ -99,9 +99,10 @@ class SqlBackend:
         loaded_tx.user_id = userid
         self.session.add(loaded_tx)
         self.session.commit()
-        return "Transaction added for user {}. Operation is {}.\n".format(
+        val = "Transaction added for user {}. Operation is {}.\n".format(
             userid, loaded_tx.operation
         )
+        return val
 
     def user_create(self, name):
         user_obj = user.User(username=name, password="")
@@ -169,7 +170,13 @@ class SqlBackend:
             tx_dict = dict(tx.__dict__)
             tx_dict.pop("_sa_instance_state")
             ans.append(tx_dict)
-            for numeric_key in ("usd_subtotal", "fees", "quantity"):
+            for numeric_key in (
+                "usd_subtotal",
+                "fees",
+                "quantity",
+                "quantity_received",
+                "quantity_traded",
+            ):
                 tx_dict[numeric_key] = str(tx_dict[numeric_key])
             tx_dict["operation"] = tx_dict["operation"].value
         for item in ans:
