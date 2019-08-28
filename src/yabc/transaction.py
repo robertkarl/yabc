@@ -6,10 +6,6 @@ import enum
 from decimal import Decimal
 
 import sqlalchemy
-from sqlalchemy import Column
-from sqlalchemy import DateTime
-from sqlalchemy import ForeignKey
-from sqlalchemy import Integer
 from sqlalchemy.types import TypeDecorator
 
 import yabc
@@ -26,7 +22,7 @@ class PreciseDecimalString(TypeDecorator):
         return str(value)
 
     def process_result_value(self, value, dialect):
-        if not value:
+        if not value or value == "None":
             value = 0
         return Decimal(value)
 
@@ -47,9 +43,37 @@ class TransactionOperationString(TypeDecorator):
         return Transaction.Operation(value)
 
 
+@enum.unique
+class Market(enum.Enum):
+    BTCUSD = enum.auto()
+    ETHUSD = enum.auto()
+    BCHUSD = enum.auto()
+    ZECUSD = enum.auto()
+    LTCUSD = enum.auto()
+    BTCETH = enum.auto()
+
+
+@enum.unique
+class Symbol(enum.Enum):
+    BTC = enum.auto()
+    ETH = enum.auto()
+    BCH = enum.auto()
+    USD = enum.auto()
+    LTC = enum.auto()
+    ZEC = enum.auto()
+
+
 class Transaction(yabc.Base):
     """
-    Exchange-independent representation of a transaction (buy or sell)
+    Exchange-independent representation of a transaction (buy or sell).
+
+    Each transaction is something that the user actually clicked a button to do. For example, trading BTC for ETH is one
+    transaction.
+
+    On Binance, a single trade can result in several events that affect taxes. Consider the BTCETH market, and a single SELL order executed there:
+    - coins can be used to pay fees. this means the coins need to be subtracted from the pool.
+    - BTC needs to be removed from the pool
+    - ETH needs to be added (less fees)
     """
 
     @enum.unique
@@ -62,40 +86,63 @@ class Transaction(yabc.Base):
         SPLIT = "Split"
         MINING = "Mining"
         SPENDING = "Spending"
+        TRADE_INPUT = "TradeInput"
 
     __tablename__ = "transaction"
-    id = Column(Integer, primary_key=True)
-    asset_name = Column(sqlalchemy.String)
-    date = Column(DateTime)
-    fees = Column(PreciseDecimalString)
-    operation = Column(TransactionOperationString)
-    quantity = Column(PreciseDecimalString)
-    source = Column(sqlalchemy.String)
-    usd_subtotal = Column(PreciseDecimalString)
-    user_id = Column(sqlalchemy.Integer, ForeignKey("user.id"))
+    id = sqlalchemy.Column(sqlalchemy.Integer, primary_key=True)
+    asset_name = sqlalchemy.Column(sqlalchemy.String)  # Deprecated
+    quantity = sqlalchemy.Column(PreciseDecimalString)  # Deprecated
+    date = sqlalchemy.Column(sqlalchemy.DateTime)
+    fees = sqlalchemy.Column(PreciseDecimalString)
+    fee_symbol = sqlalchemy.Column(sqlalchemy.String)
+    operation = sqlalchemy.Column(TransactionOperationString)
+
+    quantity_traded = sqlalchemy.Column(PreciseDecimalString)  # column added
+    symbol_traded = sqlalchemy.Column(sqlalchemy.String)  # column added
+
+    quantity_received = sqlalchemy.Column(PreciseDecimalString)  # column added
+    symbol_received = sqlalchemy.Column(sqlalchemy.String)  # column added
+
+    source = sqlalchemy.Column(sqlalchemy.String)
+    usd_subtotal = sqlalchemy.Column(PreciseDecimalString)  # deprecated
+    user_id = sqlalchemy.Column(sqlalchemy.Integer, sqlalchemy.ForeignKey("user.id"))
 
     def __init__(
         self,
         operation: Operation,
-        asset_name="BTC",
+        asset_name="BTC",  # deprecated
         date=None,
         fees=0,
         quantity=0,
         source=None,
-        usd_subtotal=0,
+        usd_subtotal=0,  # depreacted
         user_id="",
+        symbol_traded="",
+        symbol_received="",
+        quantity_traded=0,
+        quantity_received=0,
+        fee_symbol="USD",
     ):
         for param in (quantity, fees, usd_subtotal):
             assert isinstance(param, (float, str, Decimal, int))
         self.quantity = Decimal(quantity)
         self.operation = operation
-        if date:
+        self.date = date
+        if date and isinstance(date, datetime.datetime):
             self.date = date.replace(tzinfo=None)
         self.usd_subtotal = Decimal(usd_subtotal)
         self.source = source
         self.asset_name = asset_name
         self.user_id = user_id
         self.fees = Decimal(fees)
+
+        # The new syntax explicitly labels each leg of the trade.
+        # Allow its use to overwrite values in columns for "asset_name" and "usd_subtotal"
+        self.quantity_received = Decimal(quantity_received)
+        self.quantity_traded = Decimal(quantity_traded)
+        self.fee_symbol = fee_symbol
+        self.symbol_received = symbol_received
+        self.symbol_traded = symbol_traded
 
     def is_input(self):
         """
