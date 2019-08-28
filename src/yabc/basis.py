@@ -90,6 +90,7 @@ def split_report(coin_to_split: Transaction, amount, trans: Transaction):
     )
 
 def make_tx_from_coin_to_coin_trade(trans: transaction.Transaction):
+    result = trans
     assert False
 
 def process_one(trans: transaction.Transaction, pool: typing.Sequence):
@@ -106,8 +107,6 @@ def process_one(trans: transaction.Transaction, pool: typing.Sequence):
                    this is reported to IRS as 2 trannies: 
                    One: Sell 0.25 with a basis of $1
                    Two: Sell 0.25 with a basis of $2
-        - Return:
-
 
     :param trans: a buy or sell with fields filled
     :param pool: a sequence containing transaction.Transaction instances.
@@ -131,6 +130,7 @@ def process_one(trans: transaction.Transaction, pool: typing.Sequence):
             # This is the case for buying BTC with fiat.
             return {"basis_reports": [], "add": [trans], "remove_index": -1}
         else:
+            # In this case we need to get  basis reports (below) AND add to the pool.
             to_add.append(make_tx_from_coin_to_coin_trade(trans))
 
     while amount < trans.quantity_traded:

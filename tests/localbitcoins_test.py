@@ -8,6 +8,7 @@ import unittest
 
 from yabc.formats import localbitcoins
 from yabc.transaction import Operation
+datetime.date(2017,1,1)
 
 
 class LocalbitcoinsCsvTest(unittest.TestCase):

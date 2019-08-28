@@ -129,8 +129,10 @@ class Transaction(yabc.Base):
         self.quantity_received = Decimal(quantity_received)
         self.symbol_received = symbol_received
         self.operation = operation
-        if date:
+        if date and isinstance(date, datetime.datetime):
             self.date = date.replace(tzinfo=None)
+        else:
+            self.date = date
         self.quantity_received = Decimal(quantity_received)
         self.source = source
         self.user_id = user_id
@@ -139,6 +141,17 @@ class Transaction(yabc.Base):
 
     def is_to_fiat(self):
         return self.symbol_received == 'USD'
+
+    def contains_fiat(self):
+        return self.symbol_received == 'USD' or self.symbol_traded == 'USD'
+
+    def is_coin_to_coin(self):
+        if self.operation in {Operation.BUY, Operation.SELL}:
+            if self.contains_fiat():
+                return False
+            return True
+        # All others, like mining or spending, are assumed not to fall into this category.
+        return False
 
     def is_input(self):
         """
@@ -151,22 +164,28 @@ class Transaction(yabc.Base):
             Operation.BUY,
         }:
             return True
-        elif self.operation == Operation.SELL and not self.is_to_fiat():
-            # This means it was a BTC/ETH sale for example
+        elif self.is_coin_to_coin():
             return True
         return False
 
     def is_taxable_output(self):
-        return self.operation in {Operation.SPENDING, Operation.SELL}
+        """
+        Return true if we need to create 8949 entries for this transaction.
+        """
+        if self.operation in {Operation.SPENDING, Operation.SELL}:
+            return True
+        # In some cases a buy is taxable. Only if you buy one coin with another.
+        if self.is_coin_to_coin():
+            return True
+        return False
 
     def __repr__(self):
-        return "<{user} - {operation} {quantity_traded} {symbol_received} on {} for {quantity_received}, on {date} from {exchange}. Fee {fee}.>".format(
+        return "<{user} - {operation} {quantity_traded} {symbol_received} on {exchange} for {quantity_received}, on {date} from. Fee {fee}.>".format(
             exchange=self.source,
             date=self.date,
             operation=self.operation,
             quantity_traded=self.quantity_traded,
             user=self.user_id,
-            asset_name=self.asset_name,
             quantity_received=self.quantity_received,
             fee=self.fees,
             symbol_received=self.symbol_received
