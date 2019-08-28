@@ -45,22 +45,25 @@ class TransactionOperationString(TypeDecorator):
 
 @enum.unique
 class Market(enum.Enum):
-    BTCUSD = enum.auto()
-    ETHUSD = enum.auto()
-    BCHUSD = enum.auto()
-    ZECUSD = enum.auto()
-    LTCUSD = enum.auto()
-    BTCETH = enum.auto()
+    """
+    Note that we don't use auto() because it's not in python3.5
+    """
+    BTCUSD = 1
+    ETHUSD = 2
+    BCHUSD = 3
+    ZECUSD = 4
+    LTCUSD = 5
+    BTCETH = 6
 
 
 @enum.unique
 class Symbol(enum.Enum):
-    BTC = enum.auto()
-    ETH = enum.auto()
-    BCH = enum.auto()
-    USD = enum.auto()
-    LTC = enum.auto()
-    ZEC = enum.auto()
+    BTC = 1
+    ETH = 2
+    BCH = 3
+    USD = 4
+    LTC = 5
+    ZEC = 6
 
 
 class Transaction(yabc.Base):
