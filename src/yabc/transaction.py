@@ -181,12 +181,12 @@ class Transaction(yabc.Base):
 
 
 def make_transaction(
-    kind: Transaction.Operation=Transaction.Operation.BUY,
+    kind: Transaction.Operation = Transaction.Operation.BUY,
     quantity=1,
     fees=0,
     subtotal=10000,
     date=datetime.datetime(2015, 2, 5, 6, 27, 56, 373000),
-    asset_name="BTC"
+    asset_name="BTC",
 ):
     """
     Convenience method for creating valid transaction objects; used in tests only.
