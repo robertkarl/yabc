@@ -45,7 +45,9 @@ class FifoTest(unittest.TestCase):
         sale2 = make_transaction(
             Operation.SELL, 1, 0, 1010, date=self.start + self.one_day * 2
         )
-        reports = process_all(coinpool.PoolMethod.FIFO, [purchase_with_fees, sale1, sale2])
+        reports = process_all(
+            coinpool.PoolMethod.FIFO, [purchase_with_fees, sale1, sale2]
+        )
         self.assertEqual(len(reports), 2)
         for i in reports:
             print(i)

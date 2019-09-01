@@ -1,6 +1,7 @@
 import unittest
 
-from yabc import basis, coinpool
+from yabc import basis
+from yabc import coinpool
 from yabc.formats import coinbase
 
 

@@ -15,8 +15,9 @@ from flask import make_response
 from flask.cli import with_appcontext
 from sqlalchemy.orm import sessionmaker
 
-from yabc import Base, coinpool
+from yabc import Base
 from yabc import basis
+from yabc import coinpool
 from yabc import costbasisreport
 from yabc import taxdoc
 from yabc import transaction

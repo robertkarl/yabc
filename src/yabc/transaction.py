@@ -48,6 +48,7 @@ class Market(enum.Enum):
     """
     Note that we don't use auto() because it's not in python3.5
     """
+
     BTCUSD = 1
     ETHUSD = 2
     BCHUSD = 3
@@ -62,6 +63,7 @@ class Symbol(enum.Enum):
     These aren't in wide use yet.
     TODO: Migrate to use these instead of strings.
     """
+
     BTC = 1
     ETH = 2
     BCH = 3
@@ -101,7 +103,7 @@ class Transaction(yabc.Base):
     quantity = sqlalchemy.Column(PreciseDecimalString)  # Deprecated
     date = sqlalchemy.Column(sqlalchemy.DateTime)
     fees = sqlalchemy.Column(PreciseDecimalString)
-    fee_symbol = sqlalchemy.Column(sqlalchemy.String) # new in schema 8
+    fee_symbol = sqlalchemy.Column(sqlalchemy.String)  # new in schema 8
     operation = sqlalchemy.Column(TransactionOperationString)
 
     quantity_traded = sqlalchemy.Column(PreciseDecimalString)  # column added

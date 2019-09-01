@@ -6,8 +6,9 @@ from decimal import Decimal
 import sqlalchemy
 from sqlalchemy.orm import sessionmaker
 
-from yabc import Base, coinpool
+from yabc import Base
 from yabc import basis
+from yabc import coinpool
 from yabc import transaction
 from yabc import user  # noqa
 from yabc.formats import coinbase

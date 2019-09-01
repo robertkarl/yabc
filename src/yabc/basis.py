@@ -6,11 +6,11 @@ TODO: Add other accounting methods than FIFO, most notably LIFO.
 import copy
 import csv
 import io
-import typing
 from decimal import Decimal
 from typing import Sequence
 
-from yabc import formats, coinpool
+from yabc import coinpool
+from yabc import formats
 from yabc import transaction
 from yabc import transaction_parser
 from yabc.costbasisreport import CostBasisReport
@@ -141,7 +141,9 @@ def process_one(trans: transaction.Transaction, pool: coinpool.CoinPool):
             cost_basis_reports.append(
                 split_report(coin_to_split, portion_of_split_coin_to_sell, trans)
             )
-        coin_to_add = split_coin_to_add(coin_to_split, portion_of_split_coin_to_sell, trans)
+        coin_to_add = split_coin_to_add(
+            coin_to_split, portion_of_split_coin_to_sell, trans
+        )
         diff.add(coin_to_add.asset_name, coin_to_add)
     diff.remove(trans.asset_name, pool_index)
     if not needs_split:
@@ -163,16 +165,17 @@ def _build_sale_reports(pool, pool_index, trans: Transaction):
         #
         # NOTE: the entire basis coin will be sold; but for each iteration
         # through we only use a portion of trans.
-        portion_of_sale = pool.get(trans.asset_name)[i].quantity / trans.quantity
-        # The seller is allowed to inflate their cost basis for the BUY fees a bit.
+        curr_sale_tx = pool.get(trans.asset_name)[i]
+        portion_of_sale = curr_sale_tx.quantity / trans.quantity
+        # The seller can inflate their cost basis by the buy fees.
         ir = CostBasisReport(
-            pool.get(trans.asset_name)[i].user_id,
-            pool.get(trans.asset_name)[i].usd_subtotal + pool.get(trans.asset_name)[i].fees,
-            pool.get(trans.asset_name)[i].quantity,
-            pool.get(trans.asset_name)[i].date,
+            curr_sale_tx.user_id,
+            curr_sale_tx.usd_subtotal + curr_sale_tx.fees,
+            curr_sale_tx.quantity,
+            curr_sale_tx.date,
             portion_of_sale * (trans.usd_subtotal - trans.fees),
             trans.date,
-            pool.get(trans.asset_name)[i].asset_name,
+            curr_sale_tx.asset_name,
             triggering_transaction=trans,
         )
         ans.append(ir)

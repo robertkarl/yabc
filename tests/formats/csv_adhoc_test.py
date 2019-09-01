@@ -5,7 +5,8 @@ import datetime
 import unittest
 from decimal import Decimal
 
-from yabc import transaction, coinpool
+from yabc import coinpool
+from yabc import transaction
 from yabc.basis import process_all
 from yabc.formats import adhoc
 from yabc.transaction import Operation

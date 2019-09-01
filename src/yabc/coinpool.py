@@ -11,6 +11,7 @@ class PoolMethod(enum.Enum):
     LIFO = 1
     FIFO = 2
 
+
 class PoolDiff:
     """
     Operations to be applied to a CoinPool.
@@ -20,7 +21,7 @@ class PoolDiff:
 
     def __init__(self):
         self.to_add = []
-        self.to_remove= []
+        self.to_remove = []
 
     def add(self, symbol, coin: transaction.Transaction):
         if not coin.asset_name == symbol:
@@ -31,7 +32,6 @@ class PoolDiff:
         assert isinstance(index, int)
         assert isinstance(symbol, str)
         self.to_remove.append((symbol, index))
-
 
 
 def _handle_add_lifo(pool, to_add: transaction.Transaction):
@@ -55,6 +55,7 @@ def _handle_add_fifo(pool, to_add: transaction.Transaction):
             transaction.Operation.GIFT_RECEIVED,
         ]
         pool.append(to_add)
+
 
 class CoinPool:
     """
@@ -87,11 +88,10 @@ class CoinPool:
 
     def apply(self, diff: PoolDiff):
         """
+
         Pop from the front of a list of txs, or add in the correct spot based on method.
 
         This mutates the object and isn't easy to undo.
-
-        :param diff:  a dictionary with keys remove_index, add,
         """
         for item in diff.to_add:
             coin_list = self._coins[item.asset_name]
@@ -100,7 +100,4 @@ class CoinPool:
             elif self.method == PoolMethod.FIFO:
                 _handle_add_fifo(coin_list, item)
         for symbol, index in diff.to_remove:
-            self._coins[symbol] = self._coins[symbol][index + 1:]
-
-
-
+            self._coins[symbol] = self._coins[symbol][index + 1 :]
