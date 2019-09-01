@@ -1,7 +1,5 @@
 """
 Calculating the cost basis.
-
-TODO: Add other accounting methods than FIFO, most notably LIFO.
 """
 import copy
 import csv
