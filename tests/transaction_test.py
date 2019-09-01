@@ -6,7 +6,7 @@ from decimal import Decimal
 import sqlalchemy
 from sqlalchemy.orm import sessionmaker
 
-from yabc import Base
+from yabc import Base, coinpool
 from yabc import basis
 from yabc import transaction
 from yabc import user  # noqa
@@ -34,7 +34,10 @@ class TransactionTest(unittest.TestCase):
     def test_fees_no_proceeds(self):
         """ Test case where fees make a profit of 0.
         """
-        pool = [self.sample_buy]
+        pool = coinpool.CoinPool(coinpool.PoolMethod.LIFO)
+        diff = coinpool.PoolDiff()
+        diff.add(self.sample_buy.asset_name, self.sample_buy)
+        pool.apply(diff)
         sale = transaction.Transaction(
             operation=SELL,
             quantity=0.5,
@@ -47,8 +50,8 @@ class TransactionTest(unittest.TestCase):
         # Cost basis: (purchase price + fees) / quantity = 500
         # Proceeds: (.5 / (1010 - 10)) = 500
         # This transaction should result in $0 of capital gains.
-        result = basis.process_one(sale, pool)
-        self.assertEqual(result["basis_reports"][0].gain_or_loss, 0)
+        reports, _ = basis.process_one(sale, pool)
+        self.assertEqual(reports[0].gain_or_loss, 0)
 
     def test_split_report_no_gain(self):
         """ Test simple case with no profit or loss.

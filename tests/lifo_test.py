@@ -1,5 +1,6 @@
 import unittest
 
+from yabc import coinpool
 from yabc.basis import process_all
 from yabc.transaction import *
 
@@ -17,7 +18,7 @@ class LifoTest(unittest.TestCase):
         sale2 = make_transaction(
             Operation.SELL, 1, 0, 1000, date=self.start + self.one_day * 2
         )
-        reports = process_all("LIFO", [self.purchase, sale1, sale2])
+        reports = process_all(coinpool.PoolMethod.LIFO, [self.purchase, sale1, sale2])
         self.assertEqual(len(reports), 2)
         for i in reports:
             self.assertEqual(i.gain_or_loss, 0)
@@ -29,7 +30,7 @@ class LifoTest(unittest.TestCase):
         sale2 = make_transaction(
             Operation.SELL, 1, 10, 1010, date=self.start + self.one_day * 2
         )
-        reports = process_all("LIFO", [self.purchase, sale1, sale2])
+        reports = process_all(coinpool.PoolMethod.LIFO, [self.purchase, sale1, sale2])
         self.assertEqual(len(reports), 2)
         for i in reports:
             self.assertEqual(i.gain_or_loss, 0)
@@ -44,7 +45,7 @@ class LifoTest(unittest.TestCase):
         sale2 = make_transaction(
             Operation.SELL, 1, 0, 1010, date=self.start + self.one_day * 2
         )
-        reports = process_all("LIFO", [purchase_with_fees, sale1, sale2])
+        reports = process_all(coinpool.PoolMethod.LIFO, [purchase_with_fees, sale1, sale2])
         self.assertEqual(len(reports), 2)
         for i in reports:
             self.assertEqual(i.gain_or_loss, 0)
@@ -57,7 +58,7 @@ class LifoTest(unittest.TestCase):
         sale = make_transaction(
             Operation.SELL, 1, 0, 1200, date=self.start + 2 * self.one_day
         )
-        reports = process_all("LIFO", [purchase1, purchase2, sale])
+        reports = process_all(coinpool.PoolMethod.LIFO, [purchase1, purchase2, sale])
         self.assertEqual(len(reports), 1)
         r = reports[0]
         self.assertEqual(r.gain_or_loss, 1000)
@@ -70,7 +71,7 @@ class LifoTest(unittest.TestCase):
         sale = make_transaction(
             Operation.SELL, 1, 0, 1100, date=self.start + 2 * self.one_day
         )
-        reports = process_all("LIFO", [purchase1, sale])
+        reports = process_all(coinpool.PoolMethod.LIFO, [purchase1, sale])
         self.assertEqual(len(reports), 1)
         r = reports[0]
         self.assertEqual(r.gain_or_loss, 1000)

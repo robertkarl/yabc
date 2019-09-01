@@ -32,7 +32,7 @@ def main():
             print(flag, file=sys.stderr)
         print("Quitting yabc.", file=sys.stderr)
         sys.exit(1)
-    processor = basis.BasisProcessor("FIFO", parser.txs)
+    processor = basis.BasisProcessor(coinpool.PoolMethod.FIFO, parser.txs)
     reports = processor.process()
     batch = ReportBatch(reports)
     print(batch.human_readable_report())

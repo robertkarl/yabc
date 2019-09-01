@@ -5,7 +5,7 @@ import datetime
 import unittest
 from decimal import Decimal
 
-from yabc import transaction
+from yabc import transaction, coinpool
 from yabc.basis import process_all
 from yabc.formats import adhoc
 from yabc.transaction import Operation
@@ -57,7 +57,7 @@ class CsvAdhocTest(unittest.TestCase):
         sale = make_transaction(
             Operation.SELL, 1, 0, 1001, date=self.start + self.one_day * 2
         )
-        reports = process_all("FIFO", [purchase, gift_given, sale])
+        reports = process_all(coinpool.PoolMethod.FIFO, [purchase, gift_given, sale])
         print(reports)
         self.assertEqual(len(reports), 1)
         sale_report = reports[0]
@@ -68,5 +68,5 @@ class CsvAdhocTest(unittest.TestCase):
         sold = make_transaction(
             Operation.SELL, 1, 0, 2000, date=self.start + self.one_day
         )
-        reports = process_all("FIFO", [sold, mined])
+        reports = process_all(coinpool.PoolMethod.FIFO, [sold, mined])
         self.assertEqual(reports[0].get_gain_or_loss(), 1000)
