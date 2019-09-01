@@ -25,7 +25,7 @@ def split_coin_to_add(coin_to_split, amount, trans):
     Create a coin to be added back to the pool.
 
     TODO: For creating an audit trail, we should track the origin of the split coin,
-    ie. was it generated from mining or a gift or just purchased?
+          ie. was it generated from mining, a gift, or purchased?
     
     parameters:
         amount: unsold portion of the asset ie. float(0.5) for a sale of 1 BTC
@@ -156,7 +156,7 @@ def process_one(trans: transaction.Transaction, pool: coinpool.CoinPool):
     return (cost_basis_reports, diff)
 
 
-def _build_sale_reports(pool, pool_index, trans: Transaction):
+def _build_sale_reports(pool: coinpool.CoinPool, pool_index, trans: Transaction):
     ans = []
     for i in range(pool_index):
         # each of these including pool_index will become a sale to be reported to IRS
@@ -220,7 +220,7 @@ def reports_to_csv(reports: Sequence[CostBasisReport]):
     return of
 
 
-def _process_all(method: coinpool.PoolMethod, txs):
+def _process_all(method: coinpool.PoolMethod, txs: Sequence[Transaction]):
     """
     The meat and potatoes. Creates a transaction pool, and iteratively processes txs and saves the pool state and any
     cost basis reports.
@@ -240,7 +240,11 @@ def _process_all(method: coinpool.PoolMethod, txs):
     return irs_reports, pool
 
 
-def process_all(method, txs):
+def process_all(method: coinpool.PoolMethod, txs: Sequence[Transaction]):
+    """
+    Given a method and a bunch of transactions, return a list with the CostBasisReports calculated.
+    """
+    assert method in coinpool.PoolMethod
     reports, pool = _process_all(method, txs)
     return reports
 
@@ -253,10 +257,10 @@ class BasisProcessor:
     """
 
     def __init__(self, method, txs):
-        assert method in coinpool.PoolMethod.FIFO, "LIFO"
+        assert method in coinpool.PoolMethod
         self.method = method
         self.txs = txs
-        self._reports = None
+        self._reports = []
 
     def process(self):
         reports, pool = _process_all(self.method, self.txs)
