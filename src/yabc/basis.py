@@ -1,15 +1,13 @@
 """
 Calculating the cost basis.
-
-TODO: Add other accounting methods than FIFO, most notably LIFO.
 """
 import copy
 import csv
 import io
-import typing
 from decimal import Decimal
 from typing import Sequence
 
+from yabc import coinpool
 from yabc import formats
 from yabc import transaction
 from yabc import transaction_parser
@@ -25,7 +23,7 @@ def split_coin_to_add(coin_to_split, amount, trans):
     Create a coin to be added back to the pool.
 
     TODO: For creating an audit trail, we should track the origin of the split coin,
-    ie. was it generated from mining or a gift or just purchased?
+          ie. was it generated from mining, a gift, or purchased?
     
     parameters:
         amount: unsold portion of the asset ie. float(0.5) for a sale of 1 BTC
@@ -92,7 +90,7 @@ def split_report(coin_to_split: Transaction, amount, trans: Transaction):
     )
 
 
-def process_one(trans: transaction.Transaction, pool: typing.Sequence):
+def process_one(trans: transaction.Transaction, pool: coinpool.CoinPool):
     """
     Cost basis calculator for a single transaction. Return the 'diff'
     required to process this one tx.
@@ -113,36 +111,39 @@ def process_one(trans: transaction.Transaction, pool: typing.Sequence):
 
     :param trans: a buy or sell with fields filled
     :param pool: a sequence containing transaction.Transaction instances.
-    :param trans
 
-    :return json describing the transaction:
-    {'sell': [T1, T1], 'remove_from_pool': 1, 'add_to_pool': [T5]}
+    :return (basis_reports, diff): a tuple with any cost basis reports and a PoolDiff.
     """
+    diff = coinpool.PoolDiff()
     cost_basis_reports = []
     amount = Decimal(0)
     pool_index = -1
     if trans.is_input():
-        return {"basis_reports": [], "add": trans, "remove_index": -1}
+        diff.add(trans.asset_name, trans)
+        return ([], diff)
 
     while amount < trans.quantity:
         pool_index += 1
-        amount += pool[pool_index].quantity
+        amount += pool.get(trans.asset_name)[pool_index].quantity
     needs_split = (amount - trans.quantity) > 1e-5
 
     to_add = None
     if needs_split:
-        coin_to_split = pool[pool_index]
+        coin_to_split = pool.get(trans.asset_name)[pool_index]
         excess = amount - trans.quantity
         portion_of_split_coin_to_sell = coin_to_split.quantity - excess
         if trans.is_taxable_output():
             # Outgoing gifts would not trigger this.
             # TODO: Alert the user if the value of a gift exceeds $15,000, in which
-            # case gift taxes may be eligible...
+            #       case gift taxes may be eligible...
             cost_basis_reports.append(
                 split_report(coin_to_split, portion_of_split_coin_to_sell, trans)
             )
-        to_add = split_coin_to_add(coin_to_split, portion_of_split_coin_to_sell, trans)
-    needs_remove = pool_index
+        coin_to_add = split_coin_to_add(
+            coin_to_split, portion_of_split_coin_to_sell, trans
+        )
+        diff.add(coin_to_add.asset_name, coin_to_add)
+    diff.remove(trans.asset_name, pool_index)
     if not needs_split:
         pool_index += 1  # Ensures that we report the oldest transaction as a sale.
     if trans.is_taxable_output():
@@ -150,15 +151,10 @@ def process_one(trans: transaction.Transaction, pool: typing.Sequence):
         # The coins just magically remove themselves from the pool.
         # No entry in 8949 for them.
         cost_basis_reports.extend(_build_sale_reports(pool, pool_index, trans))
-
-    return {
-        "basis_reports": cost_basis_reports,
-        "add": to_add,
-        "remove_index": needs_remove,
-    }
+    return (cost_basis_reports, diff)
 
 
-def _build_sale_reports(pool, pool_index, trans: Transaction):
+def _build_sale_reports(pool: coinpool.CoinPool, pool_index, trans: Transaction):
     ans = []
     for i in range(pool_index):
         # each of these including pool_index will become a sale to be reported to IRS
@@ -167,16 +163,17 @@ def _build_sale_reports(pool, pool_index, trans: Transaction):
         #
         # NOTE: the entire basis coin will be sold; but for each iteration
         # through we only use a portion of trans.
-        portion_of_sale = pool[i].quantity / trans.quantity
-        # The seller is allowed to inflate their cost basis for the BUY fees a bit.
+        curr_sale_tx = pool.get(trans.asset_name)[i]
+        portion_of_sale = curr_sale_tx.quantity / trans.quantity
+        # The seller can inflate their cost basis by the buy fees.
         ir = CostBasisReport(
-            pool[i].user_id,
-            pool[i].usd_subtotal + pool[i].fees,
-            pool[i].quantity,
-            pool[i].date,
+            curr_sale_tx.user_id,
+            curr_sale_tx.usd_subtotal + curr_sale_tx.fees,
+            curr_sale_tx.quantity,
+            curr_sale_tx.date,
             portion_of_sale * (trans.usd_subtotal - trans.fees),
             trans.date,
-            pool[i].asset_name,
+            curr_sale_tx.asset_name,
             triggering_transaction=trans,
         )
         ans.append(ir)
@@ -189,7 +186,6 @@ def transactions_from_file(tx_file, expected_format):
 
     :param tx_file: the name of a csv file
     :param expected_format: a string, the name of the exchange. (gemini or coinbase)
-    :return:
     """
     hint = None
     if expected_format == "gemini":
@@ -222,58 +218,31 @@ def reports_to_csv(reports: Sequence[CostBasisReport]):
     return of
 
 
-def handle_add_lifo(pool, to_add: Transaction):
+def _process_all(method: coinpool.PoolMethod, txs: Sequence[Transaction]):
     """
-    Simply put any new transaction, including splits, at the beginning.
-    """
-    pool.insert(0, to_add)
+    The meat and potatoes. Creates a transaction pool, and iteratively processes txs and saves the pool state and any
+    cost basis reports.
 
-
-def handle_add_fifo(pool, to_add: Transaction):
+    :param method: LIFO or FIFO
+    :param txs: a list of transactions (doesn't need to be sorted)
+    :return: reports to be sent to tax authorities, and a tx pool.
     """
-    FIFO is defined by putting the BUY transactions at the end.
-    For split coins, they need to be sold first.
-    """
-    if to_add.operation == Transaction.Operation.SPLIT:
-        pool.insert(0, to_add)
-    else:
-        assert to_add.operation in [
-            transaction.Operation.BUY,
-            transaction.Operation.MINING,
-            transaction.Operation.GIFT_RECEIVED,
-        ]
-        pool.append(to_add)
-
-
-def _process_all(method, txs):
-    """
-    The meat and potatoes
-    :param method:
-    :param txs:
-    :return:
-    """
-    pool = []
+    assert method in coinpool.PoolMethod
+    pool = coinpool.CoinPool(method)
     to_process = sorted(txs, key=lambda tx: tx.date)
     irs_reports = []
     for tx in to_process:
-        ops = process_one(tx, pool)
-        reports = ops["basis_reports"]
-        to_add = ops["add"]
-        remove_index = ops["remove_index"]
-        if remove_index > -1:
-            pool = pool[remove_index + 1 :]
-        if to_add is not None:
-            if method == "FIFO":
-                handle_add_fifo(pool, to_add)
-            elif method == "LIFO":
-                handle_add_lifo(pool, to_add)
-            else:
-                assert False
+        reports, diff = process_one(tx, pool)
+        pool.apply(diff)
         irs_reports.extend(reports)
     return irs_reports, pool
 
 
-def process_all(method, txs):
+def process_all(method: coinpool.PoolMethod, txs: Sequence[Transaction]):
+    """
+    Given a method and a bunch of transactions, return a list with the CostBasisReports calculated.
+    """
+    assert method in coinpool.PoolMethod
     reports, pool = _process_all(method, txs)
     return reports
 
@@ -286,12 +255,12 @@ class BasisProcessor:
     """
 
     def __init__(self, method, txs):
-        assert method in "FIFO", "LIFO"
+        assert method in coinpool.PoolMethod
         self.method = method
         self.txs = txs
-        self._reports = None
+        self._reports = []
 
-    def process(self):
+    def process(self) -> Sequence[CostBasisReport]:
         reports, pool = _process_all(self.method, self.txs)
         self._reports = reports
         self.pool = pool

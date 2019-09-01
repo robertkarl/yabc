@@ -17,6 +17,7 @@ from sqlalchemy.orm import sessionmaker
 
 from yabc import Base
 from yabc import basis
+from yabc import coinpool
 from yabc import costbasisreport
 from yabc import taxdoc
 from yabc import transaction
@@ -312,7 +313,7 @@ class SqlBackend:
         all_txs = list(
             self.session.query(transaction.Transaction).filter_by(user_id=userid)
         )
-        basis_reports = basis.process_all("FIFO", all_txs)
+        basis_reports = basis.process_all(coinpool.PoolMethod.FIFO, all_txs)
         for i in basis_reports:
             self.session.add(i)
         self.session.commit()

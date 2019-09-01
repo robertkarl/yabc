@@ -48,6 +48,7 @@ class Market(enum.Enum):
     """
     Note that we don't use auto() because it's not in python3.5
     """
+
     BTCUSD = 1
     ETHUSD = 2
     BCHUSD = 3
@@ -58,6 +59,11 @@ class Market(enum.Enum):
 
 @enum.unique
 class Symbol(enum.Enum):
+    """
+    These aren't in wide use yet.
+    TODO: Migrate to use these instead of strings.
+    """
+
     BTC = 1
     ETH = 2
     BCH = 3
@@ -97,7 +103,7 @@ class Transaction(yabc.Base):
     quantity = sqlalchemy.Column(PreciseDecimalString)  # Deprecated
     date = sqlalchemy.Column(sqlalchemy.DateTime)
     fees = sqlalchemy.Column(PreciseDecimalString)
-    fee_symbol = sqlalchemy.Column(sqlalchemy.String)
+    fee_symbol = sqlalchemy.Column(sqlalchemy.String)  # new in schema 8
     operation = sqlalchemy.Column(TransactionOperationString)
 
     quantity_traded = sqlalchemy.Column(PreciseDecimalString)  # column added
@@ -175,15 +181,23 @@ class Transaction(yabc.Base):
 
 
 def make_transaction(
-    kind: Transaction.Operation,
-    quantity,
-    fees,
-    subtotal,
+    kind: Transaction.Operation = Transaction.Operation.BUY,
+    quantity=1,
+    fees=0,
+    subtotal=10000,
     date=datetime.datetime(2015, 2, 5, 6, 27, 56, 373000),
+    asset_name="BTC",
 ):
+    """
+    Convenience method for creating valid transaction objects; used in tests only.
+
+    Without any parameters passed, creates a 1 BTC buy for 10,000 USD
+
+    TODO: Remove from here and add to tests if not used in the codebase.
+    """
     return Transaction(
         operation=kind,
-        asset_name="BTC",
+        asset_name=asset_name,
         date=date,
         fees=fees,
         quantity=quantity,
