@@ -260,7 +260,7 @@ class BasisProcessor:
         self.txs = txs
         self._reports = []
 
-    def process(self):
+    def process(self) -> Sequence[CostBasisReport]:
         reports, pool = _process_all(self.method, self.txs)
         self._reports = reports
         self.pool = pool
