@@ -284,7 +284,7 @@ class SqlBackend:
             )  # TODO: determine if this is a performance bottleneck.
         except Exception as e:
             logging.warn("Failed to run basis ")
-            return flask.jsonify({'result': 'failure'})
+            return flask.jsonify({"result": "failure"})
         return flask.jsonify(
             {
                 "hash": contents_md5_hash,

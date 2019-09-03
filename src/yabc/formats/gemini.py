@@ -54,9 +54,27 @@ def _tx_from_gemini_row(tx_row):
     quantity = quantity
     tp = _gemini_type_to_operation(tx_row["Type"])
     if tp == transaction.Operation.BUY:
-        tx = transaction.Transaction(operation=tp, quantity_traded=usd_subtotal, symbol_traded="USD", quantity_received=quantity, symbol_received=currency, date=date,fees=fees, source=_SOURCE_NAME)
+        tx = transaction.Transaction(
+            operation=tp,
+            quantity_traded=usd_subtotal,
+            symbol_traded="USD",
+            quantity_received=quantity,
+            symbol_received=currency,
+            date=date,
+            fees=fees,
+            source=_SOURCE_NAME,
+        )
     elif tp == transaction.Operation.SELL:
-        tx = transaction.Transaction(operation=tp, quantity_traded=quantity, symbol_traded=currency, quantity_received=usd_subtotal, symbol_received="USD", date=date, fees=fees, source=_SOURCE_NAME)
+        tx = transaction.Transaction(
+            operation=tp,
+            quantity_traded=quantity,
+            symbol_traded=currency,
+            quantity_received=usd_subtotal,
+            symbol_received="USD",
+            date=date,
+            fees=fees,
+            source=_SOURCE_NAME,
+        )
     else:
         raise RuntimeError("Unknown transaction type from gemini file.")
     return tx
