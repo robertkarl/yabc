@@ -157,7 +157,7 @@ class Transaction(yabc.Base):
         self.init_on_load()
 
     def needs_migrate_away_from_asset_name(self):
-        return self.symbol_received == '' and self.symbol_traded == ''
+        return self.symbol_received == "" and self.symbol_traded == ""
 
     @sqlalchemy.orm.reconstructor
     def init_on_load(self):
@@ -168,15 +168,21 @@ class Transaction(yabc.Base):
             # Do not modify the object further if we've already restored fields.
             return
 
-        self.fee_symbol = 'USD' # Not possible to have others, until binance or other coin/coin markets are added.
+        self.fee_symbol = (
+            "USD"
+        )  # Not possible to have others, until binance or other coin/coin markets are added.
         if self.is_input():
             self.symbol_received = self.asset_name
             self.quantity_received = self.quantity
-            self.symbol_traded = 'USD'
+            self.symbol_traded = "USD"
             self.quantity_traded = self.usd_subtotal
         else:
             # Check the assumption that there are no SPLITs in the DB.
-            assert self.operation in {Operation.SPENDING, Operation.GIFT_SENT, Operation.SELL}
+            assert self.operation in {
+                Operation.SPENDING,
+                Operation.GIFT_SENT,
+                Operation.SELL,
+            }
             # We assume that these are SELLs in the sense that we are trading away BTC and receiving cash.
             self.symbol_traded = self.asset_name
             self.quantity_traded = self.quantity
