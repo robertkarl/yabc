@@ -272,10 +272,9 @@ class SqlBackend:
             file_name=submitted_file.filename,
         )
         self.session.add(taxdoc_obj)
-        for t in parsed_txs:
-            print(t)
-            t.user_id = userid
-            self.session.add(t)
+        for tx in parsed_txs:
+            tx.user_id = userid
+            self.session.add(tx)
         self.session.commit()
         try:
             # It's possible for this to fail if the user uploads documents out of order (sells before buys)

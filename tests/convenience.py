@@ -16,9 +16,7 @@ def make_buy(
     """
     Convenience method for creating valid transaction objects; used in tests only.
 
-    Without any parameters passed, creates a 1 BTC buy for 10,000 USD
-
-    TODO: Remove from here and add to tests if not used in the codebase.
+    Without any parameters passed, creates a 1 BTC buy for 10,000 USD in 2015. Not a great deal then.
     """
     return Transaction(
         operation=yabc.transaction.Operation.BUY,

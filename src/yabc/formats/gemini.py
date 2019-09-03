@@ -38,9 +38,7 @@ def _tx_from_gemini_row(tx_row):
     """
     Create a Transaction based on a row. May return None.
 
-    TODO: generate all needed values and then construct Transaction
-
-    :param tx: a dictionary with keys from a gemini transaction history spreadsheet.
+    :param tx_row: a dictionary with keys from a gemini transaction history spreadsheet.
     :return:  None if not a transaction needed for taxes. Otherwise a Transaction object.
     """
     if _TYPE_HEADER not in tx_row:
