@@ -154,6 +154,8 @@ class Transaction(yabc.Base):
         self.symbol_received = symbol_received
         self.symbol_traded = symbol_traded
 
+        self.init_on_load()
+
     def needs_migrate_away_from_asset_name(self):
         return self.symbol_received == '' and self.symbol_traded == ''
 
