@@ -5,7 +5,7 @@ import datetime
 import enum
 from decimal import Decimal
 
-import sqlalchemy
+import sqlalchemy.orm
 from sqlalchemy.types import TypeDecorator
 
 import yabc
@@ -92,10 +92,11 @@ class Transaction(yabc.Base):
         SELL = "Sell"
         GIFT_RECEIVED = "GiftReceived"
         GIFT_SENT = "GiftSent"
-        SPLIT = "Split"
         MINING = "Mining"
         SPENDING = "Spending"
+        # These aren't stored in the BD, put typically only used in basis calculations as temporary values.
         TRADE_INPUT = "TradeInput"
+        SPLIT = "Split"
 
     __tablename__ = "transaction"
     id = sqlalchemy.Column(sqlalchemy.Integer, primary_key=True)
@@ -124,7 +125,7 @@ class Transaction(yabc.Base):
         fees=0,
         quantity=0,
         source=None,
-        usd_subtotal=0,  # depreacted
+        usd_subtotal=0,  # deprecated
         user_id="",
         symbol_traded="",
         symbol_received="",
@@ -153,8 +154,44 @@ class Transaction(yabc.Base):
         self.symbol_received = symbol_received
         self.symbol_traded = symbol_traded
 
+        self.init_on_load()
+
+    def needs_migrate_away_from_asset_name(self):
+        return self.symbol_received == "" and self.symbol_traded == ""
+
+    @sqlalchemy.orm.reconstructor
+    def init_on_load(self):
+        """
+        Restore fields from self.asset_name and self.quantity to the more general columns.
+        """
+        if not self.needs_migrate_away_from_asset_name():
+            # Do not modify the object further if we've already restored fields.
+            return
+
+        self.fee_symbol = (
+            "USD"
+        )  # Not possible to have others, until binance or other coin/coin markets are added.
+        if self.is_input():
+            self.symbol_received = self.asset_name
+            self.quantity_received = self.quantity
+            self.symbol_traded = "USD"
+            self.quantity_traded = self.usd_subtotal
+        else:
+            # Check the assumption that there are no SPLITs in the DB.
+            assert self.operation in {
+                Operation.SPENDING,
+                Operation.GIFT_SENT,
+                Operation.SELL,
+            }
+            # We assume that these are SELLs in the sense that we are trading away BTC and receiving cash.
+            self.symbol_traded = self.asset_name
+            self.quantity_traded = self.quantity
+            self.symbol_received = "USD"
+            self.quantity_received = self.usd_subtotal
+
     def is_input(self):
         """
+        TODO: coin/coin trades make this more complicated, as SELLs can also be inputs.
         :return: True if this transaction is an input (like mining, a gift received, or a purchase)
         """
         return self.operation in {
