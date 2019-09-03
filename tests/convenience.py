@@ -1,15 +1,17 @@
 #  Copyright (c) 2019. Seattle Blockchain Solutions. All rights reserved.
 #  Licensed under the MIT License. See LICENSE in the project root for license information.
-from yabc.transaction import Transaction
 import datetime
+
 import yabc
+from yabc.transaction import Transaction
+
 
 def make_buy(
-        quantity=1,
-        fees=0,
-        subtotal=10000,
-        date=datetime.datetime(2015, 2, 5, 6, 27, 56, 373000),
-        symbol="BTC",
+    quantity=1,
+    fees=0,
+    subtotal=10000,
+    date=datetime.datetime(2015, 2, 5, 6, 27, 56, 373000),
+    symbol="BTC",
 ):
     """
     Convenience method for creating valid transaction objects; used in tests only.
@@ -26,6 +28,5 @@ def make_buy(
         quantity_traded=subtotal,
         date=date,
         fees=fees,
-        fee_symbol="USD"
+        fee_symbol="USD",
     )
-

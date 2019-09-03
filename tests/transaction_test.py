@@ -6,6 +6,7 @@ from decimal import Decimal
 import sqlalchemy
 from sqlalchemy.orm import sessionmaker
 
+from convenience import make_buy
 from yabc import Base
 from yabc import basis
 from yabc import coinpool
@@ -57,7 +58,7 @@ class TransactionTest(unittest.TestCase):
     def test_split_report_no_gain(self):
         """ Test simple case with no profit or loss.
         """
-        buy = make_transaction(BUY, 1.0, 0, 100.0)
+        buy = make_buy(1.0, fees=0, subtotal=100.0)
         sell = make_transaction(SELL, 1.0, 0, 100.0)
         report = basis.split_report(buy, Decimal("0.5"), sell)
         self.assertEqual(report.gain_or_loss, 0)

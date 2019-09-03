@@ -1,5 +1,6 @@
 import unittest
 
+from convenience import make_buy
 from yabc import coinpool
 from yabc.basis import process_all
 from yabc.transaction import *
@@ -66,10 +67,7 @@ class LifoTest(unittest.TestCase):
         self.assertEqual(r.gain_or_loss, 1000)
 
     def test_lifo_with_split(self):
-        purchase1 = make_transaction(Operation.BUY, 2, 0, subtotal=200, date=self.start)
-        purchase2 = make_transaction(
-            Operation.BUY, 2, 0, subtotal=200, date=self.start + self.one_day
-        )
+        purchase1 = make_buy(quantity=2, fees=0, subtotal=200, date=self.start)
         sale = make_transaction(
             Operation.SELL, 1, 0, 1100, date=self.start + 2 * self.one_day
         )

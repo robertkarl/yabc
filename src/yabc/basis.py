@@ -47,6 +47,7 @@ def split_coin_to_add(coin_to_split, amount, trans):
 
 def split_report(coin_to_split: Transaction, amount, trans: Transaction):
     """
+    TODO: the input, amount, to this function is wrong.
     The cost basis logic. Note that all fees on buy and sell sides are
     subtracted from the taxable result.
 
@@ -56,27 +57,32 @@ def split_report(coin_to_split: Transaction, amount, trans: Transaction):
 
     parameters:
 
-        coin_to_split (Transaction): part of this will be the cost basis
+        coin_to_split (Transaction): an input. part of this will be the cost basis
         portion of this report
 
         amount (Float): quantity of the split asset that needs to be sold in this report (not the USD).
 
         trans (Transaction): the transaction triggering this report
     """
+    # TODO: incorrect reports being generated here. Fix usages of quantity_[received,traded]
     assert isinstance(amount, Decimal)
     assert isinstance(coin_to_split, transaction.Transaction)
     assert isinstance(trans, transaction.Transaction)
     assert amount < coin_to_split.quantity_received
     assert not (amount - trans.quantity_received > 1e-5)  # allowed to be equal
+    # coin_to_split is a buy, mining, previous split, some kind of input.
+    #               quantity_received: crypto amount.
+    #               quantity_traded: USD
 
     # basis and fee (partial amounts of coin_to_split)
     frac_of_basis_coin = amount / coin_to_split.quantity_received
-    purchase_price = frac_of_basis_coin * coin_to_split.usd_subtotal
+    purchase_price = frac_of_basis_coin * coin_to_split.quantity_traded
     purchase_fee = frac_of_basis_coin * coin_to_split.fees
 
     # sale proceeds and fee (again, partial amounts of trans)
-    frac_of_sale_tx = amount / trans.quantity_received
-    proceeds = (frac_of_sale_tx * trans.usd_subtotal).quantize(Decimal(".01"))
+    # TODO: quantity is wrong here.
+    frac_of_sale_tx = amount / trans.quantity_traded
+    proceeds = (frac_of_sale_tx * trans.quantity_received).quantize(Decimal(".01"))
     sale_fee = (frac_of_sale_tx * trans.fees).quantize(Decimal(".01"))
     return CostBasisReport(
         trans.user_id,
@@ -126,11 +132,11 @@ def process_one(trans: transaction.Transaction, pool: coinpool.CoinPool):
     while amount < trans.quantity_traded:
         pool_index += 1
         amount += pool.get(trans.asset_name)[pool_index].quantity_received
-    needs_split = (amount - trans.quantity_received) > 1e-5
+    needs_split = (amount - trans.quantity_traded) > 1e-5
 
     if needs_split:
         coin_to_split = pool.get(trans.asset_name)[pool_index]
-        excess = amount - trans.quantity_received
+        excess = amount - trans.quantity_traded
         portion_of_split_coin_to_sell = coin_to_split.quantity_received - excess
         if trans.is_taxable_output():
             # Outgoing gifts would not trigger this.
@@ -143,7 +149,7 @@ def process_one(trans: transaction.Transaction, pool: coinpool.CoinPool):
             coin_to_split, portion_of_split_coin_to_sell, trans
         )
         diff.add(coin_to_add.asset_name, coin_to_add)
-    diff.remove(trans.asset_name, pool_index)
+    diff.remove(trans.symbol_traded, pool_index)
     if not needs_split:
         pool_index += 1  # Ensures that we report the oldest transaction as a sale.
     if trans.is_taxable_output():
@@ -154,7 +160,9 @@ def process_one(trans: transaction.Transaction, pool: coinpool.CoinPool):
     return (cost_basis_reports, diff)
 
 
-def _build_sale_reports(pool: coinpool.CoinPool, pool_index, trans: Transaction) -> Sequence[CostBasisReport]:
+def _build_sale_reports(
+    pool: coinpool.CoinPool, pool_index, trans: Transaction
+) -> Sequence[CostBasisReport]:
     """
     Use coins from pool to make CostBasisReports. `trans` is the tx triggering the reports.
     """
@@ -170,7 +178,7 @@ def _build_sale_reports(pool: coinpool.CoinPool, pool_index, trans: Transaction)
         portion_of_sale = curr_basis_tx.quantity_received / trans.quantity_traded
         # The seller can inflate their cost basis by the buy fees.
         assert curr_basis_tx.asset_name == trans.asset_name
-        ir = CostBasisReport(
+        report = CostBasisReport(
             curr_basis_tx.user_id,
             curr_basis_tx.usd_subtotal + curr_basis_tx.fees,
             curr_basis_tx.quantity_received,
@@ -180,7 +188,7 @@ def _build_sale_reports(pool: coinpool.CoinPool, pool_index, trans: Transaction)
             curr_basis_tx.asset_name,
             triggering_transaction=trans,
         )
-        ans.append(ir)
+        ans.append(report)
     return ans
 
 
