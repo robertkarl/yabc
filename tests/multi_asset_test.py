@@ -4,6 +4,7 @@
 import datetime
 import unittest
 
+from convenience import make_buy
 from yabc import basis
 from yabc import coinpool
 from yabc.transaction import Operation
@@ -16,10 +17,9 @@ class MultiAssetTest(unittest.TestCase):
     def setUp(self) -> None:
         self.start = datetime.datetime.now()
         self.one_day = datetime.timedelta(1)
-        self.purchase_bch = make_transaction(
-            Operation.BUY, 1, 0, 100, date=self.start - 2 * self.one_day
+        self.purchase_bch = make_buy(
+            quantity=1, fees=0, subtotal=100, date=self.start - 2 * self.one_day, symbol="BCH"
         )
-        self.purchase_bch.asset_name = "BCH"
         self.purchase_btc = make_transaction(
             Operation.BUY, 1, 0, TEN_K, date=self.start - self.one_day
         )

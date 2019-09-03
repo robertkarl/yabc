@@ -154,6 +154,22 @@ class Transaction(yabc.Base):
         self.symbol_received = symbol_received
         self.symbol_traded = symbol_traded
 
+        if symbol_received or symbol_traded:
+            # Both must be specified.
+            # Quantity can't be used.
+            # Try to populate the old fields.
+            assert symbol_received and symbol_traded
+            assert not quantity
+            if self.is_input():
+                self.quantity = quantity_received
+                self.asset_name = symbol_received
+                self.usd_subtotal = quantity_traded
+            else:
+                # We're disposing of the asset.
+                self.asset_name = symbol_traded
+                self.usd_subtotal = quantity_received
+                self.quantity = quantity_traded
+
         self.init_on_load()
 
     def needs_migrate_away_from_asset_name(self):
@@ -179,9 +195,9 @@ class Transaction(yabc.Base):
         else:
             # Check the assumption that there are no SPLITs in the DB.
             assert self.operation in {
-                Operation.SPENDING,
-                Operation.GIFT_SENT,
-                Operation.SELL,
+                Transaction.Operation.SPENDING,
+                Transaction.Operation.GIFT_SENT,
+                Transaction.Operation.SELL,
             }
             # We assume that these are SELLs in the sense that we are trading away BTC and receiving cash.
             self.symbol_traded = self.asset_name
@@ -205,14 +221,14 @@ class Transaction(yabc.Base):
         return self.operation in {Operation.SPENDING, Operation.SELL}
 
     def __repr__(self):
-        return "<TX for user '{}': {} {} {asset_name} for {subtotal}, on {} from exchange {}. Fee {fee}.>".format(
-            self.user_id,
-            self.operation,
-            self.quantity,
-            self.date,
-            self.source,
-            asset_name=self.asset_name,
-            subtotal=self.usd_subtotal,
+        return "<TX {date} {operation} {rcvd} {rcvd_symbol} for {traded} {traded_symbol}, from exchange {source}. Fee {fee}.>".format(
+            date=self.date,
+            traded=self.quantity_traded,
+            traded_symbol=self.symbol_traded,
+            rcvd=self.quantity_received,
+            rcvd_symbol=self.symbol_received,
+            operation=self.operation.name,
+            source=self.source,
             fee=self.fees,
         )
 
