@@ -171,6 +171,7 @@ class Transaction(yabc.Base):
                 self.quantity = quantity_traded
 
         self.init_on_load()
+        assert self.quantity_traded or self.quantity_received
 
     def needs_migrate_away_from_asset_name(self):
         return self.symbol_received == "" and self.symbol_traded == ""

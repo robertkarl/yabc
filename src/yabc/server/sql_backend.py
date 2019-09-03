@@ -262,7 +262,7 @@ class SqlBackend:
         if not parser.succeeded():
             val = flask.jsonify({"result": "failure", "flags": parser.flags})
             return make_response(val, 400)
-        tx = parser.txs
+        parsed_txs = parser.txs
         contents_md5_hash = hashlib.md5(submitted_stuff).hexdigest()
         taxdoc_obj = taxdoc.TaxDoc(
             exchange=parser.get_exchange_name(),
@@ -272,7 +272,8 @@ class SqlBackend:
             file_name=submitted_file.filename,
         )
         self.session.add(taxdoc_obj)
-        for t in tx:
+        for t in parsed_txs:
+            print(t)
             t.user_id = userid
             self.session.add(t)
         self.session.commit()
@@ -284,6 +285,7 @@ class SqlBackend:
             )  # TODO: determine if this is a performance bottleneck.
         except Exception as e:
             logging.warn("Failed to run basis ")
+            return flask.jsonify({'result': 'failure'})
         return flask.jsonify(
             {
                 "hash": contents_md5_hash,
