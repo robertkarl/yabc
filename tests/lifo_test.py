@@ -1,6 +1,6 @@
 import unittest
 
-from convenience import make_buy
+from transaction_utils import make_buy
 from yabc import coinpool
 from yabc.basis import process_all
 from yabc.transaction import *

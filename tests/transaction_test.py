@@ -6,7 +6,7 @@ from decimal import Decimal
 import sqlalchemy
 from sqlalchemy.orm import sessionmaker
 
-from convenience import make_buy
+from transaction_utils import make_buy
 from yabc import Base
 from yabc import basis
 from yabc import coinpool

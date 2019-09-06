@@ -4,7 +4,7 @@
 import datetime
 import unittest
 
-from convenience import make_buy
+from transaction_utils import make_buy
 from yabc import basis
 from yabc import coinpool
 from yabc.transaction import Operation
