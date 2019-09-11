@@ -42,7 +42,6 @@ def add_supported_exchanges():
     This is in a function mostly so our automated reformatting scripts don't place these imports above all statements
 
     #noqa should stop our unused import zapper from zapping.
-    TODO: add binance. See comment in binance file.
     """
     from . import adhoc  # noqa
     from . import coinbase  # noqa

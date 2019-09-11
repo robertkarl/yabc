@@ -6,10 +6,7 @@ Imports binance exchange data into yabc's exchange-independent format.
 yabc is not affiliated with the exchange or company Binance.
 
 TODO: binance is the first supported format with coin/coin exchange defined.
-      right now, the Transaction object is defined as an exchange of crypto for USD.
-      Once we update Transaction to support this use case, we'll add more tests and
-      take the binance format live.
-
+      Once we have historical price data, we can take this live.
 """
 import datetime
 import decimal
@@ -69,6 +66,8 @@ def _transaction_from_binance_dict(
 
 
 class BinanceParser(Format):
+    EXCHANGE_NAME = "Binance"
+
     def parse(self):
         reader = DictReader(self._file)
         for line in reader:
