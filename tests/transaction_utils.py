@@ -3,6 +3,7 @@
 import datetime
 
 import yabc
+from yabc import transaction
 from yabc.transaction import Transaction
 
 
@@ -69,11 +70,10 @@ def make_transaction(
 
     TODO: Remove from here and add to tests if not used in the codebase.
     """
-    return Transaction(
-        operation=kind,
-        asset_name=asset_name,
-        date=date,
-        fees=fees,
-        quantity=quantity,
-        usd_subtotal=subtotal,
-    )
+    if kind == transaction.Operation.BUY:
+        return make_buy(quantity, fees, subtotal, date, asset_name)
+    elif kind == transaction.Operation.SELL:
+        return make_sale(quantity, fees, subtotal, date, asset_name)
+    else:
+        raise RuntimeError("Make a Transaction object please")
+        assert False
