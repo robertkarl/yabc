@@ -1,7 +1,6 @@
 """
 Calculating the cost basis.
 """
-import copy
 import csv
 import io
 from decimal import Decimal
@@ -40,9 +39,15 @@ def split_coin_to_add(coin_to_split, amount, trans):
     cost = coin_to_split.usd_subtotal * fraction_back_in_pool
     fees = coin_to_split.fees * fraction_back_in_pool
     quantity_received = split_amount_back_in_pool
-    to_add = Transaction(Transaction.Operation.SPLIT, symbol_received=coin_to_split.symbol_received,
-                    quantity_received=quantity_received, fees=fees, symbol_traded=coin_to_split.symbol_traded,
-                    quantity_traded=cost, date=coin_to_split.date)
+    to_add = Transaction(
+        Transaction.Operation.SPLIT,
+        symbol_received=coin_to_split.symbol_received,
+        quantity_received=quantity_received,
+        fees=fees,
+        symbol_traded=coin_to_split.symbol_traded,
+        quantity_traded=cost,
+        date=coin_to_split.date,
+    )
     assert to_add.quantity_received > 0
     return to_add
 
@@ -163,7 +168,7 @@ def process_one(trans: transaction.Transaction, pool: coinpool.CoinPool):
 
 
 def _build_sale_reports(
-        pool: coinpool.CoinPool, pool_index, trans: Transaction
+    pool: coinpool.CoinPool, pool_index, trans: Transaction
 ) -> Sequence[CostBasisReport]:
     """
     Use coins from pool to make CostBasisReports. `trans` is the tx triggering the reports.
