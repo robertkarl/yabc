@@ -11,9 +11,10 @@ TODO: binance is the first supported format with coin/coin exchange defined.
       take the binance format live.
 
 """
+import datetime
 import decimal
-from typing import Sequence
 from csv import DictReader
+from typing import Sequence
 
 import delorean
 
@@ -33,9 +34,10 @@ _BINANCE_TYPE_MAP = {
     "BUY": transaction.Operation.BUY,
 }
 
-import datetime
 
-def _transaction_from_binance_dict(date, market, operation, amount, total, fee, feecoin):
+def _transaction_from_binance_dict(
+    date, market, operation, amount, total, fee, feecoin
+):
     # type: (datetime.datetime, str, transaction.Operation, decimal.Decimal, decimal.Decimal, decimal.Decimal, str)-> Sequence
 
     # The following fields are accurate if the tx is a BUY and not coin/coin.
@@ -43,7 +45,9 @@ def _transaction_from_binance_dict(date, market, operation, amount, total, fee, 
     symbol_received = market[3:]
     quantity_traded = amount
     quantity_received = total
-    is_coin_to_coin = not transaction.is_fiat(symbol_received) and not transaction.is_fiat(symbol_traded)
+    is_coin_to_coin = not transaction.is_fiat(
+        symbol_received
+    ) and not transaction.is_fiat(symbol_traded)
     if operation == transaction.Operation.BUY:
         if is_coin_to_coin:
             operation = transaction.Operation.SELL
@@ -60,7 +64,7 @@ def _transaction_from_binance_dict(date, market, operation, amount, total, fee, 
         symbol_received=symbol_received,
         date=date,
         fees=fee,
-        fee_symbol=feecoin
+        fee_symbol=feecoin,
     )
 
 
