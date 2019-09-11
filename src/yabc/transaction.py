@@ -72,7 +72,7 @@ class Symbol(enum.Enum):
     ZEC = 6
 
 
-def _is_fiat(symbol):
+def is_fiat(symbol):
     return symbol == "USD"
 
 
@@ -186,7 +186,7 @@ class Transaction(yabc.Base):
         }:
             return False
         if self.operation in {Operation.BUY, Operation.SELL}:
-            return not (_is_fiat(self.symbol_traded) and _is_fiat(self.symbol_received))
+            return not (is_fiat(self.symbol_traded) and is_fiat(self.symbol_received))
 
     def needs_migrate_away_from_asset_name(self):
         return self.symbol_received == "" and self.symbol_traded == ""

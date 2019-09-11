@@ -69,7 +69,7 @@ def split_report(coin_to_split, amount, trans):
         amount (Float): quantity of the split asset that needs to be sold in
         this report (not the USD).
 
-        trans (Transaction): the transaction triggering this report
+        trans (Transaction): the transaction triggering this report, a SELL or SPENDING
     """
     assert isinstance(amount, Decimal)
     assert isinstance(coin_to_split, transaction.Transaction)
@@ -96,7 +96,7 @@ def split_report(coin_to_split, amount, trans):
         coin_to_split.date,
         proceeds - sale_fee,
         trans.date,
-        trans.asset_name,
+        trans.symbol_traded,
         triggering_transaction=trans,
     )
 
@@ -184,10 +184,12 @@ def _build_sale_reports(pool, pool_index, trans):
         # through we only use a portion of trans.
 
         # curr_basis_tx is a BUY, GIFT_RECEIVED or a TRADE_INPUT, or another input.
-        curr_basis_tx = pool.get(trans.asset_name)[i]  # type: transaction.Transaction
+        curr_basis_tx = pool.get(trans.symbol_traded)[
+            i
+        ]  # type: transaction.Transaction
         portion_of_sale = curr_basis_tx.quantity_received / trans.quantity_traded
         # The seller can inflate their cost basis by the buy fees.
-        assert curr_basis_tx.asset_name == trans.asset_name
+        assert curr_basis_tx.symbol_received == trans.symbol_traded
         report = CostBasisReport(
             curr_basis_tx.user_id,
             curr_basis_tx.quantity_traded + curr_basis_tx.fees,
@@ -195,7 +197,7 @@ def _build_sale_reports(pool, pool_index, trans):
             curr_basis_tx.date,
             portion_of_sale * (trans.quantity_received - trans.fees),
             trans.date,
-            curr_basis_tx.asset_name,
+            curr_basis_tx.symbol_received,
             triggering_transaction=trans,
         )
         ans.append(report)
