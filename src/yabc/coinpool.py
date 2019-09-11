@@ -23,12 +23,14 @@ class PoolDiff:
         self.to_add = []
         self.to_remove = []
 
-    def add(self, symbol, coin: transaction.Transaction):
+    def add(self, symbol, coin):
+        # type: (str, transaction.Transaction) -> None
         if not coin.asset_name == symbol:
             raise RuntimeError("Cannot add to pool {}".format(symbol))
         self.to_add.append(coin)
 
     def remove(self, symbol, index):
+        # type: (str, int) -> None
         assert isinstance(index, int)
         assert isinstance(symbol, str)
         self.to_remove.append((symbol, index))

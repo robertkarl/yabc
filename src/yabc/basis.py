@@ -1,7 +1,6 @@
 """
 Calculating the cost basis.
 """
-import copy
 import csv
 import io
 from decimal import Decimal
@@ -19,64 +18,76 @@ __author__ = "Robert Karl <robertkarljr@gmail.com>"
 
 
 def split_coin_to_add(coin_to_split, amount, trans):
+    # type:  (transaction.Transaction, Decimal, transaction.Transaction) -> transaction.Transaction
     """
     Create a coin to be added back to the pool.
 
-    TODO: For creating an audit trail, we should track the origin of the split coin,
-          ie. was it generated from mining, a gift, or purchased?
-    
-    parameters:
-        amount: unsold portion of the asset ie. float(0.5) for a sale of 1 BTC
-                where another coin of 0.5 was already used
-        coin_to_split: a Transaction
-        trans: the transaction triggering the report
+    TODO: For creating an audit trail, we should track the origin of the split
+    coin, ie. was it generated from mining, a gift, or purchased?  This could
+    be similar to the way we track the origin coin in CBRs.
+
+    :param coin_to_split: a Transaction, either a BUY or an TRADE_INPUT
+    :param amount: unsold portion of the asset ie. float(0.3) for a sale of 1 BTC where another coin of 0.7 was already used
+    :param trans: the transaction triggering the report
+    :return: a Transaction of type SPLIT with a proper basis
     """
     assert isinstance(amount, Decimal)
     assert isinstance(coin_to_split, transaction.Transaction)
     assert isinstance(trans, transaction.Transaction)
-    split_amount_back_in_pool = coin_to_split.quantity - amount
-    fraction_back_in_pool = split_amount_back_in_pool / coin_to_split.quantity
-    to_add = copy.deepcopy(coin_to_split)
-    to_add.usd_subtotal = coin_to_split.usd_subtotal * fraction_back_in_pool
-    to_add.fees = coin_to_split.fees * fraction_back_in_pool
-    to_add.quantity = split_amount_back_in_pool
-    to_add.operation = Transaction.Operation.SPLIT
-    assert to_add.quantity > 0
+    split_amount_back_in_pool = coin_to_split.quantity_received - amount
+    fraction_back_in_pool = split_amount_back_in_pool / coin_to_split.quantity_received
+    cost = coin_to_split.quantity_traded * fraction_back_in_pool
+    fees = coin_to_split.fees * fraction_back_in_pool
+    quantity_received = split_amount_back_in_pool
+    to_add = transaction.Transaction(
+        transaction.Transaction.Operation.SPLIT,
+        symbol_received=coin_to_split.symbol_received,
+        quantity_received=quantity_received,
+        fees=fees,
+        symbol_traded=coin_to_split.symbol_traded,
+        quantity_traded=cost,
+        date=coin_to_split.date,
+    )
+    assert to_add.quantity_received > 0
     return to_add
 
 
-def split_report(coin_to_split: Transaction, amount, trans: Transaction):
+def split_report(coin_to_split, amount, trans):
+    # type:  (transaction.Transaction, Decimal, transaction.Transaction) -> transaction.Transaction
     """
     The cost basis logic. Note that all fees on buy and sell sides are
     subtracted from the taxable result.
 
-        basis = cost + fees
-        income_subtotal = proceeds - fees
-        taxable_income = income_subtotal - basis
+        basis = cost + fees income_subtotal = proceeds - fees taxable_income =
+        income_subtotal - basis
 
     parameters:
 
-        coin_to_split (Transaction): part of this will be the cost basis
-        portion of this report
+        coin_to_split (Transaction): an input. part of this will be the cost
+        basis portion of this report
 
-        amount (Float): quantity of the split asset that needs to be sold in this report (not the USD).
+        amount (Float): quantity of the split asset that needs to be sold in
+        this report (not the USD).
 
         trans (Transaction): the transaction triggering this report
     """
     assert isinstance(amount, Decimal)
     assert isinstance(coin_to_split, transaction.Transaction)
     assert isinstance(trans, transaction.Transaction)
-    assert amount < coin_to_split.quantity
-    assert not (amount - trans.quantity > 1e-5)  # allowed to be equal
+    assert amount < coin_to_split.quantity_received
+    assert not (amount - trans.quantity_received > 1e-5)  # allowed to be equal
+    # coin_to_split is a buy, mining, previous split, some kind of input.
+    #               quantity_received: crypto amount.
+    #               quantity_traded: USD
 
     # basis and fee (partial amounts of coin_to_split)
-    frac_of_basis_coin = amount / coin_to_split.quantity
-    purchase_price = frac_of_basis_coin * coin_to_split.usd_subtotal
+    frac_of_basis_coin = amount / coin_to_split.quantity_received
+    purchase_price = frac_of_basis_coin * coin_to_split.quantity_traded
     purchase_fee = frac_of_basis_coin * coin_to_split.fees
 
     # sale proceeds and fee (again, partial amounts of trans)
-    frac_of_sale_tx = amount / trans.quantity
-    proceeds = (frac_of_sale_tx * trans.usd_subtotal).quantize(Decimal(".01"))
+    frac_of_sale_tx = amount / trans.quantity_traded
+    proceeds = (frac_of_sale_tx * trans.quantity_received).quantize(Decimal(".01"))
     sale_fee = (frac_of_sale_tx * trans.fees).quantize(Decimal(".01"))
     return CostBasisReport(
         trans.user_id,
@@ -90,13 +101,14 @@ def split_report(coin_to_split: Transaction, amount, trans: Transaction):
     )
 
 
-def process_one(trans: transaction.Transaction, pool: coinpool.CoinPool):
+def process_one(trans, pool):
+    # type: (transaction.Transaction, coinpool.CoinPool) -> Sequence
     """
     Cost basis calculator for a single transaction. Return the 'diff'
     required to process this one tx.
 
-    It is assumed that the coin to sell is at the front, at `pool[0]`, so this works for both
-    LIFO and FIFO.
+    It is assumed that the coin to sell is at the front, at `pool[0]`, so this
+    works for both LIFO and FIFO.
 
     - If transaction is a buy, just return the add-to-pool op.
     - Otherwise, for a sale::
@@ -118,20 +130,22 @@ def process_one(trans: transaction.Transaction, pool: coinpool.CoinPool):
     cost_basis_reports = []
     amount = Decimal(0)
     pool_index = -1
-    if trans.is_input():
-        diff.add(trans.asset_name, trans)
+    if trans.is_simple_input():  # what about: and not trans.is_coin_to_coin():
+        diff.add(trans.symbol_received, trans)
         return ([], diff)
+    # At this point, trans is a sell
 
-    while amount < trans.quantity:
+    # TODO: Whenever we use quantity on a SELL transaction, we really mean
+    #       quantity_traded. Is this true?
+    while amount < trans.quantity_traded:
         pool_index += 1
-        amount += pool.get(trans.asset_name)[pool_index].quantity
-    needs_split = (amount - trans.quantity) > 1e-5
+        amount += pool.get(trans.symbol_traded)[pool_index].quantity_received
+    needs_split = (amount - trans.quantity_traded) > 1e-5
 
-    to_add = None
     if needs_split:
-        coin_to_split = pool.get(trans.asset_name)[pool_index]
-        excess = amount - trans.quantity
-        portion_of_split_coin_to_sell = coin_to_split.quantity - excess
+        coin_to_split = pool.get(trans.symbol_traded)[pool_index]
+        excess = amount - trans.quantity_traded
+        portion_of_split_coin_to_sell = coin_to_split.quantity_received - excess
         if trans.is_taxable_output():
             # Outgoing gifts would not trigger this.
             # TODO: Alert the user if the value of a gift exceeds $15,000, in which
@@ -142,8 +156,8 @@ def process_one(trans: transaction.Transaction, pool: coinpool.CoinPool):
         coin_to_add = split_coin_to_add(
             coin_to_split, portion_of_split_coin_to_sell, trans
         )
-        diff.add(coin_to_add.asset_name, coin_to_add)
-    diff.remove(trans.asset_name, pool_index)
+        diff.add(coin_to_add.symbol_received, coin_to_add)
+    diff.remove(trans.symbol_traded, pool_index)
     if not needs_split:
         pool_index += 1  # Ensures that we report the oldest transaction as a sale.
     if trans.is_taxable_output():
@@ -154,7 +168,12 @@ def process_one(trans: transaction.Transaction, pool: coinpool.CoinPool):
     return (cost_basis_reports, diff)
 
 
-def _build_sale_reports(pool: coinpool.CoinPool, pool_index, trans: Transaction):
+def _build_sale_reports(pool, pool_index, trans):
+    # type: (coinpool.CoinPool, int, transaction.Transaction) -> Sequence[CostBasisReport]
+    """
+    Use coins from pool to make CostBasisReports. `trans` is the tx triggering
+    the reports. It must be a sell of some kind.
+    """
     ans = []
     for i in range(pool_index):
         # each of these including pool_index will become a sale to be reported to IRS
@@ -163,20 +182,23 @@ def _build_sale_reports(pool: coinpool.CoinPool, pool_index, trans: Transaction)
         #
         # NOTE: the entire basis coin will be sold; but for each iteration
         # through we only use a portion of trans.
-        curr_sale_tx = pool.get(trans.asset_name)[i]
-        portion_of_sale = curr_sale_tx.quantity / trans.quantity
+
+        # curr_basis_tx is a BUY, GIFT_RECEIVED or a TRADE_INPUT, or another input.
+        curr_basis_tx = pool.get(trans.asset_name)[i]  # type: transaction.Transaction
+        portion_of_sale = curr_basis_tx.quantity_received / trans.quantity_traded
         # The seller can inflate their cost basis by the buy fees.
-        ir = CostBasisReport(
-            curr_sale_tx.user_id,
-            curr_sale_tx.usd_subtotal + curr_sale_tx.fees,
-            curr_sale_tx.quantity,
-            curr_sale_tx.date,
-            portion_of_sale * (trans.usd_subtotal - trans.fees),
+        assert curr_basis_tx.asset_name == trans.asset_name
+        report = CostBasisReport(
+            curr_basis_tx.user_id,
+            curr_basis_tx.quantity_traded + curr_basis_tx.fees,
+            curr_basis_tx.quantity_received,
+            curr_basis_tx.date,
+            portion_of_sale * (trans.quantity_received - trans.fees),
             trans.date,
-            curr_sale_tx.asset_name,
+            curr_basis_tx.asset_name,
             triggering_transaction=trans,
         )
-        ans.append(ir)
+        ans.append(report)
     return ans
 
 
@@ -220,8 +242,9 @@ def reports_to_csv(reports: Sequence[CostBasisReport]):
 
 def _process_all(method: coinpool.PoolMethod, txs: Sequence[Transaction]):
     """
-    The meat and potatoes. Creates a transaction pool, and iteratively processes txs and saves the pool state and any
-    cost basis reports.
+    Create a transaction pool, and iteratively process txs.
+
+    Saves the pool state and any cost basis reports.
 
     :param method: LIFO or FIFO
     :param txs: a list of transactions (doesn't need to be sorted)
@@ -240,7 +263,11 @@ def _process_all(method: coinpool.PoolMethod, txs: Sequence[Transaction]):
 
 def process_all(method: coinpool.PoolMethod, txs: Sequence[Transaction]):
     """
-    Given a method and a bunch of transactions, return a list with the CostBasisReports calculated.
+    Given a method and a bunch of transactions, return a list with the
+    CostBasisReports calculated.
+
+    TODO: clean this up; we don't need _process_all, process_all, and
+    BasisProcessor.
     """
     assert method in coinpool.PoolMethod
     reports, pool = _process_all(method, txs)
@@ -251,7 +278,8 @@ class BasisProcessor:
     """
     Store state for basis calculations.
 
-    This includes the pool of coins left over at the end of processing the given batch.
+    This includes the pool of coins left over at the end of processing the
+    given batch.
     """
 
     def __init__(self, method, txs):

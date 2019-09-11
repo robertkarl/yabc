@@ -72,6 +72,10 @@ class Symbol(enum.Enum):
     ZEC = 6
 
 
+def _is_fiat(symbol):
+    return symbol == "USD"
+
+
 class Transaction(yabc.Base):
     """
     Exchange-independent representation of a transaction (buy or sell).
@@ -94,7 +98,7 @@ class Transaction(yabc.Base):
         GIFT_SENT = "GiftSent"
         MINING = "Mining"
         SPENDING = "Spending"
-        # These aren't stored in the BD, put typically only used in basis calculations as temporary values.
+        # The following aren't stored in the DB, put typically only used in basis calculations as temporary values.
         TRADE_INPUT = "TradeInput"
         SPLIT = "Split"
 
@@ -154,7 +158,35 @@ class Transaction(yabc.Base):
         self.symbol_received = symbol_received
         self.symbol_traded = symbol_traded
 
+        if symbol_received or symbol_traded:
+            # Both must be specified.
+            # Quantity can't be used.
+            # Try to populate the old fields.
+            assert symbol_received and symbol_traded
+            assert not quantity
+            if self.is_simple_input():
+                self.quantity = quantity_received
+                self.asset_name = symbol_received
+                self.usd_subtotal = quantity_traded
+            else:
+                # We're disposing of the asset.
+                self.asset_name = symbol_traded
+                self.usd_subtotal = quantity_received
+                self.quantity = quantity_traded
+
         self.init_on_load()
+        assert self.quantity_traded or self.quantity_received
+
+    def is_coin_to_coin(self):
+        if self.operation in {
+            Operation.MINING,
+            Operation.GIFT_SENT,
+            Operation.GIFT_RECEIVED,
+            Operation.SPLIT,
+        }:
+            return False
+        if self.operation in {Operation.BUY, Operation.SELL}:
+            return not (_is_fiat(self.symbol_traded) and _is_fiat(self.symbol_received))
 
     def needs_migrate_away_from_asset_name(self):
         return self.symbol_received == "" and self.symbol_traded == ""
@@ -171,7 +203,7 @@ class Transaction(yabc.Base):
         self.fee_symbol = (
             "USD"
         )  # Not possible to have others, until binance or other coin/coin markets are added.
-        if self.is_input():
+        if self.is_simple_input():
             self.symbol_received = self.asset_name
             self.quantity_received = self.quantity
             self.symbol_traded = "USD"
@@ -179,9 +211,9 @@ class Transaction(yabc.Base):
         else:
             # Check the assumption that there are no SPLITs in the DB.
             assert self.operation in {
-                Operation.SPENDING,
-                Operation.GIFT_SENT,
-                Operation.SELL,
+                Transaction.Operation.SPENDING,
+                Transaction.Operation.GIFT_SENT,
+                Transaction.Operation.SELL,
             }
             # We assume that these are SELLs in the sense that we are trading away BTC and receiving cash.
             self.symbol_traded = self.asset_name
@@ -189,7 +221,7 @@ class Transaction(yabc.Base):
             self.symbol_received = "USD"
             self.quantity_received = self.usd_subtotal
 
-    def is_input(self):
+    def is_simple_input(self):
         """
         TODO: coin/coin trades make this more complicated, as SELLs can also be inputs.
         :return: True if this transaction is an input (like mining, a gift received, or a purchase)
@@ -205,41 +237,16 @@ class Transaction(yabc.Base):
         return self.operation in {Operation.SPENDING, Operation.SELL}
 
     def __repr__(self):
-        return "<TX for user '{}': {} {} {asset_name} for {subtotal}, on {} from exchange {}. Fee {fee}.>".format(
-            self.user_id,
-            self.operation,
-            self.quantity,
-            self.date,
-            self.source,
-            asset_name=self.asset_name,
-            subtotal=self.usd_subtotal,
+        return "<TX {date} {operation} {rcvd} {rcvd_symbol} for {traded} {traded_symbol}, from exchange {source}. Fee {fee}.>".format(
+            date=self.date,
+            traded=self.quantity_traded,
+            traded_symbol=self.symbol_traded,
+            rcvd=self.quantity_received,
+            rcvd_symbol=self.symbol_received,
+            operation=self.operation.name,
+            source=self.source,
             fee=self.fees,
         )
-
-
-def make_transaction(
-    kind: Transaction.Operation = Transaction.Operation.BUY,
-    quantity=1,
-    fees=0,
-    subtotal=10000,
-    date=datetime.datetime(2015, 2, 5, 6, 27, 56, 373000),
-    asset_name="BTC",
-):
-    """
-    Convenience method for creating valid transaction objects; used in tests only.
-
-    Without any parameters passed, creates a 1 BTC buy for 10,000 USD
-
-    TODO: Remove from here and add to tests if not used in the codebase.
-    """
-    return Transaction(
-        operation=kind,
-        asset_name=asset_name,
-        date=date,
-        fees=fees,
-        quantity=quantity,
-        usd_subtotal=subtotal,
-    )
 
 
 Operation = Transaction.Operation

@@ -4,8 +4,6 @@ import datetime
 import decimal
 import unittest
 
-import pytz
-
 from yabc import transaction
 from yabc.formats import gemini
 
@@ -25,10 +23,10 @@ class GeminiCsvTest(unittest.TestCase):
             self.assertEqual(zec_tx.asset_name, "ZEC")
 
         self.assertEqual(
-            btc_buy.date, datetime.datetime(2015, 10, 16, 6, 27, 56, 140000, pytz.UTC)
+            btc_buy.date, datetime.datetime(2015, 10, 16, 6, 27, 56, 140000)
         )
         self.assertEqual(
-            btc_sell.date, datetime.datetime(2018, 1, 2, 2, 30, 10, 102000, pytz.UTC)
+            btc_sell.date, datetime.datetime(2018, 1, 2, 2, 30, 10, 102000)
         )
 
         self.assertTrue(btc_buy.operation == transaction.Operation.BUY)
@@ -43,3 +41,7 @@ class GeminiCsvTest(unittest.TestCase):
 
         self.assertEqual(btc_buy.usd_subtotal, decimal.Decimal("53.62"))
         self.assertEqual(btc_sell.usd_subtotal, decimal.Decimal("489.45"))
+
+    def test_load_from_other_csv(self):
+        txs = list(gemini.GeminiParser("./testdata/gemini/synthetic_gemini_csv.csv"))
+        self.assertEqual(len(txs), 12)

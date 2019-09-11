@@ -6,6 +6,9 @@ from decimal import Decimal
 import sqlalchemy
 from sqlalchemy.orm import sessionmaker
 
+from transaction_utils import make_buy
+from transaction_utils import make_sale
+from transaction_utils import make_transaction
 from yabc import Base
 from yabc import basis
 from yabc import coinpool
@@ -13,7 +16,6 @@ from yabc import transaction
 from yabc import user  # noqa
 from yabc.formats import coinbase
 from yabc.transaction import Transaction
-from yabc.transaction import make_transaction
 
 BUY = Transaction.Operation.BUY
 SELL = Transaction.Operation.SELL
@@ -37,15 +39,13 @@ class TransactionTest(unittest.TestCase):
         """
         pool = coinpool.CoinPool(coinpool.PoolMethod.LIFO)
         diff = coinpool.PoolDiff()
-        diff.add(self.sample_buy.asset_name, self.sample_buy)
+        diff.add(self.sample_buy.symbol_received, self.sample_buy)
         pool.apply(diff)
-        sale = transaction.Transaction(
-            operation=SELL,
+        sale = make_sale(
             quantity=0.5,
-            source=None,
-            usd_subtotal=1010.0,
+            subtotal=1010.0,
             date=self.sample_buy_date,
-            asset_name="BTC",
+            symbol="BTC",
             fees=10,
         )
         # Cost basis: (purchase price + fees) / quantity = 500
@@ -57,7 +57,7 @@ class TransactionTest(unittest.TestCase):
     def test_split_report_no_gain(self):
         """ Test simple case with no profit or loss.
         """
-        buy = make_transaction(BUY, 1.0, 0, 100.0)
+        buy = make_buy(1.0, fees=0, subtotal=100.0)
         sell = make_transaction(SELL, 1.0, 0, 100.0)
         report = basis.split_report(buy, Decimal("0.5"), sell)
         self.assertEqual(report.gain_or_loss, 0)

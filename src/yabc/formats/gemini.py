@@ -38,23 +38,45 @@ def _tx_from_gemini_row(tx_row):
     """
     Create a Transaction based on a row. May return None.
 
-    :param tx: a dictionary with keys from a gemini transaction history spreadsheet.
+    :param tx_row: a dictionary with keys from a gemini transaction history spreadsheet.
     :return:  None if not a transaction needed for taxes. Otherwise a Transaction object.
     """
     if _TYPE_HEADER not in tx_row:
         raise RuntimeError("Not a valid gemini file.")
     if tx_row[_TYPE_HEADER] not in ("Buy", "Sell"):
         return None
-    tx = transaction.Transaction(_gemini_type_to_operation(tx_row["Type"]))
-    tx.date = delorean.parse(
+    date = delorean.parse(
         "{} {}".format(tx_row["Date"], tx_row[_TIME_HEADER]), dayfirst=False
     ).datetime
-    tx.usd_subtotal = _gem_int_from_dollar_string(tx_row["USD Amount USD"])
-    tx.fees = _gem_int_from_dollar_string(tx_row["Fee (USD) USD"])
+    usd_subtotal = _gem_int_from_dollar_string(tx_row["USD Amount USD"])
+    fees = _gem_int_from_dollar_string(tx_row["Fee (USD) USD"])
     quantity, currency = _quantity(tx_row)
-    tx.quantity = quantity
-    tx.asset_name = currency
-    tx.source = _SOURCE_NAME
+    quantity = quantity
+    tp = _gemini_type_to_operation(tx_row["Type"])
+    if tp == transaction.Operation.BUY:
+        tx = transaction.Transaction(
+            operation=tp,
+            quantity_traded=usd_subtotal,
+            symbol_traded="USD",
+            quantity_received=quantity,
+            symbol_received=currency,
+            date=date,
+            fees=fees,
+            source=_SOURCE_NAME,
+        )
+    elif tp == transaction.Operation.SELL:
+        tx = transaction.Transaction(
+            operation=tp,
+            quantity_traded=quantity,
+            symbol_traded=currency,
+            quantity_received=usd_subtotal,
+            symbol_received="USD",
+            date=date,
+            fees=fees,
+            source=_SOURCE_NAME,
+        )
+    else:
+        raise RuntimeError("Unknown transaction type from gemini file.")
     return tx
 
 
@@ -105,6 +127,8 @@ class GeminiParser(formats.Format):
         else:
             # it must be an open file
             self.txs = _read_txs_from_file(fname_or_file)
+
+    EXCHANGE_NAME = "Gemini"
 
     def __iter__(self):
         return self
