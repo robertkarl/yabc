@@ -71,6 +71,8 @@ class Symbol(enum.Enum):
     LTC = 5
     ZEC = 6
 
+def _is_fiat(symbol):
+    return symbol == 'USD'
 
 class Transaction(yabc.Base):
     """
@@ -94,7 +96,7 @@ class Transaction(yabc.Base):
         GIFT_SENT = "GiftSent"
         MINING = "Mining"
         SPENDING = "Spending"
-        # These aren't stored in the BD, put typically only used in basis calculations as temporary values.
+        # The following aren't stored in the DB, put typically only used in basis calculations as temporary values.
         TRADE_INPUT = "TradeInput"
         SPLIT = "Split"
 
@@ -172,6 +174,14 @@ class Transaction(yabc.Base):
 
         self.init_on_load()
         assert self.quantity_traded or self.quantity_received
+
+    def _is_coin_to_coin(self):
+        if self.operation in {Operation.MINING, Operation.GIFT_SENT, Operation.GIFT_RECEIVED, Operation.SPLIT}:
+            return False
+        if self.operation in {Operation.BUY,Operation.SELL}:
+            return not (_is_fiat(self.symbol_traded) and _is_fiat(self.symbol_received))
+
+
 
     def needs_migrate_away_from_asset_name(self):
         return self.symbol_received == "" and self.symbol_traded == ""

@@ -24,6 +24,7 @@ def split_coin_to_add(coin_to_split, amount, trans):
 
     TODO: For creating an audit trail, we should track the origin of the split coin,
           ie. was it generated from mining, a gift, or purchased?
+          This could be similar to the way we track the origin coin in CBRs.
     
     parameters:
         amount: unsold portion of the asset ie. float(0.5) for a sale of 1 BTC
@@ -36,11 +37,12 @@ def split_coin_to_add(coin_to_split, amount, trans):
     assert isinstance(trans, transaction.Transaction)
     split_amount_back_in_pool = coin_to_split.quantity_received - amount
     fraction_back_in_pool = split_amount_back_in_pool / coin_to_split.quantity_received
-    to_add = copy.deepcopy(coin_to_split)
-    to_add.usd_subtotal = coin_to_split.usd_subtotal * fraction_back_in_pool
-    to_add.fees = coin_to_split.fees * fraction_back_in_pool
-    to_add.quantity_received = split_amount_back_in_pool
-    to_add.operation = Transaction.Operation.SPLIT
+    cost = coin_to_split.usd_subtotal * fraction_back_in_pool
+    fees = coin_to_split.fees * fraction_back_in_pool
+    quantity_received = split_amount_back_in_pool
+    to_add = Transaction(Transaction.Operation.SPLIT, symbol_received=coin_to_split.symbol_received,
+                    quantity_received=quantity_received, fees=fees, symbol_traded=coin_to_split.symbol_traded,
+                    quantity_traded=cost, date=coin_to_split.date)
     assert to_add.quantity_received > 0
     return to_add
 
@@ -161,7 +163,7 @@ def process_one(trans: transaction.Transaction, pool: coinpool.CoinPool):
 
 
 def _build_sale_reports(
-    pool: coinpool.CoinPool, pool_index, trans: Transaction
+        pool: coinpool.CoinPool, pool_index, trans: Transaction
 ) -> Sequence[CostBasisReport]:
     """
     Use coins from pool to make CostBasisReports. `trans` is the tx triggering the reports.
