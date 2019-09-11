@@ -25,11 +25,11 @@ def split_coin_to_add(coin_to_split, amount, trans):
     TODO: For creating an audit trail, we should track the origin of the split
     coin, ie. was it generated from mining, a gift, or purchased?  This could
     be similar to the way we track the origin coin in CBRs.
-    
-    parameters: amount: unsold portion of the asset ie. float(0.5) for a sale
-    of 1 BTC where another coin of 0.5 was already used coin_to_split: a
-    Transaction, either a BUY or an TRADE_INPUT trans: the transaction
-    triggering the report
+
+    :param coin_to_split: a Transaction, either a BUY or an TRADE_INPUT
+    :param amount: unsold portion of the asset ie. float(0.3) for a sale of 1 BTC where another coin of 0.7 was already used
+    :param trans: the transaction triggering the report
+    :return: a Transaction of type SPLIT with a proper basis
     """
     assert isinstance(amount, Decimal)
     assert isinstance(coin_to_split, transaction.Transaction)
