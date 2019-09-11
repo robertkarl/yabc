@@ -7,6 +7,8 @@ import sqlalchemy
 from sqlalchemy.orm import sessionmaker
 
 from transaction_utils import make_buy
+from transaction_utils import make_sale
+from transaction_utils import make_transaction
 from yabc import Base
 from yabc import basis
 from yabc import coinpool
@@ -14,7 +16,6 @@ from yabc import transaction
 from yabc import user  # noqa
 from yabc.formats import coinbase
 from yabc.transaction import Transaction
-from yabc.transaction import make_transaction
 
 BUY = Transaction.Operation.BUY
 SELL = Transaction.Operation.SELL
@@ -38,15 +39,13 @@ class TransactionTest(unittest.TestCase):
         """
         pool = coinpool.CoinPool(coinpool.PoolMethod.LIFO)
         diff = coinpool.PoolDiff()
-        diff.add(self.sample_buy.asset_name, self.sample_buy)
+        diff.add(self.sample_buy.symbol_received, self.sample_buy)
         pool.apply(diff)
-        sale = transaction.Transaction(
-            operation=SELL,
+        sale = make_sale(
             quantity=0.5,
-            source=None,
-            usd_subtotal=1010.0,
+            subtotal=1010.0,
             date=self.sample_buy_date,
-            asset_name="BTC",
+            symbol="BTC",
             fees=10,
         )
         # Cost basis: (purchase price + fees) / quantity = 500

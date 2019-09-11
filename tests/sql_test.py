@@ -1,22 +1,8 @@
-import datetime
 import json
 import unittest
 
-from yabc import transaction
 from yabc import user  # noqa
 from yabc.server.sql_backend import SqlBackend
-
-
-def make_transaction(kind, quantity, fees, subtotal):
-    sample_date = datetime.datetime(2015, 2, 5, 6, 27, 56, 373000)
-    return transaction.Transaction(
-        date=sample_date,
-        operation=kind,
-        asset_name="BTC",
-        fees=fees,
-        quantity=quantity,
-        usd_subtotal=subtotal,
-    )
 
 
 class SqlTest(unittest.TestCase):

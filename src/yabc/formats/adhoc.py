@@ -97,15 +97,30 @@ class AdhocParser(Format):
             if curr[SUBTOTAL_HEADER]
             else "0"
         )
-        trans = transaction.make_transaction(
-            op,
-            quantity=decimal.Decimal(curr["Amount"]),
-            fees=decimal.Decimal(0),
-            subtotal=decimal.Decimal(
-                usd_subtotal_str
-            ),  # TODO: for mining we need to look up the value on the date mined.
-            date=trans_date,
-        )
+        usd_amount = decimal.Decimal(usd_subtotal_str)
+        crypto_amount = decimal.Decimal(curr["Amount"])
+        if (
+            op == transaction.Operation.GIFT_RECEIVED
+            or op == transaction.Operation.MINING
+        ):
+            trans = transaction.Transaction(
+                operation=op,
+                quantity_received=crypto_amount,
+                symbol_received=curr["Coin"],
+                fees=decimal.Decimal(0),
+                symbol_traded="USD",
+                quantity_traded=usd_amount,  # TODO: for mining we need to look up the value on the date mined.
+                date=trans_date,
+            )
+        elif op in {transaction.Operation.SPENDING, transaction.Operation.GIFT_SENT}:
+            trans = transaction.Transaction(
+                operation=op,
+                quantity_received=usd_amount,
+                symbol_received="USD",
+                symbol_traded=curr["Coin"],
+                quantity_traded=crypto_amount,
+                date=trans_date,
+            )
         return trans
 
     def __iter__(self):

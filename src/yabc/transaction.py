@@ -164,7 +164,7 @@ class Transaction(yabc.Base):
             # Try to populate the old fields.
             assert symbol_received and symbol_traded
             assert not quantity
-            if self.is_input():
+            if self.is_simple_input():
                 self.quantity = quantity_received
                 self.asset_name = symbol_received
                 self.usd_subtotal = quantity_traded
@@ -177,7 +177,7 @@ class Transaction(yabc.Base):
         self.init_on_load()
         assert self.quantity_traded or self.quantity_received
 
-    def _is_coin_to_coin(self):
+    def is_coin_to_coin(self):
         if self.operation in {
             Operation.MINING,
             Operation.GIFT_SENT,
@@ -203,7 +203,7 @@ class Transaction(yabc.Base):
         self.fee_symbol = (
             "USD"
         )  # Not possible to have others, until binance or other coin/coin markets are added.
-        if self.is_input():
+        if self.is_simple_input():
             self.symbol_received = self.asset_name
             self.quantity_received = self.quantity
             self.symbol_traded = "USD"
@@ -221,7 +221,7 @@ class Transaction(yabc.Base):
             self.symbol_received = "USD"
             self.quantity_received = self.usd_subtotal
 
-    def is_input(self):
+    def is_simple_input(self):
         """
         TODO: coin/coin trades make this more complicated, as SELLs can also be inputs.
         :return: True if this transaction is an input (like mining, a gift received, or a purchase)
@@ -247,31 +247,6 @@ class Transaction(yabc.Base):
             source=self.source,
             fee=self.fees,
         )
-
-
-def make_transaction(
-    kind: Transaction.Operation = Transaction.Operation.BUY,
-    quantity=1,
-    fees=0,
-    subtotal=10000,
-    date=datetime.datetime(2015, 2, 5, 6, 27, 56, 373000),
-    asset_name="BTC",
-):
-    """
-    Convenience method for creating valid transaction objects; used in tests only.
-
-    Without any parameters passed, creates a 1 BTC buy for 10,000 USD
-
-    TODO: Remove from here and add to tests if not used in the codebase.
-    """
-    return Transaction(
-        operation=kind,
-        asset_name=asset_name,
-        date=date,
-        fees=fees,
-        quantity=quantity,
-        usd_subtotal=subtotal,
-    )
 
 
 Operation = Transaction.Operation

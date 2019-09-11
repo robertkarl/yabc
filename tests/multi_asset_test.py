@@ -5,10 +5,10 @@ import datetime
 import unittest
 
 from transaction_utils import make_buy
+from transaction_utils import make_transaction
 from yabc import basis
 from yabc import coinpool
 from yabc.transaction import Operation
-from yabc.transaction import make_transaction
 
 TEN_K = 10000
 
