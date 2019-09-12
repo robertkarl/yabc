@@ -7,12 +7,13 @@ from decimal import Decimal
 from typing import Sequence
 
 from yabc import coinpool
-from yabc import ohlcprovider
 from yabc import formats
+from yabc import ohlcprovider
 from yabc import transaction
 from yabc import transaction_parser
 from yabc.costbasisreport import CostBasisReport
-from yabc.transaction import Transaction, is_fiat
+from yabc.transaction import Transaction
+from yabc.transaction import is_fiat
 from yabc.transaction_parser import TransactionParser
 
 __author__ = "Robert Karl <robertkarljr@gmail.com>"
@@ -145,7 +146,7 @@ def process_one(trans, pool, ohlc_source):
         pool_index += 1
         curr_pool = pool.get(trans.symbol_traded)
         if pool_index >= len(curr_pool):
-            raise RuntimeError('No basis coin found for sale {}'.format(trans))
+            raise RuntimeError("No basis coin found for sale {}".format(trans))
         amount += curr_pool[pool_index].quantity_received
     needs_split = (amount - trans.quantity_traded) > 1e-5
 
@@ -198,7 +199,11 @@ def _build_sale_reports(pool, pool_index, trans):
         # The seller can inflate their cost basis by the buy fees.
         assert curr_basis_tx.symbol_received == trans.symbol_traded
         if not is_fiat(trans.symbol_received):
-            raise RuntimeError('Need fiat values when building CostBasisReports. Triggering sale tx: {}'.format(trans))
+            raise RuntimeError(
+                "Need fiat values when building CostBasisReports. Triggering sale tx: {}".format(
+                    trans
+                )
+            )
         report = CostBasisReport(
             curr_basis_tx.user_id,
             curr_basis_tx.quantity_traded + curr_basis_tx.fees,

@@ -4,7 +4,7 @@
 # src.  black for code formatting, isort for import sorting and autoflake to
 # catch unused imports.
 
-set -e
+#set -e
 DIRS="src/ tests/ utils/ setup.py"
 PYTHONPATH=tests python setup.py test
 autoflake -r -i --remove-all-unused-imports $DIRS

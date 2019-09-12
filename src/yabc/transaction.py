@@ -246,7 +246,7 @@ class Transaction(yabc.Base):
             operation=self.operation.name,
             source=self.source,
             fee=self.fees,
-            feecoin=self.fee_symbol
+            feecoin=self.fee_symbol,
         )
 
 
