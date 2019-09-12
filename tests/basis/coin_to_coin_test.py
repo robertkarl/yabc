@@ -32,7 +32,7 @@ class CoinToCoinTest(unittest.TestCase):
             coinpool.PoolMethod.FIFO, [self.buy_eth, self.sell_eth_to_btc]
         )
 
-    def test_single_transaction(self):
+    def test_single_transation(self):
         """
         A single coin/coin trade, following a buy. Check the results minus fees.
         """
