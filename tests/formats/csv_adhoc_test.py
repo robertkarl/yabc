@@ -51,8 +51,13 @@ class CsvAdhocTest(unittest.TestCase):
 
     def test_gifts(self):
         purchase = make_transaction(Operation.BUY, 2, 0, 2000, date=self.start)
-        gift_given = make_transaction(
-            Operation.GIFT_SENT, 1, 0, 0, date=self.start + self.one_day
+        gift_given = transaction.Transaction(
+            operation=Operation.GIFT_SENT,
+            quantity_received=0,
+            symbol_received="USD",
+            quantity_traded=1,
+            symbol_traded="BTC",
+            date=self.start + self.one_day,
         )
         # should trigger a short term gain of $1
         sale = make_transaction(
@@ -65,7 +70,14 @@ class CsvAdhocTest(unittest.TestCase):
         self.assertEqual(sale_report.gain_or_loss, Decimal("1"))
 
     def test_mining(self):
-        mined = make_transaction(Operation.MINING, 1, 0, 1000, date=self.start)
+        mined = transaction.Transaction(
+            operation=Operation.MINING,
+            quantity_received=1,
+            symbol_received="BTC",
+            quantity_traded=1000,
+            symbol_traded="USD",
+            date=self.start,
+        )
         sold = make_transaction(
             Operation.SELL, 1, 0, 2000, date=self.start + self.one_day
         )

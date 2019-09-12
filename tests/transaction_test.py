@@ -12,7 +12,6 @@ from transaction_utils import make_transaction
 from yabc import Base
 from yabc import basis
 from yabc import coinpool
-from yabc import transaction
 from yabc import user  # noqa
 from yabc.formats import coinbase
 from yabc.transaction import Transaction
@@ -24,15 +23,7 @@ SELL = Transaction.Operation.SELL
 class TransactionTest(unittest.TestCase):
     def setUp(self):
         self.sample_buy_date = datetime.datetime(2015, 2, 5, 6, 27, 56, 373000)
-        self.sample_buy = transaction.Transaction(
-            operation=BUY,
-            quantity=0.5,
-            source=None,
-            usd_subtotal=990.0,
-            date=self.sample_buy_date,
-            asset_name="BTC",
-            fees=10,
-        )
+        self.sample_buy = make_buy(0.5, 10, 990, date=self.sample_buy_date)
 
     def test_fees_no_proceeds(self):
         """ Test case where fees make a profit of 0.

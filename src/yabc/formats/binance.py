@@ -6,14 +6,12 @@ Imports binance exchange data into yabc's exchange-independent format.
 yabc is not affiliated with the exchange or company Binance.
 
 TODO: binance is the first supported format with coin/coin exchange defined.
-      right now, the Transaction object is defined as an exchange of crypto for USD.
-      Once we update Transaction to support this use case, we'll add more tests and
-      take the binance format live.
-
+      Once we have historical price data, we can take this live.
 """
+import datetime
 import decimal
-import typing
 from csv import DictReader
+from typing import Sequence
 
 import delorean
 
@@ -35,38 +33,54 @@ _BINANCE_TYPE_MAP = {
 
 
 def _transaction_from_binance_dict(
-    date, market, type_str, price, amount, total, fee, feecoin
-) -> typing.Sequence:
-    fee = _fee_in_usd(date, feecoin, decimal.Decimal(fee))
-    coin_sold = market[:3]
-    coin_purchased = market[3:]
-    usd_subtotal = decimal.Decimal(amount) * historical(date.date, coin_sold)
+    date, market, operation, amount, total, fee, feecoin
+):
+    # type: (datetime.datetime, str, transaction.Operation, decimal.Decimal, decimal.Decimal, decimal.Decimal, str)-> Sequence
+
+    # The following fields are accurate if the tx is a BUY and not coin/coin.
+    symbol_traded = market[:3]
+    symbol_received = market[3:]
+    quantity_traded = amount
+    quantity_received = total
+    is_coin_to_coin = not transaction.is_fiat(
+        symbol_received
+    ) and not transaction.is_fiat(symbol_traded)
+    if operation == transaction.Operation.BUY:
+        if is_coin_to_coin:
+            operation = transaction.Operation.SELL
+        # Swap all of these, and the operation
+        symbol_received, symbol_traded = (symbol_traded, symbol_received)
+        quantity_traded, quantity_received = quantity_received, quantity_traded
+
     return transaction.Transaction(
-        _BINANCE_TYPE_MAP[type_str],
-        asset_name=coin_sold,
+        operation=operation,
         source="binance",
+        quantity_traded=quantity_traded,
+        quantity_received=quantity_received,
+        symbol_traded=symbol_traded,
+        symbol_received=symbol_received,
         date=date,
-        quantity=decimal.Decimal(amount),
-        usd_subtotal=usd_subtotal,
         fees=fee,
+        fee_symbol=feecoin,
     )
 
 
 class BinanceParser(Format):
+    EXCHANGE_NAME = "Binance"
+
     def parse(self):
         reader = DictReader(self._file)
         for line in reader:
             date = delorean.parse(line["Date"])
             market = line["Market"]
-            type = line["Type"]
-            price = line["Price"]
-            amount = line["Amount"]
-            total = line["Total"]
-            fee = line["Fee"]
+            operation = _BINANCE_TYPE_MAP[line["Type"]]
+            amount = decimal.Decimal(line["Amount"])
+            total = decimal.Decimal(line["Total"])
+            fee = decimal.Decimal(line["Fee"])
             fee_coin = line["Fee Coin"]
             self._reports.append(
                 _transaction_from_binance_dict(
-                    date, market, type, price, amount, total, fee, fee_coin
+                    date, market, operation, amount, total, fee, fee_coin
                 )
             )
 

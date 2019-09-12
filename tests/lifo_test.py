@@ -1,10 +1,11 @@
+import datetime
 import unittest
 
 from transaction_utils import make_buy
 from transaction_utils import make_transaction
 from yabc import coinpool
 from yabc.basis import process_all
-from yabc.transaction import *
+from yabc.transaction import Operation
 
 
 class LifoTest(unittest.TestCase):
