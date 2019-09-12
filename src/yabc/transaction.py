@@ -237,7 +237,7 @@ class Transaction(yabc.Base):
         return self.operation in {Operation.SPENDING, Operation.SELL}
 
     def __repr__(self):
-        return "<TX {date} {operation} {rcvd} {rcvd_symbol} for {traded} {traded_symbol}, from exchange {source}. Fee {fee}.>".format(
+        return "<TX {date} {operation} {rcvd} {rcvd_symbol} for {traded} {traded_symbol}, from exchange {source}. Fee {fee} {feecoin}>".format(
             date=self.date,
             traded=self.quantity_traded,
             traded_symbol=self.symbol_traded,
@@ -246,6 +246,7 @@ class Transaction(yabc.Base):
             operation=self.operation.name,
             source=self.source,
             fee=self.fees,
+            feecoin=self.fee_symbol
         )
 
 
