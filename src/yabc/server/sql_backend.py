@@ -286,7 +286,7 @@ class SqlBackend:
                 userid
             )  # TODO: determine if this is a performance bottleneck.
         except Exception as e:
-            logging.warn("Failed to run basis ")
+            logging.warn("from transaction_utils import make_buyun basis ")
             return flask.jsonify({"result": "failure"})
         return flask.jsonify(
             {
