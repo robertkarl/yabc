@@ -65,10 +65,6 @@ def make_transaction(
 ):
     """
     Convenience method for creating valid transaction objects; used in tests only.
-
-    Without any parameters passed, creates a 1 BTC buy for 10,000 USD
-
-    TODO: Remove from here and add to tests if not used in the codebase.
     """
     if kind == transaction.Operation.BUY:
         return make_buy(quantity, fees, subtotal, date, asset_name)
