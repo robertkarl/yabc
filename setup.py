@@ -4,10 +4,11 @@ import setuptools
 
 """
 
-# we do not support python3.4 because 
-- dateutil for 3.4 doesn't have parser
+# we do not support python3.4 in master because 
+- dateutil for 3.4 doesn't have parser accessible on the package
 - we need the typing backport for 3.4
-- possible more issues
+- circular import issue in our formats package fails on 3.4 (but works on later versions)
+- possibly more issues
 """
 
 setuptools.setup(
@@ -21,8 +22,8 @@ setuptools.setup(
         "flask==1.0.4",
         "sqlalchemy==1.3.3",
         "delorean==1.0.0",
-        "python-dateutil",
-        "typing",
+        "python-dateutil", # TODO: remove, we can just use delorean
+        "typing", # This backport is required for python3.4
     ],
     test_suite="tests",
     url="https://github.com/robertkarl/yabc",
@@ -35,6 +36,7 @@ setuptools.setup(
         "Operating System :: OS Independent",
         "Programming Language :: Python",
         "Programming Language :: Python :: 3",
+        "Programming Language :: Python :: 3.4",
         "Programming Language :: Python :: 3.5",
         "Programming Language :: Python :: 3.6",
         "Programming Language :: Python :: 3.7",
