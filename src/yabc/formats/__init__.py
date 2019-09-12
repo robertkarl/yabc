@@ -48,4 +48,3 @@ def add_supported_exchanges():
     from . import coinbase  # noqa
     from . import gemini  # noqa
     from . import localbitcoins  # noqa
-
