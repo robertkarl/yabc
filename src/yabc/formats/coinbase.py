@@ -6,7 +6,7 @@ YABC is not affiliated with the company Coinbase or any of its products.
 import csv
 import decimal
 
-import dateutil
+from dateutil import parser
 
 from yabc import transaction
 from yabc.formats import FORMAT_CLASSES
@@ -99,7 +99,7 @@ def FromCoinbaseJSON(json):
         asset_name=asset_name,
         operation=operation,
         quantity=quantity,
-        date=dateutil.parser.parse(timestamp_str),
+        date=parser.parse(timestamp_str),
         fees=fee,
         source="coinbase",
         usd_subtotal=proceeds,
