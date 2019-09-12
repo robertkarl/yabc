@@ -10,7 +10,7 @@ from yabc import transaction
 
 
 class CoinToCoinTest(unittest.TestCase):
-    def setUp(self) -> None:
+    def setUp(self):
         self.buy_eth = make_buy(
             1000,
             fees=0,
