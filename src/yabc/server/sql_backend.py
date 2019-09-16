@@ -19,6 +19,7 @@ from yabc import Base
 from yabc import basis
 from yabc import coinpool
 from yabc import costbasisreport
+from yabc import formats
 from yabc import taxdoc
 from yabc import transaction
 from yabc import user
@@ -28,7 +29,6 @@ from yabc.transaction_parser import TransactionParser
 from yabc.transaction_parser import TxFile
 from yabc.user import User
 
-from yabc import formats
 formats.add_supported_exchanges()
 
 __author__ = "Robert Karl <robertkarljr@gmail.com>"

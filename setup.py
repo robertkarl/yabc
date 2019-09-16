@@ -6,7 +6,8 @@ import setuptools
 Python versions and dependencies notes:
 
 - dateutil for 3.4 doesn't have parser accessible on the package
-- previously there was a circular import issue in our formats package. This failed on 3.4 (but worked on later versions)
+- previously there was a circular import issue in our formats package. This
+  failed on 3.4 (but worked on later versions)
 - we need the typing dep since we need the backport for 3.4
 """
 
@@ -18,11 +19,12 @@ setuptools.setup(
     maintainer="Robert Karl",
     maintainer_email="robertkarljr@gmail.com",
     install_requires=[
-        "flask==1.0.4",
+        "flask==1.0.4",  # flask 1.1. drops python3.4 support
         "sqlalchemy==1.3.3",
         "delorean==1.0.0",
-        "python-dateutil", # TODO: remove, we can just use delorean
-        "typing", # This backport is required for python3.4
+        "python-dateutil",  # TODO: remove, we can just use delorean
+        # This package is present on 3.5+, backport required for 3.4
+        "typing",
     ],
     test_suite="tests",
     url="https://github.com/robertkarl/yabc",
