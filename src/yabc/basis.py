@@ -8,10 +8,12 @@ from typing import Sequence
 
 from yabc import coinpool
 from yabc import formats
+from yabc import ohlcprovider
 from yabc import transaction
 from yabc import transaction_parser
 from yabc.costbasisreport import CostBasisReport
 from yabc.transaction import Transaction
+from yabc.transaction import is_fiat
 from yabc.transaction_parser import TransactionParser
 
 __author__ = "Robert Karl <robertkarljr@gmail.com>"
@@ -23,12 +25,15 @@ def split_coin_to_add(coin_to_split, amount, trans):
     Create a coin to be added back to the pool.
 
     TODO: For creating an audit trail, we should track the origin of the split
-    coin, ie. was it generated from mining, a gift, or purchased?  This could
-    be similar to the way we track the origin coin in CBRs.
+        coin, ie. was it generated from mining, a gift, or purchased?  This could
+        be similar to the way we track the origin coin in CBRs.
 
     :param coin_to_split: a Transaction, either a BUY or an TRADE_INPUT
+
     :param amount: unsold portion of the asset ie. float(0.3) for a sale of 1 BTC where another coin of 0.7 was already used
+
     :param trans: the transaction triggering the report
+
     :return: a Transaction of type SPLIT with a proper basis
     """
     assert isinstance(amount, Decimal)
@@ -101,8 +106,8 @@ def split_report(coin_to_split, amount, trans):
     )
 
 
-def process_one(trans, pool):
-    # type: (transaction.Transaction, coinpool.CoinPool) -> Sequence
+def process_one(trans, pool, ohlc_source=None):
+    # type: (transaction.Transaction, coinpool.CoinPool, ohlc.OHLC) -> Sequence
     """
     Cost basis calculator for a single transaction. Return the 'diff'
     required to process this one tx.
@@ -139,7 +144,10 @@ def process_one(trans, pool):
     #       quantity_traded. Is this true?
     while amount < trans.quantity_traded:
         pool_index += 1
-        amount += pool.get(trans.symbol_traded)[pool_index].quantity_received
+        curr_pool = pool.get(trans.symbol_traded)
+        if pool_index >= len(curr_pool):
+            raise RuntimeError("No basis coin found for sale {}".format(trans))
+        amount += curr_pool[pool_index].quantity_received
     needs_split = (amount - trans.quantity_traded) > 1e-5
 
     if needs_split:
@@ -190,6 +198,12 @@ def _build_sale_reports(pool, pool_index, trans):
         portion_of_sale = curr_basis_tx.quantity_received / trans.quantity_traded
         # The seller can inflate their cost basis by the buy fees.
         assert curr_basis_tx.symbol_received == trans.symbol_traded
+        if not is_fiat(trans.symbol_received):
+            raise RuntimeError(
+                "Need fiat values when building CostBasisReports. Triggering sale tx: {}".format(
+                    trans
+                )
+            )
         report = CostBasisReport(
             curr_basis_tx.user_id,
             curr_basis_tx.quantity_traded + curr_basis_tx.fees,
@@ -242,7 +256,8 @@ def reports_to_csv(reports: Sequence[CostBasisReport]):
     return of
 
 
-def _process_all(method: coinpool.PoolMethod, txs: Sequence[Transaction]):
+def _process_all(method, txs, ohlc_source=None):
+    # type: (coinpool.PoolMethod, Sequence[Transaction], ohlc.OHLC) -> Sequence
     """
     Create a transaction pool, and iteratively process txs.
 
@@ -257,13 +272,14 @@ def _process_all(method: coinpool.PoolMethod, txs: Sequence[Transaction]):
     to_process = sorted(txs, key=lambda tx: tx.date)
     irs_reports = []
     for tx in to_process:
-        reports, diff = process_one(tx, pool)
+        reports, diff = process_one(tx, pool, ohlc_source)
         pool.apply(diff)
         irs_reports.extend(reports)
     return irs_reports, pool
 
 
-def process_all(method: coinpool.PoolMethod, txs: Sequence[Transaction]):
+def process_all(method, txs):
+    # type: (coinpool.PoolMethod, Sequence[Transaction]) -> Sequence[CostBasisReport]
     """
     Given a method and a bunch of transactions, return a list with the
     CostBasisReports calculated.
@@ -284,14 +300,16 @@ class BasisProcessor:
     given batch.
     """
 
-    def __init__(self, method, txs):
-        assert method in coinpool.PoolMethod
+    def __init__(self, method, txs, ohlc_class=ohlcprovider.OhlcProvider):
+        # type: (coinpool.PoolMethod, Sequence, ohlcprovider.OhlcProvider) -> None
+        self.ohlc = ohlc_class()
         self.method = method
         self.txs = txs
         self._reports = []
 
-    def process(self) -> Sequence[CostBasisReport]:
-        reports, pool = _process_all(self.method, self.txs)
+    def process(self):
+        # type: () -> Sequence[CostBasisReport]
+        reports, pool = _process_all(self.method, self.txs, self.ohlc)
         self._reports = reports
         self.pool = pool
         return self._reports

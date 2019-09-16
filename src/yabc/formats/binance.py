@@ -17,13 +17,8 @@ import delorean
 
 from yabc import transaction
 from yabc.formats import Format
-from yabc.price_data import historical
 
 HEADERS = "Date,Market,Type,Price,Amount,Total,Fee,Fee Coin".split(",")
-
-
-def _fee_in_usd(date, coin, quantity: decimal.Decimal):
-    return historical(date, coin) * quantity
 
 
 _BINANCE_TYPE_MAP = {
