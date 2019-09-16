@@ -55,9 +55,10 @@ python setup.py install
 ```
 
 # Notes
-File structure and setup.py usage inspired by source and test layout of python modules
-[sshuttle](https://github.com/sshuttle/sshuttle) and
-[flask](https://github.com/pallets/flask).
+File structure, setup.py usage, and shields inspired by source of python
+modules [sshuttle](https://github.com/sshuttle/sshuttle),
+[flask](https://github.com/pallets/flask), and
+[black](https://github.com/psf/black/blob/master/README.md).
 
 # Caveats
 Please note that yabc is not a tax service or tax accounting software and is
