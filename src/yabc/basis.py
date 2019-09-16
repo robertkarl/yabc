@@ -106,7 +106,7 @@ def split_report(coin_to_split, amount, trans):
     )
 
 
-def process_one(trans, pool, ohlc_source):
+def process_one(trans, pool, ohlc_source=None):
     # type: (transaction.Transaction, coinpool.CoinPool, ohlc.OHLC) -> Sequence
     """
     Cost basis calculator for a single transaction. Return the 'diff'
@@ -256,7 +256,7 @@ def reports_to_csv(reports: Sequence[CostBasisReport]):
     return of
 
 
-def _process_all(method, txs, ohlc_source):
+def _process_all(method, txs, ohlc_source=None):
     # type: (coinpool.PoolMethod, Sequence[Transaction], ohlc.OHLC) -> Sequence
     """
     Create a transaction pool, and iteratively process txs.
