@@ -43,10 +43,8 @@ def add_supported_exchanges():
 
     #noqa should stop our unused import zapper from zapping.
     """
+    # TODO: these are circular imports; these files then attemp to import THIS file.
     from . import adhoc  # noqa
     from . import coinbase  # noqa
     from . import gemini  # noqa
     from . import localbitcoins  # noqa
-
-
-add_supported_exchanges()
