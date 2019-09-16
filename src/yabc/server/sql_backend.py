@@ -28,6 +28,9 @@ from yabc.transaction_parser import TransactionParser
 from yabc.transaction_parser import TxFile
 from yabc.user import User
 
+from yabc import formats
+formats.add_supported_exchanges()
+
 __author__ = "Robert Karl <robertkarljr@gmail.com>"
 
 
