@@ -12,10 +12,9 @@ jan_1 = datetime.datetime(2017, 1, 1).date()
 _ETH_DATA = {
     jan_1: OhlcData(*[decimal.Decimal(i) for i in ["8.5", "8.6", "8.0", "8.1"]])
 }
-_ETH_DATA = {
+_BTC_DATA = {
     jan_1: OhlcData(*[decimal.Decimal(i) for i in ["1000", "1008.6", "990", "1000"]])
 }
-_BTC_DATA = {jan_1: 1000}
 _PRICE_DATA = {"ETH": _ETH_DATA, "BTC": _BTC_DATA}
 
 
@@ -27,15 +26,16 @@ class OhlcProvider:
     def __init__(self):
         pass
 
-    def get(self, symbol, dt):
+    @staticmethod
+    def get(symbol, dt):
         # type: (str, datetime.datetime) -> OhlcData
         """
-        Return the price in USD.
+        Return the fiat OHLC prices.
         """
         if isinstance(dt, (datetime.datetime, delorean.Delorean)):
-            date = dt.date
+            dt = dt.date
         try:
-            val = _PRICE_DATA[symbol][date]
+            val = _PRICE_DATA[symbol][dt]
             return val
-        except Exception as e:
-            return 17
+        except KeyError:
+            return _PRICE_DATA["ETH"][jan_1]
