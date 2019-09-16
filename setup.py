@@ -3,16 +3,15 @@
 import setuptools
 
 """
+Python versions and dependencies notes:
 
-# we do not support python3.4 in master because 
 - dateutil for 3.4 doesn't have parser accessible on the package
-- we need the typing backport for 3.4
-- circular import issue in our formats package fails on 3.4 (but works on later versions)
-- possibly more issues
+- previously there was a circular import issue in our formats package. This failed on 3.4 (but worked on later versions)
+- we need the typing dep since we need the backport for 3.4
 """
 
 setuptools.setup(
-    version="0.1.11",
+    version="0.1.12",
     name="yabc",
     python_requires=">=3.4,<=3.8",
     author="Seattle Blockchain Solutions",
