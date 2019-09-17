@@ -146,6 +146,7 @@ def process_one(trans, pool, ohlc_source=None):
         pool_index += 1
         curr_pool = pool.get(trans.symbol_traded)
         if pool_index >= len(curr_pool):
+            # TODO: do not raise; instead add a flag to the basis processor.
             raise RuntimeError("No basis coin found for sale {}".format(trans))
         amount += curr_pool[pool_index].quantity_received
     needs_split = (amount - trans.quantity_traded) > 1e-5

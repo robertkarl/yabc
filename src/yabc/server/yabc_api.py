@@ -56,7 +56,7 @@ def get_userid():
     return userid
 
 
-@yabc_api.route("/yabc/v1/run_basis", methods=["POST"])
+@yabc_api.route("/yabc/v1/run_basis", methods=["POST", "GET"])
 @check_authorized
 def run_basis():
     """
