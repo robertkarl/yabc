@@ -4,12 +4,13 @@ import unittest
 
 from transaction_utils import make_sale
 from yabc import basis
-from yabc.coinpool import CoinPool, PoolMethod
+from yabc.coinpool import PoolMethod
 
 
 class SingleSaleTest(unittest.TestCase):
     def setUp(self) -> None:
         pass
+
     def test_single_sale(self):
         txs = [make_sale()]
         bp = basis.BasisProcessor(PoolMethod.LIFO, txs)
