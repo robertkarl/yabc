@@ -5,6 +5,7 @@ import csv
 import decimal
 import io
 from decimal import Decimal
+from typing import Callable
 from typing import Sequence
 
 from yabc import coinpool
@@ -27,12 +28,9 @@ def _split_coin_to_add(coin_to_split, amount, trans):
       be similar to the way we track the origin coin in CBRs.
 
     :param coin_to_split: a Transaction, either a BUY or an TRADE_INPUT
-
     :param amount: unsold portion of the asset ie. float(0.3) for a sale of 1
-    BTC where another coin of 0.7 was already used
-
+                   BTC where another coin of 0.7 was already used
     :param trans: the transaction triggering the report
-
     :return: a Transaction of type SPLIT with a proper basis
     """
     split_amount_back_in_pool = coin_to_split.quantity_received - amount
@@ -62,12 +60,11 @@ def _split_report(coin_to_split, amount, trans):
         basis = cost + fees income_subtotal = proceeds - fees taxable_income =
         income_subtotal - basis
 
-    :param coin_to_split:  an input. part of this will be the cost basis portion of this report
-    
-    :param amount:  quantity of the split asset that needs to be sold in this report (not the USD).
-    
+    :param coin_to_split: an input. part of this will be the cost basis portion
+                          of this report
+    :param amount: quantity of the split asset that needs to be sold in this
+                   report (not the USD).
     :param trans: the transaction triggering this report, a SELL or SPENDING
-
     :return: a transaction of type Split
     """
     assert amount < coin_to_split.quantity_received
@@ -133,7 +130,7 @@ def _process_one(trans, pool, ohlc_source=None):
         curr_pool = pool.get(trans.symbol_traded)
         if pool_index >= len(curr_pool):
             # If we get here, we have partial information about the tx.
-            # We should probably use a basis of zero for the sale.
+            # Use a basis of zero for the sale.
             flags.append(("Transaction without basis information", trans))
             basis_information_absent = True
             amount = trans.quantity_traded
@@ -170,9 +167,9 @@ def _process_one(trans, pool, ohlc_source=None):
 
 
 def _build_sale_reports(pool, pool_index, trans, basis_information_absent):
-    # type: (coinpool.CoinPool, int, transaction.Transaction) -> Sequence[CostBasisReport]
+    # type:  (coinpool.CoinPool, int, transaction.Transaction, bool) -> Sequence[CostBasisReport]
     """
-    Use coins from pool to make CostBasisReports. `trans` is
+    Use coins from pool to make CostBasisReports.
 
     :param trans: the tx triggering the reports. It must be a sell of some kind.
     """
@@ -275,7 +272,7 @@ class BasisProcessor:
     """
 
     def __init__(self, method, txs, ohlc_class=ohlcprovider.OhlcProvider):
-        # type: (coinpool.PoolMethod, Sequence, type) -> None
+        # type: (coinpool.PoolMethod, Sequence, Callable) -> None
         self.ohlc = ohlc_class()
         self._method = method
         self._txs = txs
@@ -293,7 +290,7 @@ class BasisProcessor:
         """
         Perform the basis calculation given the txs passed to the constructor.
 
-        Saves the pool of remaining coins to self.pool.
+        Saves the pool of remaining coins and any flags.
 
         :return: the CostBasisReports generated.
         """

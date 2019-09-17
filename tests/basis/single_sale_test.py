@@ -8,9 +8,10 @@ from yabc.coinpool import PoolMethod
 
 
 class SingleSaleTest(unittest.TestCase):
-    def setUp(self) -> None:
-        pass
-
+    """
+    Check that just a sale (no previous buy for that tx) raises a flag and
+    generates a short term CostBasisReport.
+    """
     def test_single_sale(self):
         txs = [make_sale()]
         bp = basis.BasisProcessor(PoolMethod.LIFO, txs)

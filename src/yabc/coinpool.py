@@ -17,7 +17,6 @@ class PoolDiff:
     Operations to be applied to a CoinPool.
 
     Supports add and remove.
-
     """
 
     def __init__(self):
@@ -35,8 +34,6 @@ class PoolDiff:
         """
         The coins up to and including this index will be REMOVED from the pool.
         """
-        assert isinstance(index, int)
-        assert isinstance(symbol, str)
         self.to_remove.append((symbol, index))
 
 
@@ -72,11 +69,12 @@ class CoinPool:
         - potentially need to split a BTC coin
         - if so, need to add BTC to the pool
 
-    Internal representation note: by convention, the coins at the START of the list will be sold first. This is for LIFO and FIFO.
-
+    Internal representation note: by convention, the coins at the START of the
+    list will be sold first. This is for LIFO and FIFO.
     """
 
-    def __init__(self, method: PoolMethod):
+    def __init__(self, method):
+        # type: (PoolMethod) -> None
         assert method in PoolMethod
         self._coins = defaultdict(list)
         self.method = method
@@ -94,7 +92,6 @@ class CoinPool:
 
     def apply(self, diff: PoolDiff):
         """
-
         Pop from the front of a list of txs, or add in the correct spot based on method.
 
         This mutates the object and isn't easy to undo.
@@ -106,4 +103,4 @@ class CoinPool:
             elif self.method == PoolMethod.FIFO:
                 _handle_add_fifo(coin_list, item)
         for symbol, index in diff.to_remove:
-            self._coins[symbol] = self._coins[symbol][index + 1 :]
+            self._coins[symbol] = self._coins[symbol][index + 1:]
