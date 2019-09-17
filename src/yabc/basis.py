@@ -53,7 +53,7 @@ def _split_coin_to_add(coin_to_split, amount, trans):
     return to_add
 
 
-def split_report(coin_to_split, amount, trans):
+def _split_report(coin_to_split, amount, trans):
     # type:  (transaction.Transaction, Decimal, transaction.Transaction) -> transaction.Transaction
     """
     The cost basis logic. Note that all fees on buy and sell sides are
@@ -128,9 +128,6 @@ def _process_one(trans, pool, ohlc_source=None):
         diff.add(trans.symbol_received, trans)
         return ([], diff, [])
     # At this point, trans is a sell
-
-    # TODO: Whenever we use quantity on a SELL transaction, we really mean
-    #       quantity_traded. Is this true?
     while amount < trans.quantity_traded:
         pool_index += 1
         curr_pool = pool.get(trans.symbol_traded)
@@ -153,7 +150,7 @@ def _process_one(trans, pool, ohlc_source=None):
             # TODO: Alert the user if the value of a gift exceeds $15,000, in which
             #       case gift taxes may be eligible...
             cost_basis_reports.append(
-                split_report(coin_to_split, portion_of_split_coin_to_sell, trans)
+                _split_report(coin_to_split, portion_of_split_coin_to_sell, trans)
             )
         coin_to_add = _split_coin_to_add(
             coin_to_split, portion_of_split_coin_to_sell, trans

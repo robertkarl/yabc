@@ -3,4 +3,7 @@
 
 """
 BasisProcessor integration tests
+
+Perhaps the most important tests we have, these check that various input transactions
+result in sensible BasisProcessor outputs.
 """
