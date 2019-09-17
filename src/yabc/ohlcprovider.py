@@ -26,8 +26,7 @@ class OhlcProvider:
     def __init__(self):
         pass
 
-    @staticmethod
-    def get(symbol, dt):
+    def get(self, symbol, dt):
         # type: (str, datetime.datetime) -> OhlcData
         """
         Return the fiat OHLC prices.

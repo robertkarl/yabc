@@ -8,7 +8,7 @@ from decimal import Decimal
 from transaction_utils import make_transaction
 from yabc import coinpool
 from yabc import transaction
-from yabc.basis import process_all
+from yabc.basis import BasisProcessor
 from yabc.formats import adhoc
 from yabc.transaction import Operation
 
@@ -63,7 +63,9 @@ class CsvAdhocTest(unittest.TestCase):
         sale = make_transaction(
             Operation.SELL, 1, 0, 1001, date=self.start + self.one_day * 2
         )
-        reports = process_all(coinpool.PoolMethod.FIFO, [purchase, gift_given, sale])
+        reports = BasisProcessor(
+            coinpool.PoolMethod.FIFO, [purchase, gift_given, sale]
+        ).process()
         print(reports)
         self.assertEqual(len(reports), 1)
         sale_report = reports[0]
@@ -81,5 +83,5 @@ class CsvAdhocTest(unittest.TestCase):
         sold = make_transaction(
             Operation.SELL, 1, 0, 2000, date=self.start + self.one_day
         )
-        reports = process_all(coinpool.PoolMethod.FIFO, [sold, mined])
+        reports = BasisProcessor(coinpool.PoolMethod.FIFO, [sold, mined]).process()
         self.assertEqual(reports[0].get_gain_or_loss(), 1000)

@@ -7,14 +7,11 @@ from decimal import Decimal
 from typing import Sequence
 
 from yabc import coinpool
-from yabc import formats
 from yabc import ohlcprovider
 from yabc import transaction
-from yabc import transaction_parser
 from yabc.costbasisreport import CostBasisReport
 from yabc.transaction import Transaction
 from yabc.transaction import is_fiat
-from yabc.transaction_parser import TransactionParser
 
 __author__ = "Robert Karl <robertkarljr@gmail.com>"
 
@@ -106,8 +103,8 @@ def split_report(coin_to_split, amount, trans):
     )
 
 
-def process_one(trans, pool, ohlc_source=None):
-    # type: (transaction.Transaction, coinpool.CoinPool, ohlc.OHLC) -> Sequence
+def _process_one(trans, pool, ohlc_source=None):
+    # type: (transaction.Transaction, coinpool.CoinPool, ohlcprovider.OhlcProvider) -> Sequence
     """
     Cost basis calculator for a single transaction. Return the 'diff'
     required to process this one tx.
@@ -218,33 +215,11 @@ def _build_sale_reports(pool, pool_index, trans):
     return ans
 
 
-def transactions_from_file(tx_file, expected_format):
-    """
-    Get a list of transactions from a single file.
-
-    :param tx_file: the name of a csv file
-    :param expected_format: a string, the name of the exchange. (gemini or coinbase)
-    """
-    hint = None
-    if expected_format == "gemini":
-        hint = formats.gemini.GeminiParser
-        tx_file = io.TextIOWrapper(tx_file)
-    elif expected_format == "coinbase":
-        hint = formats.coinbase.CoinbaseParser
-        tx_file = io.TextIOWrapper(tx_file)
-    else:
-        tx_file = transaction_parser.TxFile(tx_file, None)
-    tx_file = transaction_parser.TxFile(tx_file, hint)
-    parser = TransactionParser([tx_file])
-    return parser.txs
-
-
 def reports_to_csv(reports: Sequence[CostBasisReport]):
     """ Return a file-like object with a row for each report.
 
     Also includes summary information and headers.
     """
-
     of = io.StringIO()
     writer = csv.writer(of)
     names = CostBasisReport.field_names()
@@ -272,24 +247,10 @@ def _process_all(method, txs, ohlc_source=None):
     to_process = sorted(txs, key=lambda tx: tx.date)
     irs_reports = []
     for tx in to_process:
-        reports, diff = process_one(tx, pool, ohlc_source)
+        reports, diff = _process_one(tx, pool, ohlc_source)
         pool.apply(diff)
         irs_reports.extend(reports)
     return irs_reports, pool
-
-
-def process_all(method, txs):
-    # type: (coinpool.PoolMethod, Sequence[Transaction]) -> Sequence[CostBasisReport]
-    """
-    Given a method and a bunch of transactions, return a list with the
-    CostBasisReports calculated.
-
-    TODO: clean this up; we don't need _process_all, process_all, and
-    BasisProcessor.
-    """
-    assert method in coinpool.PoolMethod
-    reports, pool = _process_all(method, txs)
-    return reports
 
 
 class BasisProcessor:

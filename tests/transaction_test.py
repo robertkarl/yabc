@@ -42,7 +42,7 @@ class TransactionTest(unittest.TestCase):
         # Cost basis: (purchase price + fees) / quantity = 500
         # Proceeds: (.5 / (1010 - 10)) = 500
         # This transaction should result in $0 of capital gains.
-        reports, _ = basis.process_one(sale, pool)
+        reports, _ = basis._process_one(sale, pool)
         self.assertEqual(reports[0].gain_or_loss, 0)
 
     def test_split_report_no_gain(self):
