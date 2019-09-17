@@ -2,7 +2,7 @@ import unittest
 
 from transaction_utils import make_transaction
 from yabc import coinpool
-from yabc.basis import process_all
+from yabc.basis import BasisProcessor
 from yabc.transaction import *
 
 
@@ -19,7 +19,9 @@ class FifoTest(unittest.TestCase):
         sale2 = make_transaction(
             Operation.SELL, 1, 0, 1000, date=self.start + self.one_day * 2
         )
-        reports = process_all(coinpool.PoolMethod.FIFO, [self.purchase, sale1, sale2])
+        reports = BasisProcessor(
+            coinpool.PoolMethod.FIFO, [self.purchase, sale1, sale2]
+        ).process()
         self.assertEqual(len(reports), 2)
         for i in reports:
             self.assertEqual(i.gain_or_loss, 0)
@@ -31,7 +33,9 @@ class FifoTest(unittest.TestCase):
         sale2 = make_transaction(
             Operation.SELL, 1, 10, 1010, date=self.start + self.one_day * 2
         )
-        reports = process_all(coinpool.PoolMethod.FIFO, [self.purchase, sale1, sale2])
+        reports = BasisProcessor(
+            coinpool.PoolMethod.FIFO, [self.purchase, sale1, sale2]
+        ).process()
         self.assertEqual(len(reports), 2)
         for i in reports:
             self.assertEqual(i.gain_or_loss, 0)
@@ -46,9 +50,9 @@ class FifoTest(unittest.TestCase):
         sale2 = make_transaction(
             Operation.SELL, 1, 0, 1010, date=self.start + self.one_day * 2
         )
-        reports = process_all(
+        reports = BasisProcessor(
             coinpool.PoolMethod.FIFO, [purchase_with_fees, sale1, sale2]
-        )
+        ).process()
         self.assertEqual(len(reports), 2)
         for i in reports:
             print(i)

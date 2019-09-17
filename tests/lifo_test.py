@@ -4,7 +4,7 @@ import unittest
 from transaction_utils import make_buy
 from transaction_utils import make_transaction
 from yabc import coinpool
-from yabc.basis import process_all
+from yabc.basis import BasisProcessor
 from yabc.transaction import Operation
 
 
@@ -21,7 +21,10 @@ class LifoTest(unittest.TestCase):
         sale2 = make_transaction(
             Operation.SELL, 1, 0, 1000, date=self.start + self.one_day * 2
         )
-        reports = process_all(coinpool.PoolMethod.LIFO, [self.purchase, sale1, sale2])
+
+        reports = BasisProcessor(
+            coinpool.PoolMethod.LIFO, [self.purchase, sale1, sale2]
+        ).process()
         self.assertEqual(len(reports), 2)
         for i in reports:
             self.assertEqual(i.gain_or_loss, 0)
@@ -33,7 +36,9 @@ class LifoTest(unittest.TestCase):
         sale2 = make_transaction(
             Operation.SELL, 1, 10, 1010, date=self.start + self.one_day * 2
         )
-        reports = process_all(coinpool.PoolMethod.LIFO, [self.purchase, sale1, sale2])
+        reports = BasisProcessor(
+            coinpool.PoolMethod.LIFO, [self.purchase, sale1, sale2]
+        ).process()
         self.assertEqual(len(reports), 2)
         for i in reports:
             self.assertEqual(i.gain_or_loss, 0)
@@ -48,9 +53,9 @@ class LifoTest(unittest.TestCase):
         sale2 = make_transaction(
             Operation.SELL, 1, 0, 1010, date=self.start + self.one_day * 2
         )
-        reports = process_all(
+        reports = BasisProcessor(
             coinpool.PoolMethod.LIFO, [purchase_with_fees, sale1, sale2]
-        )
+        ).process()
         self.assertEqual(len(reports), 2)
         for i in reports:
             self.assertEqual(i.gain_or_loss, 0)
@@ -63,7 +68,9 @@ class LifoTest(unittest.TestCase):
         sale = make_transaction(
             Operation.SELL, 1, 0, 1200, date=self.start + 2 * self.one_day
         )
-        reports = process_all(coinpool.PoolMethod.LIFO, [purchase1, purchase2, sale])
+        reports = BasisProcessor(
+            coinpool.PoolMethod.LIFO, [purchase1, purchase2, sale]
+        ).process()
         self.assertEqual(len(reports), 1)
         r = reports[0]
         self.assertEqual(r.gain_or_loss, 1000)
@@ -73,7 +80,7 @@ class LifoTest(unittest.TestCase):
         sale = make_transaction(
             Operation.SELL, 1, 0, 1100, date=self.start + 2 * self.one_day
         )
-        reports = process_all(coinpool.PoolMethod.LIFO, [purchase1, sale])
+        reports = BasisProcessor(coinpool.PoolMethod.LIFO, [purchase1, sale]).process()
         self.assertEqual(len(reports), 1)
         r = reports[0]
         self.assertEqual(r.gain_or_loss, 1000)

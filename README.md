@@ -5,36 +5,37 @@
 
 # yabc - a bitcoin tax calculator
 yabc translates cryptocurrency trades, mining, and spending data into a list of
-reports that can be sent to tax authorities.  
+reports that can be sent to tax authorities. It is most useful for
+cryptocurrency traders in the US.
 
-yabc is the tax calculator behind [https://costbasis.report/](https://costbasis.report/).
+yabc is the tax calculator behind [https://CostBasis.Report/](https://costbasis.report/).
 
 ```
-$ pip install yabc
-$ python -m yabc ./testdata/synthetic_gemini_csv.csv ./testdata/synthetic_coinbase_csv.csv 
+python -m yabc testdata/gemini/synthetic_gemini_csv.csv ./testdata/synthetic_coinbase_csv.csv 
 13 transactions to be reported
 
-<Sold 0.76 BTC for 236 total profiting -155. Adjustment 0>
-<Sold 1 BTC for 311 total profiting 29. Adjustment 0>
-<Sold 2 BTC for 622 total profiting 546. Adjustment 0>
-<Sold 2.5 BTC for 777 total profiting 666. Adjustment 0>
-<Sold 0.04290503 BTC for 594 total profiting 572. Adjustment 0>
-<Sold 0.35608537 BTC for 4929 total profiting 4746. Adjustment 0>
-<Sold 0.00100960 BTC for 14 total profiting 13. Adjustment 0>
-<Sold 0.50000000 BTC for 7032 total profiting 6775. Adjustment 0>
-<Sold 0.03500000 BTC for 496 total profiting 478. Adjustment 0>
-<Sold 0.03518002 BTC for 498 total profiting 480. Adjustment 0>
-<Sold 0.03447186 BTC for 488 total profiting 470. Adjustment 0>
-<Sold 0.01057786 BTC for 150 total profiting 145. Adjustment 0>
-<Sold 0.03500000 BTC for 496 total profiting 478. Adjustment 0>
+<Sold 0.76 BTC on 2008-04-21 01:12:00 for $236. Exchange: coinbase. Profit:$-155.>
+<Sold 1 BTC on 2008-04-21 01:12:00 for $311. Exchange: coinbase. Profit:$29.>
+<Sold 2 BTC on 2008-04-21 01:12:00 for $622. Exchange: coinbase. Profit:$546.>
+<Sold 2.5 BTC on 2008-04-21 01:12:00 for $777. Exchange: coinbase. Profit:$666.>
+<Sold 0.04290503 BTC on 2008-08-13 06:27:56.145000 for $594. Exchange: gemini. Profit:$572.>
+<Sold 0.35608537 BTC on 2008-08-14 06:27:56.146000 for $4929. Exchange: gemini. Profit:$4746.>
+<Sold 0.0010096 BTC on 2008-08-15 06:27:56.147000 for $14. Exchange: gemini. Profit:$13.>
+<Sold 0.5 BTC on 2008-08-18 06:27:56.150000 for $7032. Exchange: gemini. Profit:$6775. Long term.>
+<Sold 0.035 BTC on 2008-08-20 06:27:56.152000 for $496. Exchange: gemini. Profit:$478. Long term.>
+<Sold 0.03518002 BTC on 2008-08-21 06:27:56.153000 for $498. Exchange: gemini. Profit:$480. Long term.>
+<Sold 0.03447186 BTC on 2008-08-22 06:27:56.154000 for $488. Exchange: gemini. Profit:$470. Long term.>
+<Sold 0.01057786 BTC on 2008-08-23 06:27:56.155000 for $150. Exchange: gemini. Profit:$145. Long term.>
+<Sold 0.035 BTC on 2009-08-24 06:27:56.156000 for $496. Exchange: gemini. Profit:$478. Long term.>
 
 total gain or loss for above transactions: 15243
 
 total basis for above transactions: 1400
 total proceeds for above transactions: 16643
+Remaining coins after sales: <yabc.coinpool.CoinPool object at 0x7f831da9e208>
 ```
 
-An adhoc CSV format is supported for non-exchange transactions like mining and purchases.
+An adhoc CSV format is supported for non-exchange transactions like mining, gifts, and purchases.
 
 yabc also includes a set of HTTP endpoints that allow for storing data more
 permanently in a database, sqlite by default. Postgres as a backend is also supported.
@@ -43,9 +44,9 @@ permanently in a database, sqlite by default. Postgres as a backend is also supp
 
 - [ ] TODO: Support coin/coin trades like BTC/ETH.
 - [ ] TODO: Enable importing from more exchanges (binance)
-- [ ] TODO: Add better historical price lookup support; it is now a stub that returns $17
+- [ ] TODO: Add better historical price lookup support; it is now a stub.
 
-# Installation, with virtualenv
+# Installation from source, with virtualenv
 ```
 git clone git@github.com:robertkarl/yabc.git
 cd yabc

@@ -15,6 +15,7 @@ import sys
 
 import yabc.transaction_parser
 from yabc import basis
+from yabc import coinpool
 from yabc.costbasisreport import ReportBatch
 
 

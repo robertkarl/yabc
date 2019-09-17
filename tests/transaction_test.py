@@ -42,7 +42,7 @@ class TransactionTest(unittest.TestCase):
         # Cost basis: (purchase price + fees) / quantity = 500
         # Proceeds: (.5 / (1010 - 10)) = 500
         # This transaction should result in $0 of capital gains.
-        reports, _ = basis.process_one(sale, pool)
+        reports, _, _ = basis._process_one(sale, pool)
         self.assertEqual(reports[0].gain_or_loss, 0)
 
     def test_split_report_no_gain(self):
@@ -50,7 +50,7 @@ class TransactionTest(unittest.TestCase):
         """
         buy = make_buy(1.0, fees=0, subtotal=100.0)
         sell = make_transaction(SELL, 1.0, 0, 100.0)
-        report = basis.split_report(buy, Decimal("0.5"), sell)
+        report = basis._split_report(buy, Decimal("0.5"), sell)
         self.assertEqual(report.gain_or_loss, 0)
 
     def test_split_report(self):
@@ -58,7 +58,7 @@ class TransactionTest(unittest.TestCase):
         """
         buy = make_transaction(BUY, 1.0, 10, 100.0)
         sell = make_transaction(SELL, 1.0, 10, 200.0)
-        report = basis.split_report(buy, Decimal("0.5"), sell)
+        report = basis._split_report(buy, Decimal("0.5"), sell)
         ans_gain_or_loss = 40.0
         self.assertEqual(report.gain_or_loss, ans_gain_or_loss)
 
@@ -69,7 +69,7 @@ class TransactionTest(unittest.TestCase):
         buy = make_transaction(BUY, purchase_quantity, 0, 100.0)
         sell = make_transaction(SELL, 2.0, 0, 100.0)
         with self.assertRaises(AssertionError):
-            basis.split_report(
+            basis._split_report(
                 buy, purchase_quantity, sell
             )  # Should not split the basis coin, quantity matches
 
