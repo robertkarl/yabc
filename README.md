@@ -5,9 +5,10 @@
 
 # yabc - a bitcoin tax calculator
 yabc translates cryptocurrency trades, mining, and spending data into a list of
-reports that can be sent to tax authorities.  
+reports that can be sent to tax authorities. It is most useful for
+cryptocurrency traders in the US.
 
-yabc is the tax calculator behind [https://costbasis.report/](https://costbasis.report/).
+yabc is the tax calculator behind [https://CostBasis.Report/](https://costbasis.report/).
 
 ```
 python -m yabc testdata/gemini/synthetic_gemini_csv.csv ./testdata/synthetic_coinbase_csv.csv 
@@ -34,7 +35,7 @@ total proceeds for above transactions: 16643
 Remaining coins after sales: <yabc.coinpool.CoinPool object at 0x7f831da9e208>
 ```
 
-An adhoc CSV format is supported for non-exchange transactions like mining and purchases.
+An adhoc CSV format is supported for non-exchange transactions like mining, gifts, and purchases.
 
 yabc also includes a set of HTTP endpoints that allow for storing data more
 permanently in a database, sqlite by default. Postgres as a backend is also supported.
@@ -43,9 +44,9 @@ permanently in a database, sqlite by default. Postgres as a backend is also supp
 
 - [ ] TODO: Support coin/coin trades like BTC/ETH.
 - [ ] TODO: Enable importing from more exchanges (binance)
-- [ ] TODO: Add better historical price lookup support; it is now a stub that returns $17
+- [ ] TODO: Add better historical price lookup support; it is now a stub.
 
-# Installation, with virtualenv
+# Installation from source, with virtualenv
 ```
 git clone git@github.com:robertkarl/yabc.git
 cd yabc
