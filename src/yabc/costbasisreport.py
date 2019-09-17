@@ -12,6 +12,7 @@ from sqlalchemy import Integer
 from sqlalchemy import orm
 
 import yabc
+from yabc import transaction
 from yabc.transaction import PreciseDecimalString
 
 
@@ -79,6 +80,7 @@ class CostBasisReport(yabc.Base):
         adjustment=Decimal(0),
         triggering_transaction=None,
     ):
+        # type: (int, decimal.Decimal, decimal.Decimal, datetime.datetime, decimal.Decimal, datetime.datetime, str, decimal.Decimal, transaction.Transaction) -> None
         """
         Note that when pulling items from a SQL alchemy ORM query, this constructor isn't called.
         """

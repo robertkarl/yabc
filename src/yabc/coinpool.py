@@ -17,6 +17,7 @@ class PoolDiff:
     Operations to be applied to a CoinPool.
 
     Supports add and remove.
+
     """
 
     def __init__(self):
@@ -31,6 +32,9 @@ class PoolDiff:
 
     def remove(self, symbol, index):
         # type: (str, int) -> None
+        """
+        The coins up to and including this index will be REMOVED from the pool.
+        """
         assert isinstance(index, int)
         assert isinstance(symbol, str)
         self.to_remove.append((symbol, index))

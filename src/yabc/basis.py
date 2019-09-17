@@ -1,7 +1,8 @@
 """
-Calculating the cost basis.
+Calculate the cost basis.
 """
 import csv
+import decimal
 import io
 from decimal import Decimal
 from typing import Sequence
@@ -16,26 +17,24 @@ from yabc.transaction import is_fiat
 __author__ = "Robert Karl <robertkarljr@gmail.com>"
 
 
-def split_coin_to_add(coin_to_split, amount, trans):
+def _split_coin_to_add(coin_to_split, amount, trans):
     # type:  (transaction.Transaction, Decimal, transaction.Transaction) -> transaction.Transaction
     """
     Create a coin to be added back to the pool.
 
     TODO: For creating an audit trail, we should track the origin of the split
-        coin, ie. was it generated from mining, a gift, or purchased?  This could
-        be similar to the way we track the origin coin in CBRs.
+      coin, ie. was it generated from mining, a gift, or purchased?  This could
+      be similar to the way we track the origin coin in CBRs.
 
     :param coin_to_split: a Transaction, either a BUY or an TRADE_INPUT
 
-    :param amount: unsold portion of the asset ie. float(0.3) for a sale of 1 BTC where another coin of 0.7 was already used
+    :param amount: unsold portion of the asset ie. float(0.3) for a sale of 1
+    BTC where another coin of 0.7 was already used
 
     :param trans: the transaction triggering the report
 
     :return: a Transaction of type SPLIT with a proper basis
     """
-    assert isinstance(amount, Decimal)
-    assert isinstance(coin_to_split, transaction.Transaction)
-    assert isinstance(trans, transaction.Transaction)
     split_amount_back_in_pool = coin_to_split.quantity_received - amount
     fraction_back_in_pool = split_amount_back_in_pool / coin_to_split.quantity_received
     cost = coin_to_split.quantity_traded * fraction_back_in_pool
@@ -63,19 +62,14 @@ def split_report(coin_to_split, amount, trans):
         basis = cost + fees income_subtotal = proceeds - fees taxable_income =
         income_subtotal - basis
 
-    parameters:
+    :param coin_to_split:  an input. part of this will be the cost basis portion of this report
+    
+    :param amount:  quantity of the split asset that needs to be sold in this report (not the USD).
+    
+    :param trans: the transaction triggering this report, a SELL or SPENDING
 
-        coin_to_split (Transaction): an input. part of this will be the cost
-        basis portion of this report
-
-        amount (Float): quantity of the split asset that needs to be sold in
-        this report (not the USD).
-
-        trans (Transaction): the transaction triggering this report, a SELL or SPENDING
+    :return: a transaction of type Split
     """
-    assert isinstance(amount, Decimal)
-    assert isinstance(coin_to_split, transaction.Transaction)
-    assert isinstance(trans, transaction.Transaction)
     assert amount < coin_to_split.quantity_received
     assert not (amount - trans.quantity_received > 1e-5)  # allowed to be equal
     # coin_to_split is a buy, mining, previous split, some kind of input.
@@ -115,26 +109,24 @@ def _process_one(trans, pool, ohlc_source=None):
     - If transaction is a buy, just return the add-to-pool op.
     - Otherwise, for a sale::
         - Example: buy 0.25 @ $1 and 0.25 at $2. Then sell 0.5 at $3.
-                   this is reported to IRS as 2 trannies: 
+                   this is reported to IRS as 2 transactions:
                    One: Sell 0.25 with a basis of $1
                    Two: Sell 0.25 with a basis of $2
-        - Return:
-            - ans['remove_index']: The coins up to and including this index will be REMOVED from the pool.
-            - ans['basis_reports']: The list of coins to sell, with cost basis filled.
-            - ans['add']: At most one coin to add to the pool, if there was a partial sale.
 
     :param trans: a buy or sell with fields filled
     :param pool: a sequence containing transaction.Transaction instances.
 
-    :return (basis_reports, diff): a tuple with any cost basis reports and a PoolDiff.
+    :return (reports, diff, flags): any CostBasisReports, the PoolDiff, any flags raised.
     """
     diff = coinpool.PoolDiff()
+    flags = []
     cost_basis_reports = []
+    basis_information_absent = False
     amount = Decimal(0)
     pool_index = -1
     if trans.is_simple_input():  # what about: and not trans.is_coin_to_coin():
         diff.add(trans.symbol_received, trans)
-        return ([], diff)
+        return ([], diff, [])
     # At this point, trans is a sell
 
     # TODO: Whenever we use quantity on a SELL transaction, we really mean
@@ -143,8 +135,13 @@ def _process_one(trans, pool, ohlc_source=None):
         pool_index += 1
         curr_pool = pool.get(trans.symbol_traded)
         if pool_index >= len(curr_pool):
-            raise RuntimeError("No basis coin found for sale {}".format(trans))
-        amount += curr_pool[pool_index].quantity_received
+            # If we get here, we have partial information about the tx.
+            # We should probably use a basis of zero for the sale.
+            flags.append(("Transaction without basis information", trans))
+            basis_information_absent = True
+            amount = trans.quantity_traded
+        else:
+            amount += curr_pool[pool_index].quantity_received
     needs_split = (amount - trans.quantity_traded) > 1e-5
 
     if needs_split:
@@ -158,7 +155,7 @@ def _process_one(trans, pool, ohlc_source=None):
             cost_basis_reports.append(
                 split_report(coin_to_split, portion_of_split_coin_to_sell, trans)
             )
-        coin_to_add = split_coin_to_add(
+        coin_to_add = _split_coin_to_add(
             coin_to_split, portion_of_split_coin_to_sell, trans
         )
         diff.add(coin_to_add.symbol_received, coin_to_add)
@@ -169,17 +166,32 @@ def _process_one(trans, pool, ohlc_source=None):
         # The other option is gift. If it's a gift we don't report any gain or loss.
         # The coins just magically remove themselves from the pool.
         # No entry in 8949 for them.
-        cost_basis_reports.extend(_build_sale_reports(pool, pool_index, trans))
-    return (cost_basis_reports, diff)
+        cost_basis_reports.extend(
+            _build_sale_reports(pool, pool_index, trans, basis_information_absent)
+        )
+    return (cost_basis_reports, diff, flags)
 
 
-def _build_sale_reports(pool, pool_index, trans):
+def _build_sale_reports(pool, pool_index, trans, basis_information_absent):
     # type: (coinpool.CoinPool, int, transaction.Transaction) -> Sequence[CostBasisReport]
     """
-    Use coins from pool to make CostBasisReports. `trans` is the tx triggering
-    the reports. It must be a sell of some kind.
+    Use coins from pool to make CostBasisReports. `trans` is
+
+    :param trans: the tx triggering the reports. It must be a sell of some kind.
     """
     ans = []
+    if basis_information_absent:
+        report = CostBasisReport(
+            trans.user_id,
+            decimal.Decimal(0),
+            trans.quantity_traded,
+            trans.date,
+            proceeds=trans.quantity_received,
+            date_sold=trans.date,
+            asset=trans.symbol_traded,
+            triggering_transaction=trans,
+        )
+        return [report]
     for i in range(pool_index):
         # each of these including pool_index will become a sale to be reported to IRS
         # The cost basis is pool[i].proceeds
@@ -232,7 +244,7 @@ def reports_to_csv(reports: Sequence[CostBasisReport]):
 
 
 def _process_all(method, txs, ohlc_source=None):
-    # type: (coinpool.PoolMethod, Sequence[Transaction], ohlc.OHLC) -> Sequence
+    # type: (coinpool.PoolMethod, Sequence[Transaction], ohlcprovider.OhlcProvider) -> Sequence
     """
     Create a transaction pool, and iteratively process txs.
 
@@ -246,11 +258,13 @@ def _process_all(method, txs, ohlc_source=None):
     pool = coinpool.CoinPool(method)
     to_process = sorted(txs, key=lambda tx: tx.date)
     irs_reports = []
+    flags = []
     for tx in to_process:
-        reports, diff = _process_one(tx, pool, ohlc_source)
+        reports, diff, curr_flags = _process_one(tx, pool, ohlc_source)
+        flags.extend(curr_flags)
         pool.apply(diff)
         irs_reports.extend(reports)
-    return irs_reports, pool
+    return irs_reports, pool, flags
 
 
 class BasisProcessor:
@@ -259,18 +273,35 @@ class BasisProcessor:
 
     This includes the pool of coins left over at the end of processing the
     given batch.
+
+    See self.pool and self.flags after running process()
     """
 
     def __init__(self, method, txs, ohlc_class=ohlcprovider.OhlcProvider):
-        # type: (coinpool.PoolMethod, Sequence, ohlcprovider.OhlcProvider) -> None
+        # type: (coinpool.PoolMethod, Sequence, type) -> None
         self.ohlc = ohlc_class()
-        self.method = method
-        self.txs = txs
+        self._method = method
+        self._txs = txs
         self._reports = []
+        self.pool = []
+        self._flags = None
+
+    def flags(self):
+        if self._flags is None:
+            raise RuntimeError("Run basis calculation first")
+        return self._flags
 
     def process(self):
         # type: () -> Sequence[CostBasisReport]
-        reports, pool = _process_all(self.method, self.txs, self.ohlc)
+        """
+        Perform the basis calculation given the txs passed to the constructor.
+
+        Saves the pool of remaining coins to self.pool.
+
+        :return: the CostBasisReports generated.
+        """
+        reports, pool, flags = _process_all(self._method, self._txs, self.ohlc)
         self._reports = reports
         self.pool = pool
+        self._flags = flags
         return self._reports
