@@ -1,8 +1,5 @@
 """
 Adhoc transactions include mining, spending, and gifts.
-
-TODO: For each supported input file type, like those from each exchange.
-create a file like this one.
 """
 import csv
 import decimal
@@ -15,7 +12,9 @@ from yabc.formats import Format
 
 TRANSACTION_TYPE_HEADER = "Type"
 SUBTOTAL_HEADER = "DollarValue"
-field_names = ["Coin", "Amount", "Timestamp", TRANSACTION_TYPE_HEADER, SUBTOTAL_HEADER]
+RECEIVED_CURRENCY = "ReceivedCurrency"
+RECEIVED_AMOUNT = "ReceivedAmount"
+field_names = ["Coin", "Amount", "Timestamp", TRANSACTION_TYPE_HEADER, SUBTOTAL_HEADER, RECEIVED_CURRENCY, RECEIVED_AMOUNT]
 
 
 SUPPORTED = [
@@ -23,6 +22,7 @@ SUPPORTED = [
     transaction.Transaction.Operation.GIFT_SENT,
     transaction.Transaction.Operation.MINING,
     transaction.Transaction.Operation.SPENDING,
+    transaction.Transaction.Operation.SELL,
 ]
 
 
@@ -121,10 +121,21 @@ class AdhocParser(Format):
                 quantity_traded=crypto_amount,
                 date=trans_date,
             )
+        elif op == transaction.Operation.SELL:
+            trans = _make_adhoc_sell(trans_date, crypto_amount, curr)
         return trans
+
 
     def __iter__(self):
         return self
+
+def _make_adhoc_sell(date, crypto_amount, curr):
+    if curr[RECEIVED_CURRENCY]:
+        rcvd_coin = curr[RECEIVED_CURRENCY]
+        rcvd_amount = curr[RECEIVED_AMOUNT]
+        if not rcvd_amount or not rcvd_coin:
+            raise RuntimeError("Invalid row, need currency and amount if either is specified {}".format(curr))
+        return transaction.Transaction(transaction.Operation.SELL, symbol_received=rcvd_coin, quantity_received=decimal.Decimal(rcvd_amount), symbol_traded=curr["Coin"], quantity_traded=crypto_amount, date=date)
 
 
 FORMAT_CLASSES.append(AdhocParser)

@@ -55,6 +55,7 @@ class CostBasisReport(yabc.Base):
     adjustment = Column(PreciseDecimalString)
     long_term = Column(Boolean)
     user_id = Column(sqlalchemy.Integer, ForeignKey("user.id"))
+    secondary_asset = Column(sqlalchemy.String) # Needed for coin/coin trades.
 
     @staticmethod
     def make_random_report():
@@ -79,6 +80,7 @@ class CostBasisReport(yabc.Base):
         asset,
         adjustment=Decimal(0),
         triggering_transaction=None,
+        secondary_asset=None
     ):
         # type: (int, decimal.Decimal, decimal.Decimal, datetime.datetime, decimal.Decimal, datetime.datetime, str, decimal.Decimal, transaction.Transaction) -> None
         """
@@ -98,6 +100,7 @@ class CostBasisReport(yabc.Base):
         self.adjustment = adjustment
         self.long_term = self._is_long_term()
         self.triggering_transaction = triggering_transaction
+        self.secondary_asset = secondary_asset
 
     def _is_long_term(self):
         return (self.date_sold - self.date_purchased) > datetime.timedelta(364)
@@ -124,10 +127,15 @@ class CostBasisReport(yabc.Base):
         return amount.quantize(Decimal(".01"))
 
     def description(self):
-        return "{:.6f} {}".format(self.quantity, self.asset_name)
+        """
+        A description suitable for form 8949.
+
+        For example, .06 BTC to USD
+        """
+        return "{:.6f} {} {}".format(self.quantity, self.asset_name, "to USD" if not self.secondary_asset else "to {}".format(self.secondary_asset))
 
     def __repr__(self):
-        return "<Sold {} {} on {date} for ${}. Exchange: {exchange}. Profit:${profit}.{longterm}>".format(
+        return "<Sold {} {} on {date} for ${}. Exchange: {exchange}. Profit:${profit}.{longterm}\n\t{trigger}>".format(
             self.quantity,
             self.asset_name,
             self.proceeds,
@@ -137,6 +145,7 @@ class CostBasisReport(yabc.Base):
             exchange=self.triggering_transaction.source
             if self.triggering_transaction
             else "Unknown",
+            trigger=self.triggering_transaction
         )
 
     def fields(self):
