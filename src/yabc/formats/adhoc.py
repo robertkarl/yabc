@@ -10,20 +10,20 @@ from yabc import transaction
 from yabc.formats import FORMAT_CLASSES
 from yabc.formats import Format
 
-TRANSACTION_TYPE_HEADER = "Type"
-SUBTOTAL_HEADER = "DollarValue"
-RECEIVED_CURRENCY = "ReceivedCurrency"
-RECEIVED_AMOUNT = "ReceivedAmount"
+_TRANSACTION_TYPE_HEADER = "Type"
+_SUBTOTAL_HEADER = "DollarValue"
+_RECEIVED_CURRENCY = "ReceivedCurrency"
+_RECEIVED_AMOUNT = "ReceivedAmount"
 _FEE = "Fee"
 _FEE_COIN = "FeeCurrency"
 field_names = [
     "Coin",
     "Amount",
     "Timestamp",
-    TRANSACTION_TYPE_HEADER,
-    SUBTOTAL_HEADER,
-    RECEIVED_CURRENCY,
-    RECEIVED_AMOUNT,
+    _TRANSACTION_TYPE_HEADER,
+    _SUBTOTAL_HEADER,
+    _RECEIVED_CURRENCY,
+    _RECEIVED_AMOUNT,
     _FEE,
     _FEE_COIN,
 ]
@@ -98,15 +98,15 @@ class AdhocParser(Format):
 
         op = None
         for t in SUPPORTED:
-            if curr[TRANSACTION_TYPE_HEADER].upper() == t.value.upper():
+            if curr[_TRANSACTION_TYPE_HEADER].upper() == t.value.upper():
                 op = t
         if not op:
             op = transaction.Transaction.Operation.NOOP
         trans_date = delorean.parse(curr["Timestamp"], dayfirst=False).datetime
 
         usd_subtotal_str = (
-            curr[SUBTOTAL_HEADER].strip("$").replace(",", "")
-            if curr[SUBTOTAL_HEADER]
+            curr[_SUBTOTAL_HEADER].strip("$").replace(",", "")
+            if curr[_SUBTOTAL_HEADER]
             else "0"
         )
         usd_amount = decimal.Decimal(usd_subtotal_str)
@@ -142,11 +142,11 @@ class AdhocParser(Format):
 
 
 def _make_adhoc_sell(date, crypto_amount, curr):
-    if curr[RECEIVED_CURRENCY]:
+    if curr[_RECEIVED_CURRENCY]:
         fee = 0
         fee_coin = 0
-        rcvd_coin = curr[RECEIVED_CURRENCY]
-        rcvd_amount = curr[RECEIVED_AMOUNT]
+        rcvd_coin = curr[_RECEIVED_CURRENCY]
+        rcvd_amount = curr[_RECEIVED_AMOUNT]
         if not rcvd_amount or not rcvd_coin:
             raise RuntimeError(
                 "Invalid row, need currency and amount if either is specified {}".format(
