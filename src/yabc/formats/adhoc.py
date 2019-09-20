@@ -14,7 +14,19 @@ TRANSACTION_TYPE_HEADER = "Type"
 SUBTOTAL_HEADER = "DollarValue"
 RECEIVED_CURRENCY = "ReceivedCurrency"
 RECEIVED_AMOUNT = "ReceivedAmount"
-field_names = ["Coin", "Amount", "Timestamp", TRANSACTION_TYPE_HEADER, SUBTOTAL_HEADER, RECEIVED_CURRENCY, RECEIVED_AMOUNT]
+_FEE = "Fee"
+_FEE_COIN = "FeeCurrency"
+field_names = [
+    "Coin",
+    "Amount",
+    "Timestamp",
+    TRANSACTION_TYPE_HEADER,
+    SUBTOTAL_HEADER,
+    RECEIVED_CURRENCY,
+    RECEIVED_AMOUNT,
+    _FEE,
+    _FEE_COIN,
+]
 
 
 SUPPORTED = [
@@ -125,17 +137,35 @@ class AdhocParser(Format):
             trans = _make_adhoc_sell(trans_date, crypto_amount, curr)
         return trans
 
-
     def __iter__(self):
         return self
 
+
 def _make_adhoc_sell(date, crypto_amount, curr):
     if curr[RECEIVED_CURRENCY]:
+        fee = 0
+        fee_coin = 0
         rcvd_coin = curr[RECEIVED_CURRENCY]
         rcvd_amount = curr[RECEIVED_AMOUNT]
         if not rcvd_amount or not rcvd_coin:
-            raise RuntimeError("Invalid row, need currency and amount if either is specified {}".format(curr))
-        return transaction.Transaction(transaction.Operation.SELL, symbol_received=rcvd_coin, quantity_received=decimal.Decimal(rcvd_amount), symbol_traded=curr["Coin"], quantity_traded=crypto_amount, date=date)
+            raise RuntimeError(
+                "Invalid row, need currency and amount if either is specified {}".format(
+                    curr
+                )
+            )
+        if curr[_FEE]:
+            fee = decimal.Decimal(curr[_FEE])
+            fee_coin = curr[_FEE_COIN]
+        return transaction.Transaction(
+            transaction.Operation.SELL,
+            symbol_received=rcvd_coin,
+            quantity_received=decimal.Decimal(rcvd_amount),
+            symbol_traded=curr["Coin"],
+            quantity_traded=crypto_amount,
+            date=date,
+            fees=fee,
+            fee_symbol=fee_coin,
+        )
 
 
 FORMAT_CLASSES.append(AdhocParser)

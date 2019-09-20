@@ -103,4 +103,4 @@ class CoinPool:
             elif self.method == PoolMethod.FIFO:
                 _handle_add_fifo(coin_list, item)
         for symbol, index in diff.to_remove:
-            self._coins[symbol] = self._coins[symbol][index + 1:]
+            self._coins[symbol] = self._coins[symbol][index + 1 :]

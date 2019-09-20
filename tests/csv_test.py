@@ -1,11 +1,11 @@
 """
 Test that we can parse data from various CSV sources.
 """
+import datetime
 import decimal
 import glob
 import os
 import unittest
-import datetime
 
 from yabc import transaction
 from yabc.formats import adhoc
@@ -28,15 +28,17 @@ class CsvTest(unittest.TestCase):
         with open("testdata/adhoc.csv") as f:
             stuff = list(adhoc.AdhocParser(f))
             rcvd, sent, mining, spending, sell = stuff
-            sell = sell # type: transaction.Transaction
+            sell = sell  # type: transaction.Transaction
             self.assertEqual(len(stuff), 5)
             self.assertEqual(rcvd.operation, transaction.Operation.GIFT_RECEIVED)
             self.assertEqual(sent.operation, transaction.Operation.GIFT_SENT)
             self.assertEqual(mining.operation, transaction.Operation.MINING)
             self.assertEqual(spending.operation, transaction.Operation.SPENDING)
             self.assertEqual(sell.operation, transaction.Operation.SELL)
-            self.assertEqual(sell.symbol_traded, 'BTC')
+            self.assertEqual(sell.symbol_traded, "BTC")
             self.assertEqual(sell.quantity_received, 10000)
-            self.assertEqual(sell.symbol_received, 'ETH')
-            self.assertEqual(sell.quantity_traded, decimal.Decimal('.33'))
-            self.assertEqual(sell.date, datetime.datetime(2018, 5, 1)) # May 1
+            self.assertEqual(sell.symbol_received, "ETH")
+            self.assertEqual(sell.quantity_traded, decimal.Decimal(".33"))
+            self.assertEqual(sell.date, datetime.datetime(2018, 5, 1))  # May 1
+            self.assertEqual(sell.fees, 10)
+            self.assertEqual(sell.fee_symbol, "BTC")

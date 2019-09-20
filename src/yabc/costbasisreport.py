@@ -55,7 +55,7 @@ class CostBasisReport(yabc.Base):
     adjustment = Column(PreciseDecimalString)
     long_term = Column(Boolean)
     user_id = Column(sqlalchemy.Integer, ForeignKey("user.id"))
-    secondary_asset = Column(sqlalchemy.String) # Needed for coin/coin trades.
+    secondary_asset = Column(sqlalchemy.String)  # Needed for coin/coin trades.
 
     @staticmethod
     def make_random_report():
@@ -80,7 +80,7 @@ class CostBasisReport(yabc.Base):
         asset,
         adjustment=Decimal(0),
         triggering_transaction=None,
-        secondary_asset=None
+        secondary_asset=None,
     ):
         # type: (int, decimal.Decimal, decimal.Decimal, datetime.datetime, decimal.Decimal, datetime.datetime, str, decimal.Decimal, transaction.Transaction) -> None
         """
@@ -132,7 +132,13 @@ class CostBasisReport(yabc.Base):
 
         For example, .06 BTC to USD
         """
-        return "{:.6f} {} {}".format(self.quantity, self.asset_name, "to USD" if not self.secondary_asset else "to {}".format(self.secondary_asset))
+        return "{:.6f} {} {}".format(
+            self.quantity,
+            self.asset_name,
+            "to USD"
+            if not self.secondary_asset
+            else "to {}".format(self.secondary_asset),
+        )
 
     def __repr__(self):
         return "<Sold {} {} on {date} for ${}. Exchange: {exchange}. Profit:${profit}.{longterm}\n\t{trigger}>".format(
@@ -145,7 +151,7 @@ class CostBasisReport(yabc.Base):
             exchange=self.triggering_transaction.source
             if self.triggering_transaction
             else "Unknown",
-            trigger=self.triggering_transaction
+            trigger=self.triggering_transaction,
         )
 
     def fields(self):
