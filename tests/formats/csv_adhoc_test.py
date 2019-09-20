@@ -16,7 +16,7 @@ from yabc.transaction import Operation
 class CsvAdhocTest(unittest.TestCase):
     def test_load_gifts_mining(self):
         lists_per_row = [
-            adhoc.field_names,
+            adhoc._FIELD_NAMES,
             ["BTC", "3.1", "2019/5/6", "Mining"],
             ["BTC", "0.1", "2019/5/18", "GiftReceived"],
             ["BTC", "0.1", "2019/5/11", "GiftSent"],

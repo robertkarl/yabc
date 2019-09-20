@@ -14,22 +14,23 @@ _TRANSACTION_TYPE_HEADER = "Type"
 _SUBTOTAL_HEADER = "DollarValue"
 _RECEIVED_CURRENCY = "ReceivedCurrency"
 _RECEIVED_AMOUNT = "ReceivedAmount"
+_TRADED_CURRENCY = "TradedCurrency"
+_TRADED_AMOUNT = "TradedAmount"
 _FEE = "Fee"
 _FEE_COIN = "FeeCurrency"
-field_names = [
-    "Coin",
-    "Amount",
-    "Timestamp",
-    _TRANSACTION_TYPE_HEADER,
-    _SUBTOTAL_HEADER,
+_FIELD_NAMES = [
     _RECEIVED_CURRENCY,
     _RECEIVED_AMOUNT,
+    "Timestamp",
+    _TRANSACTION_TYPE_HEADER,
+    _TRADED_CURRENCY,
+    _TRADED_AMOUNT,
     _FEE,
     _FEE_COIN,
 ]
 
 
-SUPPORTED = [
+_SUPPORTED = [
     transaction.Transaction.Operation.GIFT_RECEIVED,
     transaction.Transaction.Operation.GIFT_SENT,
     transaction.Transaction.Operation.MINING,
@@ -48,7 +49,7 @@ class AdhocParser(Format):
     EXCHANGE_NAME = "adhoc transactions"
 
     def validate_headers(self, curr):
-        for header_name in field_names:
+        for header_name in _FIELD_NAMES:
             if header_name not in curr:
                 raise RuntimeError(
                     "Incorrectly formatted adhoc file {}, missing header key {}".format(
@@ -58,7 +59,6 @@ class AdhocParser(Format):
 
     def __init__(self, csv_file):
         """
-
         :param csv_file: can be a list of rows, each containing a string, or an
         open file-like object.
         """
@@ -88,7 +88,7 @@ class AdhocParser(Format):
         curr = next(self.reader)
         if not curr:
             raise StopIteration
-        for header_name in field_names:
+        for header_name in _FIELD_NAMES:
             if header_name not in curr:
                 raise RuntimeError(
                     "Incorrectly formatted adhoc file {}, missing header key {}".format(
@@ -97,7 +97,7 @@ class AdhocParser(Format):
                 )
 
         op = None
-        for t in SUPPORTED:
+        for t in _SUPPORTED:
             if curr[_TRANSACTION_TYPE_HEADER].upper() == t.value.upper():
                 op = t
         if not op:
@@ -111,10 +111,7 @@ class AdhocParser(Format):
         )
         usd_amount = decimal.Decimal(usd_subtotal_str)
         crypto_amount = decimal.Decimal(curr["Amount"])
-        if (
-            op == transaction.Operation.GIFT_RECEIVED
-            or op == transaction.Operation.MINING
-        ):
+        if op in {transaction.Operation.GIFT_RECEIVED, transaction.Operation.MINING}:
             trans = transaction.Transaction(
                 operation=op,
                 quantity_received=crypto_amount,
@@ -127,8 +124,8 @@ class AdhocParser(Format):
         elif op in {transaction.Operation.SPENDING, transaction.Operation.GIFT_SENT}:
             trans = transaction.Transaction(
                 operation=op,
-                quantity_received=usd_amount,
-                symbol_received="USD",
+                quantity_received=decimal.Decimal(curr[_RECEIVED_AMOUNT]),
+                symbol_received=curr[_RECEIVED_CURRENCY],
                 symbol_traded=curr["Coin"],
                 quantity_traded=crypto_amount,
                 date=trans_date,
