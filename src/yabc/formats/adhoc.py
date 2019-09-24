@@ -91,20 +91,12 @@ class AdhocParser(Format):
         curr = next(self.reader)
         if not curr:
             raise StopIteration
-        for header_name in _FIELD_NAMES:
-            if header_name not in curr:
-                raise RuntimeError(
-                    "Incorrectly formatted adhoc file {}, missing header key {}".format(
-                        self._file, header_name
-                    )
-                )
-
         op = None
         for t in _SUPPORTED:
             if curr[_TRANSACTION_TYPE_HEADER].upper() == t.value.upper():
                 op = t
         if not op:
-            op = transaction.Transaction.Operation.NOOP
+            return transaction.Transaction(operation=transaction.Operation.NOOP)
         trans_date = delorean.parse(curr[_TIMESTAMP_HEADER], dayfirst=False).datetime
 
         if op == transaction.Operation.MINING:
@@ -119,7 +111,9 @@ class AdhocParser(Format):
             return _make_adhoc_sell(trans_date, curr)
         elif op == transaction.Operation.BUY:
             return _handle_buy(trans_date, curr)
-        return transaction.Transaction(operation=transaction.Operation.NOOP)
+        else:
+            # Should be unreachable as we checked if we did not match above.
+            assert False
 
     def __iter__(self):
         return self

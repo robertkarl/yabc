@@ -10,7 +10,7 @@ import unittest
 from yabc.formats import coinbase
 
 
-class CsvTest(unittest.TestCase):
+class CoinbaseCsvTest(unittest.TestCase):
     def setUp(self) -> None:
         self.filenames = glob.glob("testdata/*coinbase*.csv")
 
