@@ -2,5 +2,5 @@ ReceivedCurrency,ReceivedAmount,Timestamp,Type,TradedCurrency,TradedAmount,FeeCu
 BTC,3,2018/3/4,GiftReceived,USD,750
 ,,2018/3/6 7:57PM,GiftSent,BTC,1
 BTC,0.25,2018/4/1,Mining
-BTC,0.33,2018/5/1,Spending,USD,1000
+USD, 1000,2018/5/1,Spending,BTC,.33,USD,15
 BTC,0.33,2018/5/22,Sell,ETH,10000,BTC,.001

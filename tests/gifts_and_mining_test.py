@@ -1,6 +1,9 @@
 """
 Test that we can parse and consume data from various non-trading txs in our own adhoc format.
 """
+#  Copyright (c) 2019. Seattle Blockchain Solutions. All rights reserved.
+#  Licensed under the MIT License. See LICENSE in the project root for license information.
+
 import datetime
 import unittest
 from decimal import Decimal
@@ -12,7 +15,7 @@ from yabc.basis import BasisProcessor
 from yabc.transaction import Operation
 
 
-class CsvAdhocTest(unittest.TestCase):
+class GiftsAndMiningTest(unittest.TestCase):
     def setUp(self) -> None:
         self.start = datetime.datetime.now()
         self.one_day = datetime.timedelta(1)
@@ -34,7 +37,6 @@ class CsvAdhocTest(unittest.TestCase):
         reports = BasisProcessor(
             coinpool.PoolMethod.FIFO, [purchase, gift_given, sale]
         ).process()
-        print(reports)
         self.assertEqual(len(reports), 1)
         sale_report = reports[0]
         self.assertEqual(sale_report.gain_or_loss, Decimal("1"))

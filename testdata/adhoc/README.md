@@ -4,7 +4,7 @@ Dates should be in YYYY/MM/DD format.
 
 ## File format
 Adhoc transactions are defined in a CSV file. You can start with a copy of [this one](./adhoc.csv)
-It is recommended that the CSV file is edited with a program like excel or google sheets before use with yabc or [CostBasis.Report](https://costbasis.report).
+It is recommended that the CSV file is edited with a program like Excel or Google Sheets before use with yabc or [CostBasis.Report](https://costbasis.report).
 
 ## Number formatting
 All values should be positive in your adhoc transaction sheet.
@@ -15,7 +15,8 @@ Use US-style formatting, with a period `.` for delineating dollars and cents: $1
 ## Supported types:
 1) Mining
     - for mining, the TradedCurrency and TradedAmount fields should be blank
-2) Sell or Buy
+2) Trading 
+    - This can be selling coins to receive USD, buying crypto with dollars, or trading crypto for crypto.
     - For a coin/coin trade, for example trading ether for bitcoin, use a sell.
 3) Spending
     - ReceivedCurrency and ReceivedAmount can optionally hold the USD value of the purchased goods.

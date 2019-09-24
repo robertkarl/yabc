@@ -118,7 +118,7 @@ class TransactionTest(unittest.TestCase):
         """ Test modifying SQL db via ORM.
         """
         trans = self.sample_buy
-        engine = sqlalchemy.create_engine("sqlite:///:memory:", echo=True)
+        engine = sqlalchemy.create_engine("sqlite:///:memory:")
         Session = sessionmaker(bind=engine)
         session = Session()
         Base.metadata.create_all(engine)
