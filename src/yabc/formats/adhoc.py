@@ -38,6 +38,7 @@ _SUPPORTED = [
     transaction.Transaction.Operation.MINING,
     transaction.Transaction.Operation.SPENDING,
     transaction.Transaction.Operation.SELL,
+    transaction.Transaction.Operation.BUY,
 ]
 
 
@@ -116,6 +117,8 @@ class AdhocParser(Format):
             return _handle_gift_sent(trans_date, curr)
         elif op == transaction.Operation.SELL:
             return _make_adhoc_sell(trans_date, curr)
+        elif op == transaction.Operation.BUY:
+            return _handle_buy(trans_date, curr)
         return transaction.Transaction(operation=transaction.Operation.NOOP)
 
     def __iter__(self):
@@ -156,6 +159,25 @@ def _handle_spending(date, curr):
         symbol_received="USD",
         fees=fees,
         fee_symbol=fee_coin,
+    )
+
+
+def _handle_buy(date, curr):
+    # type: (datetime.datetime, dict) -> transaction.Transaction
+    fees = 0
+    feecoin = "USD"
+    if curr[_FEE]:
+        fees = curr[_FEE]
+        feecoin = curr[_FEE_COIN]
+    return transaction.Transaction(
+        transaction.Operation.BUY,
+        date=date,
+        symbol_traded="USD",
+        quantity_traded=curr[_TRADED_AMOUNT],
+        symbol_received=curr[_RECEIVED_CURRENCY],
+        quantity_received=curr[_RECEIVED_AMOUNT],
+        fees=fees,
+        fee_symbol=feecoin,
     )
 
 

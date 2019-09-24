@@ -1,5 +1,5 @@
 """
-Test that we can parse data from various CSV sources.
+Load and check for adhoc format.
 """
 #  Copyright (c) 2019. Seattle Blockchain Solutions. All rights reserved.
 #  Licensed under the MIT License. See LICENSE in the project root for license information.
@@ -63,3 +63,12 @@ class AdhocCsvTest(unittest.TestCase):
             self.assertEqual(sell.quantity_traded, 10000)
             self.assertEqual(sell.fees, decimal.Decimal(".001"))
             self.assertEqual(sell.fee_symbol, "BTC")
+
+            buy = stuff[5]
+            self.assertEqual(buy.operation, transaction.Operation.BUY)
+            self.assertEqual(buy.quantity_received, 15)
+            self.assertEqual(buy.symbol_received, "BTC")
+            self.assertEqual(buy.quantity_traded, 12345)
+            self.assertEqual(buy.symbol_traded, "USD")
+            self.assertEqual(buy.fees, 10)
+            self.assertEqual(buy.fee_symbol, "USD")

@@ -39,9 +39,11 @@ def make_sale(
     symbol="BTC",
 ):
     """
-    Convenience method for creating valid transaction objects; used in tests only.
+    Without any parameters passed, creates a 1 BTC sell for 10,000 USD in 2015.
 
-    Without any parameters passed, creates a 1 BTC buy for 10,000 USD in 2015. Not a great deal then.
+    A sweet trade then.
+
+    Used in tests only.
     """
     return Transaction(
         operation=yabc.transaction.Operation.SELL,
@@ -72,4 +74,3 @@ def make_transaction(
         return make_sale(quantity, fees, subtotal, date, asset_name)
     else:
         raise RuntimeError("Make a Transaction object please")
-        assert False
