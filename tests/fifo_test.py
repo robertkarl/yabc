@@ -55,5 +55,4 @@ class FifoTest(unittest.TestCase):
         ).process()
         self.assertEqual(len(reports), 2)
         for i in reports:
-            print(i)
             self.assertEqual(i.gain_or_loss, 0)
