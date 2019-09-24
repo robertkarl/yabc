@@ -1,7 +1,9 @@
 """
-Adhoc transactions include mining, spending, and gifts.
+Adhoc transactions - yabc's proprietary format for specifying trades, mining,
+espending, and gifts.
 """
 import csv
+import datetime
 import decimal
 
 import delorean
@@ -11,24 +13,24 @@ from yabc.formats import FORMAT_CLASSES
 from yabc.formats import Format
 
 _TRANSACTION_TYPE_HEADER = "Type"
-_SUBTOTAL_HEADER = "DollarValue"
 _RECEIVED_CURRENCY = "ReceivedCurrency"
+_TIMESTAMP_HEADER = "Timestamp"
 _RECEIVED_AMOUNT = "ReceivedAmount"
 _TRADED_CURRENCY = "TradedCurrency"
 _TRADED_AMOUNT = "TradedAmount"
 _FEE = "Fee"
 _FEE_COIN = "FeeCurrency"
+
 _FIELD_NAMES = [
     _RECEIVED_CURRENCY,
     _RECEIVED_AMOUNT,
-    "Timestamp",
+    _TIMESTAMP_HEADER,
     _TRANSACTION_TYPE_HEADER,
     _TRADED_CURRENCY,
     _TRADED_AMOUNT,
     _FEE,
     _FEE_COIN,
 ]
-
 
 _SUPPORTED = [
     transaction.Transaction.Operation.GIFT_RECEIVED,
@@ -104,38 +106,63 @@ class AdhocParser(Format):
             op = transaction.Transaction.Operation.NOOP
         trans_date = delorean.parse(curr["Timestamp"], dayfirst=False).datetime
 
-        usd_subtotal_str = (
-            curr[_SUBTOTAL_HEADER].strip("$").replace(",", "")
-            if curr[_SUBTOTAL_HEADER]
-            else "0"
-        )
-        usd_amount = decimal.Decimal(usd_subtotal_str)
         crypto_amount = decimal.Decimal(curr["Amount"])
-        if op in {transaction.Operation.GIFT_RECEIVED, transaction.Operation.MINING}:
-            trans = transaction.Transaction(
-                operation=op,
-                quantity_received=crypto_amount,
-                symbol_received=curr["Coin"],
-                fees=decimal.Decimal(0),
-                symbol_traded="USD",
-                quantity_traded=usd_amount,  # TODO: for mining we need to look up the value on the date mined.
-                date=trans_date,
-            )
-        elif op in {transaction.Operation.SPENDING, transaction.Operation.GIFT_SENT}:
-            trans = transaction.Transaction(
-                operation=op,
-                quantity_received=decimal.Decimal(curr[_RECEIVED_AMOUNT]),
-                symbol_received=curr[_RECEIVED_CURRENCY],
-                symbol_traded=curr["Coin"],
-                quantity_traded=crypto_amount,
-                date=trans_date,
-            )
+        if op == transaction.Operation.MINING:
+            return _handle_mining(trans_date, op, curr)
+        elif op == transaction.Operation.GIFT_RECEIVED:
+            return _handle_gift_received(trans_date, curr)
+        elif op == transaction.Operation.SPENDING:
+            return _handle_spending(trans_date, curr)
+        elif op == transaction.Operation.GIFT_SENT:
+            return _handle_gift_sent(trans_date, curr)
         elif op == transaction.Operation.SELL:
             trans = _make_adhoc_sell(trans_date, crypto_amount, curr)
-        return trans
+        return None
 
     def __iter__(self):
         return self
+
+
+def _read_usd_value(usd_str):
+    # type: (str) -> decimal.Decimal
+    """
+    Accept $10,000 or 10000
+    """
+    usd_str = usd_str.lstrip("$")
+    usd_str = usd_str.replace(",", "")
+    return decimal.Decimal(usd_str)
+
+
+def _handle_spending(date, curr):
+    # type: (datetime.datetime, dict) -> transaction.Transaction
+    return transaction.Transaction(
+        transaction.Operation.SPENDING,
+        date=date,
+        symbol_traded=curr[_TRADED_CURRENCY],
+        quantity_traded=decimal.Decimal(curr[_TRADED_AMOUNT]),
+    )
+
+
+def _handle_gift_received(date, curr):
+    pass
+
+
+def _handle_gift_sent(date, curr):
+    pass
+
+
+def _handle_mining(date, operation, curr):
+    # type: (datetime.datetime, transaction.Operation, dict) -> transaction.Transaction
+    trans = transaction.Transaction(
+        operation=op,
+        quantity_received=crypto_amount,
+        symbol_received=curr["Coin"],
+        fees=decimal.Decimal(0),
+        symbol_traded="USD",
+        quantity_traded=usd_amount,  # TODO: for mining we need to look up the value on the date mined.
+        date=trans_date,
+    )
+    return None
 
 
 def _make_adhoc_sell(date, crypto_amount, curr):

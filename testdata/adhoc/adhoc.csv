@@ -1,5 +1,5 @@
 ReceivedCurrency,ReceivedAmount,Timestamp,Type,TradedCurrency,TradedAmount,Fee,FeeCurrency
-BTC,3,2018/3/4,GiftReceived
+BTC,3,2018/3/4,GiftReceived,750,USD
 BTC,0.1,2018/3/6 7:57PM,GiftSent
 BTC,0.25,2018/4/1,Mining
 BTC,0.33,2018/5/1,Spending,USD,1000

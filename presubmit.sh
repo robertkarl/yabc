@@ -4,9 +4,14 @@
 # src.  black for code formatting, isort for import sorting and autoflake to
 # catch unused imports.
 
-set -e
 DIRS="src/ tests/ utils/ setup.py"
-PYTHONPATH=tests python setup.py test
+set -e
+
+if [ "$1" != '--skip-tests' ]
+then 
+  PYTHONPATH=tests python setup.py test
+fi
+
 autoflake -r -i --remove-all-unused-imports $DIRS
 isort -rc $DIRS --skip src/yabc/__init__.py
 black $DIRS

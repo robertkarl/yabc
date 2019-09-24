@@ -6,6 +6,7 @@ import decimal
 import glob
 import os
 import unittest
+from typing import Sequence
 
 from yabc import transaction
 from yabc.formats import adhoc
@@ -26,9 +27,11 @@ class CsvTest(unittest.TestCase):
         """ Test wholesale load of gemini data from CSV"""
         print(os.environ)
         with open("testdata/adhoc.csv") as f:
-            stuff = list(adhoc.AdhocParser(f))
+            stuff = list(
+                adhoc.AdhocParser(f)
+            )  # type: Sequence[transaction.Transaction]
             rcvd, sent, mining, spending, sell = stuff
-            sell = sell  # type: transaction.Transaction
+            sell = sell
             self.assertEqual(len(stuff), 5)
             self.assertEqual(rcvd.operation, transaction.Operation.GIFT_RECEIVED)
             self.assertEqual(sent.operation, transaction.Operation.GIFT_SENT)
