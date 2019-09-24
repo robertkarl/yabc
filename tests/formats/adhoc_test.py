@@ -21,36 +21,38 @@ class AdhocCsvTest(unittest.TestCase):
                 adhoc.AdhocParser(f)
             )  # type: Sequence[transaction.Transaction]
             gift_received = stuff[0]
-            self.assertEqual(gift_received.operation, transaction.Operation.GIFT_RECEIVED)
+            self.assertEqual(
+                gift_received.operation, transaction.Operation.GIFT_RECEIVED
+            )
             self.assertEqual(gift_received.date, datetime.datetime(2018, 3, 4))
             self.assertEqual(gift_received.quantity_received, 3)
-            self.assertEqual(gift_received.symbol_received, 'BTC')
+            self.assertEqual(gift_received.symbol_received, "BTC")
             self.assertEqual(gift_received.quantity_traded, 750)
-            self.assertEqual(gift_received.symbol_traded, 'USD')
+            self.assertEqual(gift_received.symbol_traded, "USD")
 
             gift_sent = stuff[1]
-            self.assertEqual(gift_sent.date, datetime.datetime(2018,3,6,19,57))
+            self.assertEqual(gift_sent.date, datetime.datetime(2018, 3, 6, 19, 57))
             self.assertEqual(gift_sent.operation, transaction.Operation.GIFT_SENT)
             self.assertEqual(gift_sent.quantity_traded, 1)
-            self.assertEqual(gift_sent.symbol_traded, 'BTC')
-            self.assertEqual(gift_sent.symbol_received, 'USD')
+            self.assertEqual(gift_sent.symbol_traded, "BTC")
+            self.assertEqual(gift_sent.symbol_received, "USD")
             self.assertEqual(gift_sent.quantity_received, 0)
 
             mining = stuff[2]
             self.assertEqual(mining.operation, transaction.Operation.MINING)
             self.assertEqual(mining.fees, 0)
-            self.assertEqual(mining.quantity_received, decimal.Decimal('0.25'))
-            self.assertEqual(mining.symbol_received, 'BTC')
+            self.assertEqual(mining.quantity_received, decimal.Decimal("0.25"))
+            self.assertEqual(mining.symbol_received, "BTC")
 
             spending = stuff[3]
             self.assertEqual(spending.operation, transaction.Operation.SPENDING)
-            self.assertEqual(spending.symbol_received, 'USD')
-            self.assertEqual(spending.symbol_traded, 'BTC')
+            self.assertEqual(spending.symbol_received, "USD")
+            self.assertEqual(spending.symbol_traded, "BTC")
             self.assertEqual(spending.quantity_received, 1000)
-            self.assertEqual(spending.quantity_traded,decimal.Decimal('.33'))
+            self.assertEqual(spending.quantity_traded, decimal.Decimal(".33"))
             self.assertEqual(spending.date, datetime.datetime(2018, 5, 1))
             self.assertEqual(spending.fees, 15)
-            self.assertEqual(spending.fee_symbol, 'USD')
+            self.assertEqual(spending.fee_symbol, "USD")
 
             sell = stuff[4]
             self.assertEqual(sell.operation, transaction.Operation.SELL)
