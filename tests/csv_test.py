@@ -26,7 +26,7 @@ class CsvTest(unittest.TestCase):
     def test_load_adhoc_csv(self):
         """ Test wholesale load of gemini data from CSV"""
         print(os.environ)
-        with open("testdata/adhoc.csv") as f:
+        with open("testdata/adhoc/adhoc.csv") as f:
             stuff = list(
                 adhoc.AdhocParser(f)
             )  # type: Sequence[transaction.Transaction]
@@ -38,10 +38,10 @@ class CsvTest(unittest.TestCase):
             self.assertEqual(mining.operation, transaction.Operation.MINING)
             self.assertEqual(spending.operation, transaction.Operation.SPENDING)
             self.assertEqual(sell.operation, transaction.Operation.SELL)
-            self.assertEqual(sell.symbol_traded, "BTC")
-            self.assertEqual(sell.quantity_received, 10000)
-            self.assertEqual(sell.symbol_received, "ETH")
-            self.assertEqual(sell.quantity_traded, decimal.Decimal(".33"))
-            self.assertEqual(sell.date, datetime.datetime(2018, 5, 1))  # May 1
-            self.assertEqual(sell.fees, 10)
+            self.assertEqual(sell.symbol_received, "BTC")
+            self.assertEqual(sell.quantity_received, decimal.Decimal(".33"))
+            self.assertEqual(sell.symbol_traded, "ETH")
+            self.assertEqual(sell.quantity_traded, 10000)
+            self.assertEqual(sell.date, datetime.datetime(2018, 5, 22))
+            self.assertEqual(sell.fees, decimal.Decimal(".001"))
             self.assertEqual(sell.fee_symbol, "BTC")
