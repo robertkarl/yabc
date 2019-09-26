@@ -13,5 +13,5 @@ then
 fi
 
 autoflake -r -i --remove-all-unused-imports $DIRS
-isort -rc $DIRS --skip src/yabc/__init__.py
+isort -rc $DIRS
 black $DIRS
