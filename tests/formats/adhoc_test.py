@@ -20,6 +20,8 @@ class AdhocCsvTest(unittest.TestCase):
             stuff = list(
                 adhoc.AdhocParser(f)
             )  # type: Sequence[transaction.Transaction]
+            for tx in stuff:
+                self.assertEqual(tx.source, "adhoc")
             gift_received = stuff[0]
             self.assertEqual(
                 gift_received.operation, transaction.Operation.GIFT_RECEIVED

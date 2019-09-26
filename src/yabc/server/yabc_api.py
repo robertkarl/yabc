@@ -114,6 +114,20 @@ def taxdocs():
     return backend.import_transaction_document(userid, submitted_file)
 
 
+@yabc_api.route("/yabc/v1/transactions/by-exchange/<exchange_name>", methods=["DELETE"])
+@check_authorized
+def delete_by_exchange(exchange_name):
+    userid = get_userid()
+    try:
+        sql_backend.get_db().tx_delete_by_exchange(userid, exchange_name)
+        sql_backend.close_db()
+    except RuntimeError:
+        return flask.make_response(("Failed to delete.", 500))
+    return flask.jsonify(
+        {"result": "Deleted transactions for exchange {}".format(exchange_name)}
+    )
+
+
 @yabc_api.route("/yabc/v1/transactions/<txid>", methods=["DELETE"])
 @check_authorized
 def transaction_update(txid):
