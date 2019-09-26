@@ -47,7 +47,6 @@ def _split_coin_to_add(coin_to_split, amount, trans):
         quantity_traded=cost,
         date=coin_to_split.date,
     )
-    assert to_add.quantity_received > 0
     return to_add
 
 

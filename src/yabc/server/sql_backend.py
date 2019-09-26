@@ -135,6 +135,17 @@ class SqlBackend:
         self.session.commit()
         self.run_basis(userid)
 
+    def tx_delete_by_exchange(self, userid, exchange):
+        """
+        Deletes CBRs and re-runs basis.
+        """
+        self.session.query(transaction.Transaction).filter_by(
+            user_id=userid, source=exchange
+        ).delete()
+        self.session.query(CostBasisReport).filter_by(user_id=userid).delete()
+        self.session.commit()
+        self.run_basis(userid)
+
     def transactions_clear_all(self, userid):
         """
         Clear all transactions and re-run basis.
@@ -336,7 +347,7 @@ class SqlBackend:
         return reports
 
     def download_8949(self, userid, taxyear):
-        assert isinstance(taxyear, int)
+        # type: (int, int) -> io.BytesIO
         reports = self.reports_in_taxyear(userid, taxyear)
         of = basis.reports_to_csv(reports)
         mem = io.BytesIO()
