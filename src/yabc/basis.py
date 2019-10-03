@@ -51,7 +51,7 @@ def _split_coin_to_add(coin_to_split, amount, trans):
 
 
 def _split_report(coin_to_split, amount, trans):
-    # type:  (transaction.Transaction, Decimal, transaction.Transaction) -> transaction.Transaction
+    # type:  (transaction.Transaction, Decimal, transaction.Transaction) -> CostBasisReport
     """
     The cost basis logic. Note that all fees on buy and sell sides are
     subtracted from the taxable result.
@@ -64,7 +64,6 @@ def _split_report(coin_to_split, amount, trans):
     :param amount: quantity of the split asset that needs to be sold in this
                    report (not the USD).
     :param trans: the transaction triggering this report, a SELL or SPENDING
-    :return: a transaction of type Split
     """
     assert amount < coin_to_split.quantity_received
     assert not (amount - trans.quantity_received > 1e-5)  # allowed to be equal
@@ -170,6 +169,10 @@ def _build_sale_reports(pool, pool_index, trans, basis_information_absent):
     """
     Use coins from pool to make CostBasisReports.
 
+    :param basis_information_absent: If true, we do not know how much the
+        original coin was purchased for yet. This is either because no previous
+        buy exists, or because `trans` is a coin/coin trade we need to look up
+        the fiat values for.
     :param trans: the tx triggering the reports. It must be a sell of some kind.
     """
     ans = []
