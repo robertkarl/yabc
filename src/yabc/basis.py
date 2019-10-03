@@ -276,13 +276,17 @@ class BasisProcessor:
         self._method = method
         self._txs = txs
         self._reports = []
-        self.pool = []
+        self.pool = None
         self._flags = None
 
     def flags(self):
         if self._flags is None:
             raise RuntimeError("Run basis calculation first")
         return self._flags
+
+    def get_pool(self):
+        # type: () -> coinpool.CoinPool
+        return self.pool
 
     def process(self):
         # type: () -> Sequence[CostBasisReport]

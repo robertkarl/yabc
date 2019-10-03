@@ -7,7 +7,7 @@ from yabc.formats import coinbase
 
 class RunBasisTest(unittest.TestCase):
     def test_multi_asset_reports(self):
-        with open("testdata/multi_asset_coinbase.csv") as f:
+        with open("testdata/coinbase/multi_asset_coinbase.csv") as f:
             stuff = coinbase.from_coinbase(f)
             txs = [coinbase.FromCoinbaseJSON(i) for i in stuff]
             processor = BasisProcessor(coinpool.PoolMethod.LIFO, txs)

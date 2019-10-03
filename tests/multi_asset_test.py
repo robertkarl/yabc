@@ -4,8 +4,7 @@
 import datetime
 import unittest
 
-from transaction_utils import make_buy
-from transaction_utils import make_transaction
+import tests.transaction_utils
 from yabc import basis
 from yabc import coinpool
 from yabc.transaction import Operation
@@ -17,14 +16,14 @@ class MultiAssetTest(unittest.TestCase):
     def setUp(self) -> None:
         self.start = datetime.datetime.now()
         self.one_day = datetime.timedelta(1)
-        self.purchase_bch = make_buy(
+        self.purchase_bch = tests.transaction_utils.make_buy(
             quantity=1,
             fees=0,
             subtotal=100,
             date=self.start - 2 * self.one_day,
             symbol="BCH",
         )
-        self.purchase_btc = make_transaction(
+        self.purchase_btc = tests.transaction_utils.make_transaction(
             Operation.BUY, 1, 0, TEN_K, date=self.start - self.one_day
         )
 
@@ -35,7 +34,7 @@ class MultiAssetTest(unittest.TestCase):
         Make sure that when we sell BTC, we match with a previous BTC buy (and not BCH or something else)
         :return:
         """
-        sell_btc_no_profit = make_transaction(
+        sell_btc_no_profit = tests.transaction_utils.make_transaction(
             Operation.SELL, 1, 0, TEN_K, date=self.start + self.one_day
         )
         # Note that they don't need to be in order.

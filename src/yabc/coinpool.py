@@ -79,6 +79,9 @@ class CoinPool:
         self._coins = defaultdict(list)
         self.method = method
 
+    def known_symbols(self):
+        return self._coins.keys()
+
     def get(self, coin_name):
         """
         Read-only access to the pool of transactions for a given symbol.

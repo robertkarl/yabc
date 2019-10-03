@@ -8,7 +8,7 @@ import datetime
 import unittest
 from decimal import Decimal
 
-from transaction_utils import make_transaction
+from tests.transaction_utils import make_transaction
 from yabc import coinpool
 from yabc import transaction
 from yabc.basis import BasisProcessor

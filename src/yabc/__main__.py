@@ -37,7 +37,10 @@ def main():
     reports = processor.process()
     batch = ReportBatch(reports)
     print(batch.human_readable_report())
-    print("Remaining coins after sales: {}".format(processor.pool))
+    print("Remaining coins after sales:")
+    for symbol in processor.get_pool().known_symbols():
+        for coin in processor.get_pool().get(symbol):
+            print(coin)
 
 
 if __name__ == "__main__":

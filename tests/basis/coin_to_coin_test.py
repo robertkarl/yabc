@@ -3,7 +3,7 @@
 import datetime
 import unittest
 
-from transaction_utils import make_buy
+from tests.transaction_utils import make_buy
 from yabc import basis
 from yabc import coinpool
 from yabc import transaction

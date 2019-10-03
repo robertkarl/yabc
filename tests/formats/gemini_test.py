@@ -43,5 +43,5 @@ class GeminiCsvTest(unittest.TestCase):
         self.assertEqual(btc_sell.usd_subtotal, decimal.Decimal("489.45"))
 
     def test_load_from_other_csv(self):
-        txs = list(gemini.GeminiParser("./testdata/gemini/synthetic_gemini_csv.csv"))
+        txs = list(gemini.GeminiParser("./testdata/gemini/sample_gemini.csv"))
         self.assertEqual(len(txs), 12)
