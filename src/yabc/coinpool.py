@@ -4,6 +4,7 @@ import enum
 from collections import defaultdict
 
 from yabc import transaction
+from typing import Sequence
 
 
 @enum.unique
@@ -83,6 +84,7 @@ class CoinPool:
         return self._coins.keys()
 
     def get(self, coin_name):
+        # type: (str) -> Sequence[transaction.Transaction]
         """
         Read-only access to the pool of transactions for a given symbol.
 

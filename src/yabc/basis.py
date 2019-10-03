@@ -197,9 +197,7 @@ def _build_sale_reports(pool, pool_index, trans, basis_information_absent):
         # through we only use a portion of trans.
 
         # curr_basis_tx is a BUY, GIFT_RECEIVED or a TRADE_INPUT, or another input.
-        curr_basis_tx = pool.get(trans.symbol_traded)[
-            i
-        ]  # type: transaction.Transaction
+        curr_basis_tx = pool.get(trans.symbol_traded)[i]
         portion_of_sale = curr_basis_tx.quantity_received / trans.quantity_traded
         # The seller can inflate their cost basis by the buy fees.
         assert curr_basis_tx.symbol_received == trans.symbol_traded
