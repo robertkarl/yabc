@@ -170,7 +170,9 @@ def _build_sale_reports(pool, pool_index, trans, basis_information_absent):
     Use coins from pool to make CostBasisReports.
 
     :param basis_information_absent: If true, we do not know how much the
-        original coin was sold for.
+        original coin was purchased for yet. This is either because no previous
+        buy exists, or because `trans` is a coin/coin trade we need to look up
+        the fiat values for.
     :param trans: the tx triggering the reports. It must be a sell of some kind.
     """
     ans = []
