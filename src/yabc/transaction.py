@@ -186,7 +186,7 @@ class Transaction(yabc.Base):
         }:
             return False
         if self.operation in {Operation.BUY, Operation.SELL}:
-            return not (is_fiat(self.symbol_traded) and is_fiat(self.symbol_received))
+            return not is_fiat(self.symbol_traded) and not is_fiat(self.symbol_received)
 
     def needs_migrate_away_from_asset_name(self):
         return self.symbol_received == "" and self.symbol_traded == ""
