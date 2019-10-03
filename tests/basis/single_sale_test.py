@@ -2,7 +2,7 @@
 #  Licensed under the MIT License. See LICENSE in the project root for license information.
 import unittest
 
-from transaction_utils import make_sale
+import tests.transaction_utils
 from yabc import basis
 from yabc.coinpool import PoolMethod
 
@@ -14,7 +14,7 @@ class SingleSaleTest(unittest.TestCase):
     """
 
     def test_single_sale(self):
-        txs = [make_sale()]
+        txs = [tests.transaction_utils.make_sale()]
         bp = basis.BasisProcessor(PoolMethod.LIFO, txs)
         reports = bp.process()
         self.assertEqual(len(reports), 1)
