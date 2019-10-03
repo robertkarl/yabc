@@ -4,8 +4,6 @@ import datetime
 import decimal
 from collections import namedtuple
 
-import delorean
-
 OhlcData = namedtuple("OhlcData", ("open", "high", "low", "close"))
 
 jan_1 = datetime.datetime(2017, 1, 1).date()
@@ -31,10 +29,10 @@ class OhlcProvider:
         """
         Return the fiat OHLC prices.
         """
-        if isinstance(dt, (datetime.datetime, delorean.Delorean)):
-            dt = dt.date
+        if isinstance(dt, (datetime.datetime)):
+            dt = dt.date()
         try:
             val = _PRICE_DATA[symbol][dt]
             return val
         except KeyError:
-            return _PRICE_DATA["ETH"][jan_1]
+            raise RuntimeError("No price data found.")

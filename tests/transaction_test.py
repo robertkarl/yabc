@@ -10,10 +10,10 @@ import tests.transaction_utils
 from yabc import Base
 from yabc import basis
 from yabc import coinpool
+from yabc import transaction
 from yabc import user  # noqa
 from yabc.formats import coinbase
 from yabc.transaction import Transaction
-from yabc import transaction
 
 BUY = Transaction.Operation.BUY
 SELL = Transaction.Operation.SELL
@@ -127,23 +127,30 @@ class TransactionTest(unittest.TestCase):
         session.commit()
 
     def test_is_coin_to_coin(self):
-        trans = transaction.Transaction(operation=transaction.Operation.SELL,
-                                        quantity_received=1,
-                                        symbol_received='BTC',
-                                        quantity_traded=1000,
-                                        symbol_traded='ETH')
+        trans = transaction.Transaction(
+            operation=transaction.Operation.SELL,
+            quantity_received=1,
+            symbol_received="BTC",
+            quantity_traded=1000,
+            symbol_traded="ETH",
+        )
         self.assertEqual(trans.is_coin_to_coin(), True)
         self.assertEqual(self.sample_buy.is_coin_to_coin(), False)
-        trans = transaction.Transaction(operation=transaction.Operation.BUY,
-                                        quantity_received=1,
-                                        symbol_received='BTC',
-                                        quantity_traded=1000,
-                                        symbol_traded='ETH')
+        trans = transaction.Transaction(
+            operation=transaction.Operation.BUY,
+            quantity_received=1,
+            symbol_received="BTC",
+            quantity_traded=1000,
+            symbol_traded="ETH",
+        )
         self.assertEqual(trans.is_coin_to_coin(), True)
-        mining = transaction.Transaction(operation=transaction.Operation.MINING,
-                                         quantity_received=1, symbol_received='BTC',
-                                         symbol_traded='USD', quantity_traded=10000)
-
+        mining = transaction.Transaction(
+            operation=transaction.Operation.MINING,
+            quantity_received=1,
+            symbol_received="BTC",
+            symbol_traded="USD",
+            quantity_traded=10000,
+        )
 
         self.assertEqual(mining.is_coin_to_coin(), False)
 

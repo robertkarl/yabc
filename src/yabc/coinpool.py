@@ -2,6 +2,7 @@
 #  Licensed under the MIT License. See LICENSE in the project root for license information.
 import enum
 from collections import defaultdict
+from typing import Sequence
 
 from yabc import transaction
 
@@ -83,6 +84,7 @@ class CoinPool:
         return self._coins.keys()
 
     def get(self, coin_name):
+        # type: (str) -> Sequence[transaction.Transaction]
         """
         Read-only access to the pool of transactions for a given symbol.
 

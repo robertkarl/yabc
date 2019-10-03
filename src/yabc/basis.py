@@ -50,9 +50,14 @@ def _split_coin_to_add(coin_to_split, amount, trans):
     return to_add
 
 
-def _split_report(coin_to_split, amount, trans):
-    # type:  (transaction.Transaction, Decimal, transaction.Transaction) -> CostBasisReport
+def _split_report(coin_to_split, amount, trans, ohlc_provider=None):
+    # type:  (transaction.Transaction, Decimal, transaction.Transaction, ohlcprovider.OhlcProvider) -> CostBasisReport
     """
+    TODO: make this work for coin/coin trades.
+    Given that we are splitting `coin_to_split`, sell`amount` of it and create
+    a CBR. The event triggering the CBR is `trans`, typically a sale of some kind.
+
+
     The cost basis logic. Note that all fees on buy and sell sides are
     subtracted from the taxable result.
 
@@ -66,13 +71,16 @@ def _split_report(coin_to_split, amount, trans):
     :param trans: the transaction triggering this report, a SELL or SPENDING
     """
     assert amount < coin_to_split.quantity_received
-    assert not (amount - trans.quantity_received > 1e-5)  # allowed to be equal
+    # TODO: add a test that makes this assertion fail.
+    assert not (amount - trans.quantity_traded > 1e-5)  # allowed to be equal
     # coin_to_split is a buy, mining, previous split, some kind of input.
     #               quantity_received: crypto amount.
     #               quantity_traded: USD
 
     # basis and fee (partial amounts of coin_to_split)
     frac_of_basis_coin = amount / coin_to_split.quantity_received
+
+    # TODO: Lookup missing fiat prices for coin/coin trades.
     purchase_price = frac_of_basis_coin * coin_to_split.quantity_traded
     purchase_fee = frac_of_basis_coin * coin_to_split.fees
 
@@ -145,7 +153,9 @@ def _process_one(trans, pool, ohlc_source=None):
             # TODO: Alert the user if the value of a gift exceeds $15,000, in which
             #       case gift taxes may be eligible...
             cost_basis_reports.append(
-                _split_report(coin_to_split, portion_of_split_coin_to_sell, trans)
+                _split_report(
+                    coin_to_split, portion_of_split_coin_to_sell, trans, ohlc_source
+                )
             )
         coin_to_add = _split_coin_to_add(
             coin_to_split, portion_of_split_coin_to_sell, trans
@@ -159,12 +169,14 @@ def _process_one(trans, pool, ohlc_source=None):
         # The coins just magically remove themselves from the pool.
         # No entry in 8949 for them.
         cost_basis_reports.extend(
-            _build_sale_reports(pool, pool_index, trans, basis_information_absent)
+            _build_sale_reports(
+                pool, pool_index, trans, basis_information_absent, ohlc_source
+            )
         )
     return (cost_basis_reports, diff, flags)
 
 
-def _build_sale_reports(pool, pool_index, trans, basis_information_absent):
+def _build_sale_reports(pool, pool_index, trans, basis_information_absent, ohlc):
     # type:  (coinpool.CoinPool, int, transaction.Transaction, bool) -> Sequence[CostBasisReport]
     """
     Use coins from pool to make CostBasisReports.
@@ -197,28 +209,42 @@ def _build_sale_reports(pool, pool_index, trans, basis_information_absent):
         # through we only use a portion of trans.
 
         # curr_basis_tx is a BUY, GIFT_RECEIVED or a TRADE_INPUT, or another input.
-        curr_basis_tx = pool.get(trans.symbol_traded)[
-            i
-        ]  # type: transaction.Transaction
+        curr_basis_tx = pool.get(trans.symbol_traded)[i]
         portion_of_sale = curr_basis_tx.quantity_received / trans.quantity_traded
         # The seller can inflate their cost basis by the buy fees.
         assert curr_basis_tx.symbol_received == trans.symbol_traded
         if not is_fiat(trans.symbol_received):
-            raise RuntimeError(
-                "Need fiat values when building CostBasisReports. Triggering sale tx: {}".format(
-                    trans
-                )
+            if is_fiat(trans.fee_symbol):
+                sell_fees = trans.fees
+            else:
+                sell_fees = ohlc.get(trans.fee_symbol, trans.date).high * trans.fees
+            report = CostBasisReport(
+                curr_basis_tx.user_id,
+                curr_basis_tx.quantity_traded + curr_basis_tx.fees,
+                curr_basis_tx.quantity_received,
+                date_purchased=curr_basis_tx.date,
+                proceeds=portion_of_sale
+                * (
+                    trans.quantity_received
+                    * ohlc.get(trans.symbol_received, trans.date).high
+                    - sell_fees
+                ),
+                date_sold=trans.date,
+                asset=trans.symbol_traded,
+                secondary_asset=trans.symbol_received,
+                triggering_transaction=trans,
             )
-        report = CostBasisReport(
-            curr_basis_tx.user_id,
-            curr_basis_tx.quantity_traded + curr_basis_tx.fees,
-            curr_basis_tx.quantity_received,
-            curr_basis_tx.date,
-            portion_of_sale * (trans.quantity_received - trans.fees),
-            trans.date,
-            curr_basis_tx.symbol_received,
-            triggering_transaction=trans,
-        )
+        else:
+            report = CostBasisReport(
+                curr_basis_tx.user_id,
+                curr_basis_tx.quantity_traded + curr_basis_tx.fees,
+                curr_basis_tx.quantity_received,
+                curr_basis_tx.date,
+                portion_of_sale * (trans.quantity_received - trans.fees),
+                trans.date,
+                curr_basis_tx.symbol_received,
+                triggering_transaction=trans,
+            )
         ans.append(report)
     return ans
 
