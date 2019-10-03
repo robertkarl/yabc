@@ -56,7 +56,15 @@ class AdhocCsvTest(unittest.TestCase):
             self.assertEqual(spending.fees, 15)
             self.assertEqual(spending.fee_symbol, "USD")
 
-            sell = stuff[4]
+            eth_rcvd = stuff[4]
+            self.assertEqual(
+                eth_rcvd.operation, transaction.Operation.GIFT_RECEIVED
+            )
+            self.assertEqual(eth_rcvd.date, datetime.datetime(2018, 5, 21))
+            self.assertEqual(eth_rcvd.quantity_received, 10001)
+            self.assertEqual(eth_rcvd.symbol_received, "ETH")
+
+            sell = stuff[5]
             self.assertEqual(sell.operation, transaction.Operation.SELL)
             self.assertEqual(sell.date, datetime.datetime(2018, 5, 22))
             self.assertEqual(sell.symbol_received, "BTC")
