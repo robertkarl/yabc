@@ -6,7 +6,7 @@ install:
 script:
 - python setup.py test
 - make nuke_db_and_run& sleep 5; make test_all
-- python -m yabc testdata/gemini/sample_gemini.csv ./testdata/sample_coinbase.csv
+- python -m yabc testdata/gemini/sample_gemini.csv ./testdata/coinbase/sample_coinbase.csv
 branches:
   only:
     - master
