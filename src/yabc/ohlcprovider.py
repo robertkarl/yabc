@@ -4,8 +4,6 @@ import datetime
 import decimal
 from collections import namedtuple
 
-import delorean
-
 OhlcData = namedtuple("OhlcData", ("open", "high", "low", "close"))
 
 jan_1 = datetime.datetime(2017, 1, 1).date()

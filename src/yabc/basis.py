@@ -153,7 +153,9 @@ def _process_one(trans, pool, ohlc_source=None):
             # TODO: Alert the user if the value of a gift exceeds $15,000, in which
             #       case gift taxes may be eligible...
             cost_basis_reports.append(
-                _split_report(coin_to_split, portion_of_split_coin_to_sell, trans, ohlc_source)
+                _split_report(
+                    coin_to_split, portion_of_split_coin_to_sell, trans, ohlc_source
+                )
             )
         coin_to_add = _split_coin_to_add(
             coin_to_split, portion_of_split_coin_to_sell, trans
@@ -167,7 +169,9 @@ def _process_one(trans, pool, ohlc_source=None):
         # The coins just magically remove themselves from the pool.
         # No entry in 8949 for them.
         cost_basis_reports.extend(
-            _build_sale_reports(pool, pool_index, trans, basis_information_absent, ohlc_source)
+            _build_sale_reports(
+                pool, pool_index, trans, basis_information_absent, ohlc_source
+            )
         )
     return (cost_basis_reports, diff, flags)
 
@@ -219,7 +223,12 @@ def _build_sale_reports(pool, pool_index, trans, basis_information_absent, ohlc)
                 curr_basis_tx.quantity_traded + curr_basis_tx.fees,
                 curr_basis_tx.quantity_received,
                 date_purchased=curr_basis_tx.date,
-                proceeds=portion_of_sale * (trans.quantity_received * ohlc.get(trans.symbol_received, trans.date).high - sell_fees),
+                proceeds=portion_of_sale
+                * (
+                    trans.quantity_received
+                    * ohlc.get(trans.symbol_received, trans.date).high
+                    - sell_fees
+                ),
                 date_sold=trans.date,
                 asset=trans.symbol_traded,
                 secondary_asset=trans.symbol_received,

@@ -5,9 +5,9 @@ import decimal
 import unittest
 
 from tests.transaction_utils import make_buy
-from yabc import basis, ohlcprovider
-from yabc import costbasisreport
+from yabc import basis
 from yabc import coinpool
+from yabc import costbasisreport
 from yabc import transaction
 
 
@@ -46,9 +46,9 @@ class CoinToCoinTest(unittest.TestCase):
 
         self.assertEqual(len(reports), 1)
         report = reports[0]  # type: costbasisreport.CostBasisReport
-        daily_val = decimal.Decimal('1008.6')
+        daily_val = decimal.Decimal("1008.6")
         value_of_sell = 8 * daily_val
-        fees = decimal.Decimal('.001') * daily_val
+        fees = decimal.Decimal(".001") * daily_val
         computed_value = value_of_sell - fees
         self.assertEqual(report.proceeds, computed_value.quantize(1))
         pool = self.bp.pool  # type: coinpool.CoinPool

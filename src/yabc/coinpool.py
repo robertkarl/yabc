@@ -2,9 +2,9 @@
 #  Licensed under the MIT License. See LICENSE in the project root for license information.
 import enum
 from collections import defaultdict
+from typing import Sequence
 
 from yabc import transaction
-from typing import Sequence
 
 
 @enum.unique
