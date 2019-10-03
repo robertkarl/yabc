@@ -7,8 +7,8 @@ Simple check that we can parse data from our coinbase files.
 import glob
 import unittest
 
-from yabc import transaction
 import yabc.formats
+from yabc import transaction
 from yabc.formats import coinbase
 
 
