@@ -74,7 +74,7 @@ class AdhocCsvTest(unittest.TestCase):
             self.assertEqual(sell.fees, decimal.Decimal(".001"))
             self.assertEqual(sell.fee_symbol, "BTC")
 
-            buy = stuff[5]
+            buy = stuff[6]
             self.assertEqual(buy.operation, transaction.Operation.BUY)
             self.assertEqual(buy.quantity_received, 15)
             self.assertEqual(buy.symbol_received, "BTC")

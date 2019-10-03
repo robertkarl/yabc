@@ -50,7 +50,7 @@ def _split_coin_to_add(coin_to_split, amount, trans):
     return to_add
 
 
-def _split_report(coin_to_split, amount, trans, ohlc_provider):
+def _split_report(coin_to_split, amount, trans, ohlc_provider=None):
     # type:  (transaction.Transaction, Decimal, transaction.Transaction, ohlcprovider.OhlcProvider) -> CostBasisReport
     """
     TODO: make this work for coin/coin trades.
