@@ -21,7 +21,6 @@ class LifoTest(unittest.TestCase):
         sale2 = make_transaction(
             Operation.SELL, 1, 0, 1000, date=self.start + self.one_day * 2
         )
-
         reports = BasisProcessor(
             coinpool.PoolMethod.LIFO, [self.purchase, sale1, sale2]
         ).process()
