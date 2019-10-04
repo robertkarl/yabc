@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+
 import setuptools
 
 """
@@ -26,7 +27,6 @@ setuptools.setup(
         # This package is present on 3.5+, backport required for 3.4
         "typing",
     ],
-    test_suite="tests",
     url="https://github.com/robertkarl/yabc",
     description="A tax estimator for cryptocurrencies.",
     long_description=open("README.md").read(),

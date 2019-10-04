@@ -4,7 +4,7 @@ install:
 - pip uninstall --yes yabc || true
 - pip install --upgrade --force-reinstall --ignore-installed -e .
 script:
-- python setup.py test
+- PYTHONPATH=tests python setup.py test
 - make nuke_db_and_run& sleep 5; make test_all
 - python -m yabc testdata/gemini/sample_gemini.csv ./testdata/coinbase/sample_coinbase.csv
 branches:

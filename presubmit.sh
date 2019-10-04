@@ -9,7 +9,7 @@ set -e
 
 if [ "$1" != '--skip-tests' ]
 then 
-  python setup.py test
+  PYTHONPATH=src python -m unittest discover -s tests
 fi
 
 autoflake -r -i --remove-all-unused-imports $DIRS
