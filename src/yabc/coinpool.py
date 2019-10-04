@@ -26,7 +26,7 @@ class PoolDiff:
 
     def add(self, symbol, coin):
         # type: (str, transaction.Transaction) -> None
-        if not coin.asset_name == symbol:
+        if not coin.symbol_received == symbol:
             raise RuntimeError("Cannot add to pool {}".format(symbol))
         self.to_add.append(coin)
 
@@ -57,6 +57,7 @@ def _handle_add_fifo(pool, to_add: transaction.Transaction):
             transaction.Operation.BUY,
             transaction.Operation.MINING,
             transaction.Operation.GIFT_RECEIVED,
+            transaction.Operation.TRADE_INPUT,
         ]
         pool.append(to_add)
 

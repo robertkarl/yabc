@@ -42,6 +42,7 @@ class TransactionOperationString(TypeDecorator):
             value = Transaction.Operation.NOOP
         return Transaction.Operation(value)
 
+
 @enum.unique
 class Market(enum.Enum):
     """
@@ -221,16 +222,29 @@ class Transaction(yabc.Base):
             self.quantity_received = self.usd_subtotal
 
     def is_simple_input(self):
-        """
-        TODO: coin/coin trades make this more complicated, as SELLs can also be inputs.
-        :return: True if this transaction is an input (like mining, a gift received, or a purchase)
-        """
         return self.operation in {
             Operation.MINING,
             Operation.GIFT_RECEIVED,
             Operation.SPLIT,
             Operation.BUY,
+            Operation.TRADE_INPUT,
         }
+
+    def trade_has_input(self):
+        """
+        TODO: coin/coin trades make this more complicated, as SELLs can also be inputs.
+        :return: True if this transaction is an input (like mining, a gift received, or a purchase)
+        """
+        if self.operation in {
+            Operation.MINING,
+            Operation.GIFT_RECEIVED,
+            Operation.SPLIT,
+            Operation.BUY,
+        }:
+            return True
+        if self.Operation == Operation.SELL:
+            return self.is_coin_to_coin()
+        return False
 
     def is_taxable_output(self):
         return self.operation in {Operation.SPENDING, Operation.SELL}
