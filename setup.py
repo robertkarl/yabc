@@ -1,9 +1,7 @@
 #!/usr/bin/env python3
 
-import unittest
 
 import setuptools
-
 
 """
 Python versions and dependencies notes:

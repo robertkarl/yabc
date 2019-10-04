@@ -42,7 +42,6 @@ class TransactionOperationString(TypeDecorator):
             value = Transaction.Operation.NOOP
         return Transaction.Operation(value)
 
-
 @enum.unique
 class Market(enum.Enum):
     """
