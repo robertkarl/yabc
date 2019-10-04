@@ -6,7 +6,7 @@ from decimal import Decimal
 import sqlalchemy
 from sqlalchemy.orm import sessionmaker
 
-import tests.transaction_utils
+import transaction_utils
 from yabc import Base
 from yabc import basis
 from yabc import coinpool
@@ -22,7 +22,7 @@ SELL = Transaction.Operation.SELL
 class TransactionTest(unittest.TestCase):
     def setUp(self):
         self.sample_buy_date = datetime.datetime(2015, 2, 5, 6, 27, 56, 373000)
-        self.sample_buy = tests.transaction_utils.make_buy(
+        self.sample_buy = transaction_utils.make_buy(
             0.5, 10, 990, date=self.sample_buy_date
         )
 
@@ -33,7 +33,7 @@ class TransactionTest(unittest.TestCase):
         diff = coinpool.PoolDiff()
         diff.add(self.sample_buy.symbol_received, self.sample_buy)
         pool.apply(diff)
-        sale = tests.transaction_utils.make_sale(
+        sale = transaction_utils.make_sale(
             quantity=0.5,
             subtotal=1010.0,
             date=self.sample_buy_date,
@@ -49,16 +49,16 @@ class TransactionTest(unittest.TestCase):
     def test_split_report_no_gain(self):
         """ Test simple case with no profit or loss.
         """
-        buy = tests.transaction_utils.make_buy(1.0, fees=0, subtotal=100.0)
-        sell = tests.transaction_utils.make_transaction(SELL, 1.0, 0, 100.0)
+        buy = transaction_utils.make_buy(1.0, fees=0, subtotal=100.0)
+        sell = transaction_utils.make_transaction(SELL, 1.0, 0, 100.0)
         report = basis._split_report(buy, Decimal("0.5"), sell)
         self.assertEqual(report.gain_or_loss, 0)
 
     def test_split_report(self):
         """ Test split_report function.
         """
-        buy = tests.transaction_utils.make_transaction(BUY, 1.0, 10, 100.0)
-        sell = tests.transaction_utils.make_transaction(SELL, 1.0, 10, 200.0)
+        buy = transaction_utils.make_transaction(BUY, 1.0, 10, 100.0)
+        sell = transaction_utils.make_transaction(SELL, 1.0, 10, 200.0)
         report = basis._split_report(buy, Decimal("0.5"), sell)
         ans_gain_or_loss = 40.0
         self.assertEqual(report.gain_or_loss, ans_gain_or_loss)
@@ -67,8 +67,8 @@ class TransactionTest(unittest.TestCase):
         """ Test where function split_report gets bad inputs and should throw / assert.
         """
         purchase_quantity = 1.0
-        buy = tests.transaction_utils.make_transaction(BUY, purchase_quantity, 0, 100.0)
-        sell = tests.transaction_utils.make_transaction(SELL, 2.0, 0, 100.0)
+        buy = transaction_utils.make_transaction(BUY, purchase_quantity, 0, 100.0)
+        sell = transaction_utils.make_transaction(SELL, 2.0, 0, 100.0)
         with self.assertRaises(AssertionError):
             basis._split_report(
                 buy, purchase_quantity, sell
