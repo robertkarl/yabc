@@ -240,6 +240,7 @@ class Transaction(yabc.Base):
             Operation.GIFT_RECEIVED,
             Operation.SPLIT,
             Operation.BUY,
+            Operation.TRADE_INPUT,
         }:
             return True
         if self.Operation == Operation.SELL:

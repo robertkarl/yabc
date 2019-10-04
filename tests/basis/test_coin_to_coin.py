@@ -51,7 +51,6 @@ class CoinToCoinTest(unittest.TestCase):
         fees = decimal.Decimal(".001") * daily_val
         computed_value = value_of_sell - fees
         self.assertEqual(report.proceeds, computed_value.quantize(1))
-        pool = self.bp.pool  # type: coinpool.CoinPool
+        pool = self.bp.get_pool()
         self.assertEqual(len(pool._coins.keys()), 2)
-        # TODO: Add the received BTC to pool and enable this test.
         self.assertEqual(len(pool.get("BTC")), 1)

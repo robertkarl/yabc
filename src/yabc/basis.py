@@ -327,7 +327,7 @@ class BasisProcessor:
         self._method = method
         self._txs = txs
         self._reports = []
-        self.pool = None
+        self._pool = None
         self._flags = None
 
     def flags(self):
@@ -337,7 +337,7 @@ class BasisProcessor:
 
     def get_pool(self):
         # type: () -> coinpool.CoinPool
-        return self.pool
+        return self._pool
 
     def process(self):
         # type: () -> Sequence[CostBasisReport]
@@ -350,6 +350,6 @@ class BasisProcessor:
         """
         reports, pool, flags = _process_all(self._method, self._txs, self.ohlc)
         self._reports = reports
-        self.pool = pool
+        self._pool = pool
         self._flags = flags
         return self._reports
