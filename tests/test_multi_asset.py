@@ -48,5 +48,5 @@ class MultiAssetTest(unittest.TestCase):
         self.assertEqual(report.asset_name, "BTC")
         self.assertEqual(report.get_gain_or_loss(), 0)
         self.assertEqual(report.proceeds, TEN_K)
-        self.assertEqual(processor.pool.get("BTC"), [])
-        self.assertEqual(len(processor.pool.get("BCH")), 1)
+        self.assertEqual(processor._pool.get("BTC"), [])
+        self.assertEqual(len(processor._pool.get("BCH")), 1)

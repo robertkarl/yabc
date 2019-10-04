@@ -110,7 +110,7 @@ def _process_one(trans, pool, ohlc_source=None):
     works for both LIFO and FIFO.
 
     - If transaction is a buy, just return the add-to-pool op.
-    - Otherwise, for a sale::
+    - Otherwise, for a sale:
         - Example: buy 0.25 @ $1 and 0.25 at $2. Then sell 0.5 at $3.
                    this is reported to IRS as 2 transactions:
                    One: Sell 0.25 with a basis of $1
@@ -173,7 +173,29 @@ def _process_one(trans, pool, ohlc_source=None):
                 pool, pool_index, trans, basis_information_absent, ohlc_source
             )
         )
+    if trans.is_coin_to_coin():
+        to_add = _get_coin_to_coin_input(trans)
+        diff.add(to_add.symbol_received, to_add)
+
     return (cost_basis_reports, diff, flags)
+
+
+def _get_coin_to_coin_input(trans):
+    # type: (transaction.Transaction) -> transaction.Transaction
+    """
+    For a coin/coin trade, we need to add an input back to the pool.
+    """
+    return transaction.Transaction(
+        transaction.Operation.TRADE_INPUT,
+        symbol_received=trans.symbol_received,
+        quantity_received=trans.quantity_received,
+        symbol_traded="USD",
+        quantity_traded=0,
+        fee_symbol="USD",
+        fees=0,
+        user_id=trans.user_id,
+        source=trans.source,
+    )
 
 
 def _build_sale_reports(pool, pool_index, trans, basis_information_absent, ohlc):
@@ -278,7 +300,7 @@ def _process_all(method, txs, ohlc_source=None):
     """
     assert method in coinpool.PoolMethod
     pool = coinpool.CoinPool(method)
-    to_process = sorted(txs, key=lambda tx: tx.date)
+    to_process = sorted(txs, key=lambda trans: trans.date)
     irs_reports = []
     flags = []
     for tx in to_process:
@@ -305,7 +327,7 @@ class BasisProcessor:
         self._method = method
         self._txs = txs
         self._reports = []
-        self.pool = None
+        self._pool = None
         self._flags = None
 
     def flags(self):
@@ -315,7 +337,7 @@ class BasisProcessor:
 
     def get_pool(self):
         # type: () -> coinpool.CoinPool
-        return self.pool
+        return self._pool
 
     def process(self):
         # type: () -> Sequence[CostBasisReport]
@@ -328,6 +350,6 @@ class BasisProcessor:
         """
         reports, pool, flags = _process_all(self._method, self._txs, self.ohlc)
         self._reports = reports
-        self.pool = pool
+        self._pool = pool
         self._flags = flags
         return self._reports
