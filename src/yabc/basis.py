@@ -88,7 +88,10 @@ def _split_report(coin_to_split, amount, trans, ohlc_provider=None):
     fiat_received = trans.quantity_received
     if not is_fiat(trans.symbol_received):
         assert trans.is_coin_to_coin()
-        fiat_received = ohlc_provider.get(trans.symbol_received, trans.date).high * trans.quantity_received
+        fiat_received = (
+            ohlc_provider.get(trans.symbol_received, trans.date).high
+            * trans.quantity_received
+        )
     frac_of_sale_tx = amount / trans.quantity_traded
     proceeds = (frac_of_sale_tx * fiat_received).quantize(Decimal(".01"))
     sale_fee = (frac_of_sale_tx * trans.fees).quantize(Decimal(".01"))

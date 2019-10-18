@@ -9,7 +9,9 @@ import decimal
 import unittest
 from typing import Sequence
 
-from yabc import transaction, basis, coinpool
+from yabc import basis
+from yabc import coinpool
+from yabc import transaction
 from yabc.formats import adhoc
 
 
@@ -25,9 +27,7 @@ class AdhocCsvTest(unittest.TestCase):
         for tx in self.txs:
             self.assertEqual(tx.source, adhoc.AdhocParser.EXCHANGE_NAME)
         gift_received = self.txs[0]
-        self.assertEqual(
-            gift_received.operation, transaction.Operation.GIFT_RECEIVED
-        )
+        self.assertEqual(gift_received.operation, transaction.Operation.GIFT_RECEIVED)
         self.assertEqual(gift_received.date, datetime.datetime(2018, 3, 4))
         self.assertEqual(gift_received.quantity_received, 3)
         self.assertEqual(gift_received.symbol_received, "BTC")
