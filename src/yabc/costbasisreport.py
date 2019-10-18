@@ -141,7 +141,7 @@ class CostBasisReport(yabc.Base):
         )
 
     def __repr__(self):
-        return "<Sold {} {} on {date} for ${}. Exchange: {exchange}. Profit:${profit}.{longterm}\n\t{trigger}>".format(
+        return "<CostBasisReport: Sold {} {} on {date} for ${}. Exchange: {exchange}. Profit:${profit}.{longterm}\n\t{trigger}>".format(
             self.quantity,
             self.asset_name,
             self.proceeds,
