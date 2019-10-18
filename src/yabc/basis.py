@@ -53,7 +53,6 @@ def _split_coin_to_add(coin_to_split, amount, trans):
 def _split_report(coin_to_split, amount, trans, ohlc_provider=None):
     # type:  (transaction.Transaction, Decimal, transaction.Transaction, ohlcprovider.OhlcProvider) -> CostBasisReport
     """
-    TODO: make this work for coin/coin trades.
     Given that we are splitting `coin_to_split`, sell`amount` of it and create
     a CBR. The event triggering the CBR is `trans`, typically a sale of some kind.
 
@@ -80,13 +79,19 @@ def _split_report(coin_to_split, amount, trans, ohlc_provider=None):
     # basis and fee (partial amounts of coin_to_split)
     frac_of_basis_coin = amount / coin_to_split.quantity_received
 
-    # TODO: Lookup missing fiat prices for coin/coin trades.
     purchase_price = frac_of_basis_coin * coin_to_split.quantity_traded
     purchase_fee = frac_of_basis_coin * coin_to_split.fees
 
     # sale proceeds and fee (again, partial amounts of trans)
+    fiat_received = trans.quantity_received
+    if not is_fiat(trans.symbol_received):
+        assert trans.is_coin_to_coin()
+        fiat_received = (
+            ohlc_provider.get(trans.symbol_received, trans.date).high
+            * trans.quantity_received
+        )
     frac_of_sale_tx = amount / trans.quantity_traded
-    proceeds = (frac_of_sale_tx * trans.quantity_received).quantize(Decimal(".01"))
+    proceeds = (frac_of_sale_tx * fiat_received).quantize(Decimal(".01"))
     sale_fee = (frac_of_sale_tx * trans.fees).quantize(Decimal(".01"))
     return CostBasisReport(
         trans.user_id,
