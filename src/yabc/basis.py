@@ -53,7 +53,6 @@ def _split_coin_to_add(coin_to_split, amount, trans):
 def _split_report(coin_to_split, amount, trans, ohlc_provider=None):
     # type:  (transaction.Transaction, Decimal, transaction.Transaction, ohlcprovider.OhlcProvider) -> CostBasisReport
     """
-    TODO: make this work for coin/coin trades.
     Given that we are splitting `coin_to_split`, sell`amount` of it and create
     a CBR. The event triggering the CBR is `trans`, typically a sale of some kind.
 
@@ -80,7 +79,6 @@ def _split_report(coin_to_split, amount, trans, ohlc_provider=None):
     # basis and fee (partial amounts of coin_to_split)
     frac_of_basis_coin = amount / coin_to_split.quantity_received
 
-    # TODO: Lookup missing fiat prices for coin/coin trades.
     purchase_price = frac_of_basis_coin * coin_to_split.quantity_traded
     purchase_fee = frac_of_basis_coin * coin_to_split.fees
 
