@@ -7,7 +7,6 @@ import unittest
 from tests.transaction_utils import make_buy
 from yabc import basis
 from yabc import coinpool
-from yabc import costbasisreport
 from yabc import transaction
 
 
@@ -33,19 +32,32 @@ class CoinToCoinTest(unittest.TestCase):
         self.bp = basis.BasisProcessor(
             coinpool.PoolMethod.FIFO, [self.buy_eth, self.sell_eth_to_btc]
         )
+        self.reports = self.bp.process()
 
-    def test_single_transation(self):
+    def test_coin_to_coin_pool_remnants(self):
+        """
+        The ETH/BTC trade above generates a TRADE_INPUT. Check its fields.
+
+        Also check that the ETH is gone.
+        """
+        remaining_btc = self.bp.get_pool().get("BTC")[0]
+        self.assertEqual(remaining_btc.quantity_received, 8)
+        self.assertEqual(remaining_btc.date, datetime.datetime(2017, 1, 1))
+        self.assertEqual(remaining_btc.symbol_received, "BTC")
+        price = 1000 * decimal.Decimal("8.6")
+        self.assertEqual(remaining_btc.quantity_traded, price)
+        self.assertEqual(remaining_btc.symbol_traded, "USD")
+        self.assertEqual(remaining_btc.fee_symbol, "USD")
+        self.assertEqual(remaining_btc.fees, 0)
+        self.assertEqual(len(self.bp.get_pool().get("ETH")), 0)
+
+    def test_single_transaction(self):
         """
         A single coin/coin trade, following a buy. Check the results minus fees.
-
-        TODO: This fails for a couple reasons. Fix and enable it.
-            1. we can't add a coin/coin trade to a pool. We need to create TradeInputs and add them.
-            2. Without a historical price data source, we can't build CostBasisReports for coin/coin trades accurately.
         """
-        reports = self.bp.process()
 
-        self.assertEqual(len(reports), 1)
-        report = reports[0]  # type: costbasisreport.CostBasisReport
+        self.assertEqual(len(self.reports), 1)
+        report = self.reports[0]
         daily_val = decimal.Decimal("1008.6")
         value_of_sell = 8 * daily_val
         fees = decimal.Decimal(".001") * daily_val

@@ -136,6 +136,7 @@ class Transaction(yabc.Base):
         quantity_traded=0,
         quantity_received=0,
         fee_symbol="USD",
+        triggering_transaction=None,
     ):
         for param in (quantity, fees, usd_subtotal):
             assert isinstance(param, (float, str, Decimal, int))
@@ -149,6 +150,7 @@ class Transaction(yabc.Base):
         self.asset_name = asset_name
         self.user_id = user_id
         self.fees = Decimal(fees)
+        self.triggering_transaction = triggering_transaction
 
         # The new syntax explicitly labels each leg of the trade.
         # Allow its use to overwrite values in columns for "asset_name" and "usd_subtotal"

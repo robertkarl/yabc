@@ -174,32 +174,37 @@ def _process_one(trans, pool, ohlc_source=None):
             )
         )
     if trans.is_coin_to_coin():
-        to_add = _get_coin_to_coin_input(trans)
+        to_add = _get_coin_to_coin_input(trans, ohlc_source)
         diff.add(to_add.symbol_received, to_add)
 
     return (cost_basis_reports, diff, flags)
 
 
-def _get_coin_to_coin_input(trans):
-    # type: (transaction.Transaction) -> transaction.Transaction
+def _get_coin_to_coin_input(trans, ohlc):
+    # type: (transaction.Transaction, ohlcprovider.OhlcProvider) -> transaction.Transaction
     """
     For a coin/coin trade, we need to add an input back to the pool.
+
+    TODO: determine the buy-side fees for a coin/coin trade.
     """
+    cost_basis = ohlc.get(trans.symbol_traded, trans.date).high * trans.quantity_traded
     return transaction.Transaction(
         transaction.Operation.TRADE_INPUT,
         symbol_received=trans.symbol_received,
         quantity_received=trans.quantity_received,
         symbol_traded="USD",
-        quantity_traded=0,
+        quantity_traded=cost_basis,
         fee_symbol="USD",
         fees=0,
+        date=trans.date,
         user_id=trans.user_id,
         source=trans.source,
+        triggering_transaction=trans,
     )
 
 
 def _build_sale_reports(pool, pool_index, trans, basis_information_absent, ohlc):
-    # type:  (coinpool.CoinPool, int, transaction.Transaction, bool) -> Sequence[CostBasisReport]
+    # type:  (coinpool.CoinPool, int, transaction.Transaction, bool, ohlcprovider.OhlcProvider) -> Sequence[CostBasisReport]
     """
     Use coins from pool to make CostBasisReports.
 
