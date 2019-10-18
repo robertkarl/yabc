@@ -14,11 +14,11 @@ def _make_ohlc(ohlc_str):
 
 jan_1 = datetime.datetime(2017, 1, 1).date()
 _ETH_DATA = {
-    jan_1: OhlcData(*[decimal.Decimal(i) for i in ["8.5", "8.6", "8.0", "8.1"]]),
+    jan_1: _make_ohlc("8.5 8.6 8.0 8.1"),
     datetime.datetime(2018, 5, 22).date(): _make_ohlc("700 701 644 648"),
 }
 _BTC_DATA = {
-    jan_1: OhlcData(*[decimal.Decimal(i) for i in ["1000", "1008.6", "990", "1000"]]),
+    jan_1: _make_ohlc("1000 1008.6 990 1000"),
     datetime.datetime(2018, 5, 22).date(): _make_ohlc("8420 8423 8005 8042"),
 }
 _PRICE_DATA = {"ETH": _ETH_DATA, "BTC": _BTC_DATA}
