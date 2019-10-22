@@ -328,7 +328,9 @@ class SqlBackend:
         all_txs = list(
             self.session.query(transaction.Transaction).filter_by(user_id=userid)
         )
-        bp = basis.BasisProcessor(coinpool.PoolMethod.FIFO, all_txs)
+        bp = basis.BasisProcessor(
+            coinpool.PoolMethod.FIFO, all_txs, flask.current_app.ohlc
+        )
         basis_reports = bp.process()
 
         for i in basis_reports:
