@@ -5,7 +5,6 @@ import csv
 import decimal
 import io
 from decimal import Decimal
-from typing import Callable
 from typing import Sequence
 
 from yabc import coinpool
@@ -84,7 +83,7 @@ def _split_report(coin_to_split, amount, trans, ohlc_provider=None):
 
     # sale proceeds and fee (again, partial amounts of trans)
     fiat_received = trans.quantity_received
-    received_asset = 'USD'
+    received_asset = "USD"
     if not is_fiat(trans.symbol_received):
         assert trans.is_coin_to_coin()
         fiat_received = (
@@ -104,7 +103,7 @@ def _split_report(coin_to_split, amount, trans, ohlc_provider=None):
         trans.date,
         trans.symbol_traded,
         triggering_transaction=trans,
-        secondary_asset=received_asset
+        secondary_asset=received_asset,
     )
 
 
@@ -223,7 +222,7 @@ def _build_sale_reports(pool, pool_index, trans, basis_information_absent, ohlc)
     :param trans: the tx triggering the reports. It must be a sell of some kind.
     """
     ans = []
-    received_asset = 'USD'
+    received_asset = "USD"
     if not is_fiat(trans.symbol_received):
         received_asset = trans.symbol_received
     if basis_information_absent:
@@ -236,7 +235,7 @@ def _build_sale_reports(pool, pool_index, trans, basis_information_absent, ohlc)
             date_sold=trans.date,
             asset=trans.symbol_traded,
             triggering_transaction=trans,
-            secondary_asset=received_asset
+            secondary_asset=received_asset,
         )
         return [report]
     for i in range(pool_index):
@@ -338,8 +337,8 @@ class BasisProcessor:
     See self.pool and self.flags after running process()
     """
 
-    def __init__(self, method, txs, ohlc=ohlcprovider.OhlcProvider):
-        # type: (coinpool.PoolMethod, Sequence, Callable) -> None
+    def __init__(self, method, txs, ohlc=ohlcprovider.OhlcProvider()):
+        # type: (coinpool.PoolMethod, Sequence, ohlcprovider.OhlcProvider) -> None
         self.ohlc = ohlc
         self._method = method
         self._txs = txs
