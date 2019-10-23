@@ -223,15 +223,23 @@ def _build_sale_reports(pool, pool_index, trans, basis_information_absent, ohlc)
     """
     ans = []
     received_asset = "USD"
+    proceeds = trans.quantity_received
+    fees_in_fiat = trans.fees
+    if not is_fiat(trans.fee_symbol):
+        fees_in_fiat = ohlc.get(trans.fee_symbol, trans.date).high * trans.fees
     if not is_fiat(trans.symbol_received):
         received_asset = trans.symbol_received
+        proceeds = (
+            trans.quantity_received * ohlc.get(trans.symbol_received, trans.date).high
+            - fees_in_fiat
+        )
     if basis_information_absent:
         report = CostBasisReport(
             trans.user_id,
             decimal.Decimal(0),
             trans.quantity_traded,
             trans.date,
-            proceeds=trans.quantity_received,
+            proceeds=proceeds,
             date_sold=trans.date,
             asset=trans.symbol_traded,
             triggering_transaction=trans,
