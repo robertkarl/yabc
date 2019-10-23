@@ -18,7 +18,7 @@ def create_app(test_config=None):
     """
 
     app = Flask(__name__, instance_relative_config=True)
-    app.ohlc = ohlcprovider.OhlcProvider
+    app.ohlc = ohlcprovider.OhlcProvider()
     app.config.from_mapping(
         SECRET_KEY="dev",
         DATABASE="sqlite:///{}".format(os.path.join(app.instance_path, "yabc.sqlite")),

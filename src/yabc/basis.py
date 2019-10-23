@@ -338,9 +338,9 @@ class BasisProcessor:
     See self.pool and self.flags after running process()
     """
 
-    def __init__(self, method, txs, ohlc_class=ohlcprovider.OhlcProvider):
+    def __init__(self, method, txs, ohlc=ohlcprovider.OhlcProvider):
         # type: (coinpool.PoolMethod, Sequence, Callable) -> None
-        self.ohlc = ohlc_class()
+        self.ohlc = ohlc
         self._method = method
         self._txs = txs
         self._reports = []
