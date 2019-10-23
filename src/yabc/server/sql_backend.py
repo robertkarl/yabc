@@ -297,7 +297,7 @@ class SqlBackend:
                 userid
             )  # TODO: determine if this is a performance bottleneck.
         except Exception as e:
-            logging.warn("Failed to run basis ")
+            logging.warning("Failed to run basis ")
             return flask.jsonify({"result": "failure"})
         return flask.jsonify(
             {
@@ -328,7 +328,9 @@ class SqlBackend:
         all_txs = list(
             self.session.query(transaction.Transaction).filter_by(user_id=userid)
         )
-        bp = basis.BasisProcessor(coinpool.PoolMethod.FIFO, all_txs)
+        bp = basis.BasisProcessor(
+            coinpool.PoolMethod.FIFO, all_txs, flask.current_app.ohlc
+        )
         basis_reports = bp.process()
 
         for i in basis_reports:

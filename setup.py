@@ -13,7 +13,7 @@ Python versions and dependencies notes:
 """
 
 setuptools.setup(
-    version="0.1.13",
+    version="0.1.14",
     name="yabc",
     python_requires=">=3.4,<=3.8",
     author="Seattle Blockchain Solutions",
