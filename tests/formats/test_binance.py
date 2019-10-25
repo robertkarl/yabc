@@ -31,7 +31,7 @@ class BinanceCsvTest(unittest.TestCase):
 
         self.assertEqual(sell_to_eth.symbol_traded, "BTC")
         self.assertEqual(sell_to_eth.quantity_traded, 1)
-        self.assertEqual(sell_to_eth.date.date, datetime.date(2017, 1, 1))
+        self.assertEqual(sell_to_eth.date, datetime.datetime(2017, 1, 1))
         self.assertEqual(sell_to_eth.source, "binance")
 
         # For this transaction, the fee was paid as .01 ETH. Convert that to USD to get:

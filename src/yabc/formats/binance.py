@@ -67,7 +67,7 @@ class BinanceParser(Format):
     def parse(self):
         reader = DictReader(self._file)
         for line in reader:
-            date = delorean.parse(line["Date"])
+            date = delorean.parse(line["Date"]).datetime
             market = line["Market"]
             operation = _BINANCE_TYPE_MAP[line["Type"]]
             amount = decimal.Decimal(line["Amount"])
@@ -81,6 +81,7 @@ class BinanceParser(Format):
             )
 
     def __init__(self, file=None, filename: str = None):
+        file.seek(0)
         self._file = file
         self._reports = []
         self._filename = filename
