@@ -14,6 +14,8 @@ from yabc.costbasisreport import CostBasisReport
 from yabc.transaction import Transaction
 from yabc.transaction import is_fiat
 
+BASIS_INFORMATION_FLAG = "Transaction without basis information"
+
 __author__ = "Robert Karl <robertkarljr@gmail.com>"
 
 
@@ -144,7 +146,7 @@ def _process_one(trans, pool, ohlc_source=None):
         if pool_index >= len(curr_pool):
             # If we get here, we have partial information about the tx.
             # Use a basis of zero for the sale.
-            flags.append(("Transaction without basis information", trans))
+            flags.append((BASIS_INFORMATION_FLAG, trans))
             basis_information_absent = True
             amount = trans.quantity_traded
         else:

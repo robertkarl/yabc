@@ -67,6 +67,9 @@ class BinanceParser(Format):
     def parse(self):
         reader = DictReader(self._file)
         for line in reader:
+            for key in HEADERS:
+                if key not in line:
+                    raise RuntimeError("Not a valid binance file.")
             date = delorean.parse(line["Date"]).datetime
             market = line["Market"]
             operation = _BINANCE_TYPE_MAP[line["Type"]]

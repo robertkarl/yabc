@@ -4,9 +4,7 @@ build: src
 	docker build --tag yabc .
 
 nuke_db_and_run:
-	rm -f src/instance/*
-	PYTHONPATH=src FLASK_APP=yabc.app FLASK_ENV=development flask init-db
-	PYTHONPATH=src FLASK_APP=yabc.app FLASK_ENV=development flask run
+	./nuke_db_and_run
 
 run:
 	PYTHONPATH=src FLASK_APP=yabc.app FLASK_ENV=development flask run
@@ -50,4 +48,4 @@ pypi_deploy:
 	TWINE_USERNAME=robertkarl python3 -m twine upload dist/* --skip-existing
 
 
-.PHONY: build test_all test_adhoc test_local test_buyone_sellone pypi_deploy
+.PHONY: build test_all test_adhoc test_local test_buyone_sellone pypi_deploy nuke_db_and_run

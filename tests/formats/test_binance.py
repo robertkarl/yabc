@@ -6,6 +6,8 @@ import datetime
 import decimal
 import unittest
 
+from yabc import basis
+from yabc import coinpool
 from yabc import transaction
 from yabc.formats import binance
 from yabc.transaction import Transaction
@@ -15,6 +17,7 @@ class BinanceCsvTest(unittest.TestCase):
     def setUp(self) -> None:
         binance_parser = binance.BinanceParser(open("testdata/binance/binance.csv"))
         reports = list(binance_parser)
+        self.txs = reports
         self.assertEqual(len(reports), 4)
         self.sell_to_eth = reports[0]  # type: transaction.Transaction
         self.buy_btc_with_eth = reports[1]  # type: transaction.Transaction
@@ -64,3 +67,17 @@ class BinanceCsvTest(unittest.TestCase):
         self.assertEqual(sell.quantity_traded, 1)
         self.assertEqual(sell.symbol_traded, "BTC")
         self.assertEqual(sell.fees, decimal.Decimal(".01"))
+
+    def test_report_descriptions(self):
+        bp = basis.BasisProcessor(coinpool.PoolMethod.FIFO, self.txs)
+        reports = bp.process()
+        self.assertEqual(len(bp.flags()), 1)
+        self.assertTrue(isinstance(bp.flags()[0], tuple))
+        self.assertEqual(bp.flags()[0][0], basis.BASIS_INFORMATION_FLAG)
+        self.assertEqual(len(reports), 3)
+        sell_to_eth = reports[0]
+        self.assertTrue("BTC to ETH" in sell_to_eth.description())
+        sell_to_btc = reports[1]
+        self.assertTrue("ETH to BTC" in sell_to_btc.description())
+        sell_to_usd = reports[2]
+        self.assertTrue("BTC to USD" in sell_to_usd.description())
