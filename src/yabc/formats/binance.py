@@ -16,8 +16,8 @@ from typing import Sequence
 import delorean
 
 from yabc import transaction
-from yabc.formats import Format
 from yabc.formats import FORMAT_CLASSES
+from yabc.formats import Format
 
 HEADERS = "Date,Market,Type,Price,Amount,Total,Fee,Fee Coin".split(",")
 
@@ -96,5 +96,5 @@ class BinanceParser(Format):
     def __iter__(self):
         return self
 
-FORMAT_CLASSES.append(BinanceParser)
 
+FORMAT_CLASSES.append(BinanceParser)

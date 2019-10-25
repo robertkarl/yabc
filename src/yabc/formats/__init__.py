@@ -42,7 +42,7 @@ def add_supported_exchanges():
     TODO: these are circular imports; these files then attempt to import THIS file.
     """
     from . import adhoc  # noqa
-    from . import binance # noqa
+    from . import binance  # noqa
     from . import coinbase  # noqa
     from . import gemini  # noqa
     from . import localbitcoins  # noqa
