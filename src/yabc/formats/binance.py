@@ -84,7 +84,6 @@ class BinanceParser(Format):
             )
 
     def __init__(self, file=None, filename: str = None):
-        file.seek(0)
         self._file = file
         self._reports = []
         self._filename = filename
