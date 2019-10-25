@@ -40,6 +40,7 @@ class TransactionParser:
         # Try formats until something works.
         for constructor in yabc.formats.FORMAT_CLASSES:
             try:
+                f.seek(0)
                 generator = constructor(f)
                 values = list(generator)
                 self._exchange = constructor

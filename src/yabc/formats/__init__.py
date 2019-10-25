@@ -39,12 +39,10 @@ FORMAT_CLASSES = []
 
 def add_supported_exchanges():
     """
-    This is in a function mostly so our automated reformatting scripts don't place these imports above all statements
-
-    #noqa should stop our unused import zapper from zapping.
+    TODO: these are circular imports; these files then attempt to import THIS file.
     """
-    # TODO: these are circular imports; these files then attemp to import THIS file.
     from . import adhoc  # noqa
+    from . import binance  # noqa
     from . import coinbase  # noqa
     from . import gemini  # noqa
     from . import localbitcoins  # noqa

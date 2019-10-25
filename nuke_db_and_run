@@ -1,0 +1,4 @@
+#! /usr/bin/env sh
+rm -f src/instance/*
+PYTHONPATH=src FLASK_APP=yabc.app FLASK_ENV=development flask init-db
+PYTHONPATH=src FLASK_APP=yabc.app FLASK_ENV=development flask run

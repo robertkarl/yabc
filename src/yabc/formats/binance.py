@@ -16,6 +16,7 @@ from typing import Sequence
 import delorean
 
 from yabc import transaction
+from yabc.formats import FORMAT_CLASSES
 from yabc.formats import Format
 
 HEADERS = "Date,Market,Type,Price,Amount,Total,Fee,Fee Coin".split(",")
@@ -66,7 +67,10 @@ class BinanceParser(Format):
     def parse(self):
         reader = DictReader(self._file)
         for line in reader:
-            date = delorean.parse(line["Date"])
+            for key in HEADERS:
+                if key not in line:
+                    raise RuntimeError("Not a valid binance file.")
+            date = delorean.parse(line["Date"]).datetime
             market = line["Market"]
             operation = _BINANCE_TYPE_MAP[line["Type"]]
             amount = decimal.Decimal(line["Amount"])
@@ -93,3 +97,6 @@ class BinanceParser(Format):
 
     def __iter__(self):
         return self
+
+
+FORMAT_CLASSES.append(BinanceParser)
