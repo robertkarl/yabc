@@ -55,7 +55,7 @@ def txs_from_coinbase(f):
 
 
 class CoinbaseParser(Format):
-    EXCHANGE_NAME = "coinbase-stale"
+    EXCHANGE_NAME = "Coinbase"
 
     def __init__(self, file_or_fname):
         self._file = file_or_fname

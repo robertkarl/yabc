@@ -36,7 +36,7 @@ _ALL_HEADERS = [
 
 
 class CoinbaseTTRParser(Format):
-    EXCHANGE_NAME = "Coinbase"
+    EXCHANGE_NAME = "CoinbaseTTR"
 
     def attempt_read_transaction(self, line):
         """
