@@ -8,7 +8,7 @@ yabc translates cryptocurrency trades, mining, and spending data into a list of
 reports that can be sent to tax authorities. It is most useful for
 cryptocurrency traders in the US.
 
-yabc is the tax calculator behind [https://CostBasis.Report/](https://costbasis.report/).
+yabc is the tax calculator behind [https://costbasis.io/](https://costbasis.io/).
 ```
 $ python -m yabc testdata/gemini/sample_gemini.csv ./testdata/coinbase/sample_coinbase.csv
 13 transactions to be reported
