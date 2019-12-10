@@ -11,6 +11,7 @@ from io import TextIOWrapper
 import click
 import flask
 import sqlalchemy
+import sqlalchemy.orm
 from flask import make_response
 from flask.cli import with_appcontext
 from sqlalchemy.orm import sessionmaker
@@ -93,6 +94,10 @@ class SqlBackend:
         )
         Session = sessionmaker(bind=self.engine)
         self.session = Session()
+
+    def get_session(self):
+        # type: (None) -> sqlalchemy.orm.Session
+        return self.session
 
     def create_tables(self):
         Base.metadata.create_all(self.engine, checkfirst=True)
@@ -197,25 +202,6 @@ class SqlBackend:
         for item in ans:
             item["date"] = str(item["date"])
         return json.dumps(ans)
-
-    def taxdoc_list(self, userid):
-        docs = self.session.query(taxdoc.TaxDoc).filter_by(user_id=userid)
-        result = []
-        for obj in docs.all():
-            preview = obj.contents[:10]
-            if not isinstance(preview, str):
-                # Sqlite seems to return the file contents as bytes, while
-                # Postgres returns a string.
-                preview = preview.decode()
-            result.append(
-                {
-                    "userid": obj.user_id,
-                    "file_name": obj.file_name,
-                    "hash": obj.file_hash,
-                    "preview": preview + "...",
-                }
-            )
-        return flask.jsonify(result)
 
     def taxyear_list(self, userid, url_prefix, suffix):
         """

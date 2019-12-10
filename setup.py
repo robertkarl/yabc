@@ -13,7 +13,7 @@ Python versions and dependencies notes:
 """
 
 setuptools.setup(
-    version="0.1.14",
+    version="0.1.15",
     name="yabc",
     python_requires=">=3.4,<=3.8",
     author="Seattle Blockchain Solutions",
@@ -23,7 +23,7 @@ setuptools.setup(
         "flask==1.0.4",  # flask 1.1. drops python3.4 support
         "sqlalchemy==1.3.3",
         "delorean==1.0.0",
-        "python-dateutil",  # TODO: remove, we can just use delorean
+        "python-dateutil==2.8.0",  # TODO: remove, we can just use delorean
         # This package is present on 3.5+, backport required for 3.4
         "typing",
     ],

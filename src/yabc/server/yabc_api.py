@@ -88,21 +88,6 @@ def download_8949(taxyear):
     return result
 
 
-@yabc_api.route("/yabc/v1/taxyears", methods=["GET"])
-@check_authorized
-def taxyears():
-    """
-    No backend data structure corresponds to this endpoint;
-
-    It's client-friendly condensed information from the CostBasisReport table.
-
-    Each year that has tax information is included.
-    """
-    userid = get_userid()
-    backend = sql_backend.get_db()
-    return backend.taxyear_list(userid)
-
-
 @yabc_api.route("/yabc/v1/taxdocs", methods=["POST", "GET"])
 @check_authorized
 def taxdocs():
