@@ -14,7 +14,8 @@ from yabc.formats import coinbase
 
 class CoinbaseCsvTest(unittest.TestCase):
     def setUp(self) -> None:
-        self.filenames = glob.glob("testdata/coinbase/*.csv")
+        self.filenames = set(glob.glob("testdata/coinbase/*.csv"))
+        self.filenames.discard('testdata/coinbase/TaxTransactionsReport.csv')
 
     def test_load_coinbase_csvs(self):
         """ Test loading coinbase data from CSV does not raise

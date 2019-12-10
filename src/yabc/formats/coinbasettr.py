@@ -73,9 +73,9 @@ class CoinbaseTTRParser(Format):
                 usd_subtotal=fiat - fiat_fee,
             )
         except RuntimeError:
-            raise RuntimeError("Could not parse localbitcoins data.")
+            raise RuntimeError("Could not parse Coinbase TTR data.")
         except KeyError as e:
-            raise RuntimeError("Unknown key in localbitcoins file: {}".format(e))
+            raise RuntimeError("Unknown key in CoinbaseTTR file: {}".format(e))
 
     def __init__(self, csv_content=None, filename=None):
         self._last_date = None
@@ -88,7 +88,7 @@ class CoinbaseTTRParser(Format):
         else:
             assert not csv_content
             self._file = open(filename, "r")
-            self._reader = csv.DictReader(self._file)
+            self._reader = csv.DictReader(self._file, fieldnames=_ALL_HEADERS)
         self.txs = []
         for line in self._reader:
             tx = self.attempt_read_transaction(line)
