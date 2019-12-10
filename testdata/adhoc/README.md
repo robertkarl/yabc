@@ -4,7 +4,7 @@ Dates should be in YYYY/MM/DD format.
 
 ## File format
 Adhoc transactions are defined in a CSV file. You can start with a copy of [this one](./adhoc.csv)
-It is recommended that the CSV file is edited with a program like Excel or Google Sheets before use with yabc or [CostBasis.Report](https://costbasis.report).
+It is recommended that the CSV file is edited with a program like Excel or Google Sheets before use with yabc or [costbasis.io](https://costbasis.io).
 
 ## Number formatting
 All values should be positive in your adhoc transaction sheet.
