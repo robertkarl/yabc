@@ -7,6 +7,7 @@ YABC is not affiliated with the company Coinbase or any of its products.
 004 = {list: 8} ['10/06/2015', 'Buy', 'BTC', '1.0', '247.26', '249.73', '', 'Bought 1.0000 BTC for $249.73 USD.\n\nPaid for with Bank Name. Your BTC will arrive by the end of day on Tuesday Oct 13, 2015.']
 """
 import csv
+import datetime
 import decimal
 
 import delorean
@@ -14,23 +15,24 @@ import delorean
 from yabc import transaction
 from yabc.formats import FORMAT_CLASSES
 from yabc.formats import Format
-import datetime
 
-_TIMESTAMP_HEADER = 'Timestamp'
-_TRANSACTION_TYPE_HEADER = 'Transaction Type'
+_TIMESTAMP_HEADER = "Timestamp"
+_TRANSACTION_TYPE_HEADER = "Transaction Type"
 _FIAT_TRANSACTED_HEADER = "USD Amount Transacted (Inclusive of Coinbase Fees)"
 _QUANTITY_TRANSACTED_HEADER = "Quantity Transacted"
 _SPOT_PRICE_HEADER = "USD Spot Price at Transaction"
-_ASSET_HEADER = 'Asset'
+_ASSET_HEADER = "Asset"
 
-_ALL_HEADERS = [_TIMESTAMP_HEADER,
-               _TRANSACTION_TYPE_HEADER,
-               _ASSET_HEADER,
-               _QUANTITY_TRANSACTED_HEADER,
-               _SPOT_PRICE_HEADER,
-               _FIAT_TRANSACTED_HEADER,
-               'Address',
-               'Notes']
+_ALL_HEADERS = [
+    _TIMESTAMP_HEADER,
+    _TRANSACTION_TYPE_HEADER,
+    _ASSET_HEADER,
+    _QUANTITY_TRANSACTED_HEADER,
+    _SPOT_PRICE_HEADER,
+    _FIAT_TRANSACTED_HEADER,
+    "Address",
+    "Notes",
+]
 
 
 class CoinbaseTTRParser(Format):
@@ -42,20 +44,18 @@ class CoinbaseTTRParser(Format):
         """
         try:
             kind = line[_TRANSACTION_TYPE_HEADER]
-            if kind == 'Buy':
+            if kind == "Buy":
                 tx_type = transaction.Transaction.Operation.BUY
-            elif kind == 'Sell':
+            elif kind == "Sell":
                 tx_type = transaction.Transaction.Operation.SELL
             else:
                 return None
-            date = delorean.parse(
-                line["Timestamp"], dayfirst=False
-            ).datetime
+            date = delorean.parse(line["Timestamp"], dayfirst=False).datetime
             if date == self._last_date:
                 date += self._trade_time_delta
             self._last_date = date
 
-            asset_name = line['Asset']
+            asset_name = line["Asset"]
             quantity = decimal.Decimal(line[_QUANTITY_TRANSACTED_HEADER])
             fiat = decimal.Decimal(line[_FIAT_TRANSACTED_HEADER])
             spot_price = decimal.Decimal(line[_SPOT_PRICE_HEADER])
@@ -102,5 +102,6 @@ class CoinbaseTTRParser(Format):
         if not self.txs:
             raise StopIteration
         return self.txs.pop(0)
+
 
 FORMAT_CLASSES.append(CoinbaseTTRParser)
