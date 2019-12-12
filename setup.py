@@ -19,7 +19,7 @@ setuptools.setup(
     maintainer="Robert Karl",
     maintainer_email="robertkarljr@gmail.com",
     install_requires=[
-        "flask==1.1.0",
+        "flask==1.1.1",
         "sqlalchemy==1.3.3",
         "delorean==1.0.0",
         "python-dateutil==2.8.0",  # TODO: remove, we can just use delorean
