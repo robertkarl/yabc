@@ -36,7 +36,8 @@ _ALL_HEADERS = [
 
 
 class CoinbaseTTRParser(Format):
-    EXCHANGE_NAME = "Coinbase"
+    FORMAT_NAME = "Coinbase (Tax Transaction Report Format)"
+    EXCHANGE_HUMAN_READABLE_NAME = "Coinbase"
 
     def attempt_read_transaction(self, line):
         """
@@ -69,7 +70,7 @@ class CoinbaseTTRParser(Format):
                 date=date,
                 fees=fiat_fee,
                 quantity=quantity,
-                source=self.EXCHANGE_NAME,
+                source=self.exchange_name(),
                 usd_subtotal=fiat - fiat_fee,
             )
         except RuntimeError:

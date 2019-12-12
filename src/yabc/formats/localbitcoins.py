@@ -33,7 +33,8 @@ def _is_sell(trade_type: LocalBitcoinTradeTypes):
 
 
 class LocalBitcoinsParser(Format):
-    EXCHANGE_NAME = "localbitcoins"
+    FORMAT_NAME = "localbitcoins"
+    EXCHANGE_HUMAN_READABLE_NAME = "localbitcoins"
 
     def attempt_read_transaction(self, line):
         try:
@@ -54,7 +55,7 @@ class LocalBitcoinsParser(Format):
                 date=date,
                 fees=fiat_fee,
                 quantity=btc_amount,
-                source=LocalBitcoinsParser.EXCHANGE_NAME,
+                source=LocalBitcoinsParser.exchange_name(),
                 usd_subtotal=fiat,
             )
         except RuntimeError:

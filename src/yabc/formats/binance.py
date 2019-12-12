@@ -62,7 +62,8 @@ def _transaction_from_binance_dict(
 
 
 class BinanceParser(Format):
-    EXCHANGE_NAME = "Binance"
+    FORMAT_NAME = "Binance"
+    EXCHANGE_HUMAN_READABLE_NAME = "Binance"
 
     def parse(self):
         reader = DictReader(self._file)

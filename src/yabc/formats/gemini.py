@@ -117,6 +117,9 @@ def _valid_gemini_headers(fieldnames):
 
 
 class GeminiParser(formats.Format):
+    FORMAT_NAME = "Gemini CSV"
+    EXCHANGE_HUMAN_READABLE_NAME = "Gemini"
+
     def __init__(self, fname_or_file):
         self.txs = []
         self.flags = []
@@ -127,8 +130,6 @@ class GeminiParser(formats.Format):
         else:
             # it must be an open file
             self.txs = _read_txs_from_file(fname_or_file)
-
-    EXCHANGE_NAME = "Gemini"
 
     def __iter__(self):
         return self
