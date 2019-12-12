@@ -1,5 +1,13 @@
 #!/usr/bin/env python3
 
+"""
+Goodbye python3.4
+
+https://discuss.python.org/t/python-download-stats-for-march-2019/1424
+
+Usage statistics show that no single minor version X of 3.4.X has more than
+.39%
+"""
 
 import setuptools
 
