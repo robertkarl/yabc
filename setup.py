@@ -9,12 +9,17 @@ Usage statistics show that no single minor version X of 3.4.X has more than
 .39%
 """
 
+version = {}
+with open("./src/yabc/version.py") as fp:
+    exec(fp.read(), version)
+version = version["__version__"]
+
 import setuptools
 
 setuptools.setup(
-    version="0.1.16",
+    version=version,
     name="yabc",
-    python_requires=">=3.5,<=3.8",
+    python_requires=">=3.5,<3.9",
     author="Seattle Blockchain Solutions",
     maintainer="Robert Karl",
     maintainer_email="robertkarljr@gmail.com",

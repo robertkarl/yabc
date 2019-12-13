@@ -104,5 +104,11 @@ class CoinbaseTTRParser(Format):
             raise StopIteration
         return self.txs.pop(0)
 
+    def cleanup(self):
+        try:
+            self._file.close()
+        except:
+            pass
+
 
 FORMAT_CLASSES.append(CoinbaseTTRParser)
