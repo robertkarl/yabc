@@ -19,7 +19,8 @@ class CoinbaseTTRCsvTest(unittest.TestCase):
         """
         with open(self.filename) as f:
             coinbasettr.CoinbaseTTRParser(csv_content=f)
-        coinbasettr.CoinbaseTTRParser(filename=self.filename)
+        parser = coinbasettr.CoinbaseTTRParser(filename=self.filename)
+        parser.cleanup()
 
     def test_loading_sample(self):
         with open(self.filename) as f:
