@@ -2,17 +2,13 @@
 Track the sql alchemy session and provide methods for endpoints.
 """
 import datetime
-import hashlib
 import io
 import json
-import logging
-from io import TextIOWrapper
 
 import click
 import flask
 import sqlalchemy
 import sqlalchemy.orm
-from flask import make_response
 from flask.cli import with_appcontext
 from sqlalchemy.orm import sessionmaker
 
@@ -21,13 +17,10 @@ from yabc import basis
 from yabc import coinpool
 from yabc import costbasisreport
 from yabc import formats
-from yabc import taxdoc
 from yabc import transaction
 from yabc import user
 from yabc.costbasisreport import CostBasisReport
 from yabc.formats import coinbase
-from yabc.transaction_parser import TransactionParser
-from yabc.transaction_parser import TxFile
 from yabc.user import User
 
 formats.add_supported_exchanges()
