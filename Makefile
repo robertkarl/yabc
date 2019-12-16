@@ -41,6 +41,7 @@ test_all:
 	make test_local
 	make test_buyone_sellone
 	make test_adhoc
+	echo -e '\nTests succeeded!'
 
 pypi_deploy:
 	rm -f dist/*
