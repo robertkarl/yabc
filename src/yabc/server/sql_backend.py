@@ -2,13 +2,17 @@
 Track the sql alchemy session and provide methods for endpoints.
 """
 import datetime
+import hashlib
 import io
 import json
+import logging
+from io import TextIOWrapper
 
 import click
 import flask
 import sqlalchemy
 import sqlalchemy.orm
+from flask import make_response
 from flask.cli import with_appcontext
 from sqlalchemy.orm import sessionmaker
 
@@ -17,10 +21,13 @@ from yabc import basis
 from yabc import coinpool
 from yabc import costbasisreport
 from yabc import formats
+from yabc import taxdoc
 from yabc import transaction
 from yabc import user
 from yabc.costbasisreport import CostBasisReport
 from yabc.formats import coinbase
+from yabc.transaction_parser import TransactionParser
+from yabc.transaction_parser import TxFile
 from yabc.user import User
 
 formats.add_supported_exchanges()
@@ -235,6 +242,58 @@ class SqlBackend:
             )
             result.append(year_info)
         return flask.jsonify(result)
+
+    def import_transaction_document(self, userid, submitted_file):
+        """
+        Add the tx doc for this user.
+
+        - Perform inserts for each of its rows.
+        - Recalculate CostBasisReports also.
+
+        @param submitted_file: a filelike object
+        exchange and userid should be strings.
+        """
+        submitted_stuff = submitted_file.read()
+        text_mode_file = TextIOWrapper(submitted_file)
+        submitted_file.seek(0)
+        tx_file = TxFile(text_mode_file, None)
+        parser = TransactionParser([tx_file])
+        parser.parse()
+        if not parser.succeeded():
+            val = flask.jsonify({"result": "failure", "flags": parser.flags})
+            return make_response(val, 400)
+        parsed_txs = parser.txs
+        contents_md5_hash = hashlib.md5(submitted_stuff).hexdigest()
+        taxdoc_obj = taxdoc.TaxDoc(
+            exchange=parser.get_exchange_name(),
+            user_id=userid,
+            file_hash=contents_md5_hash,
+            contents=submitted_stuff,
+            file_name=submitted_file.filename,
+        )
+        self.session.add(taxdoc_obj)
+        for tx in parsed_txs:
+            tx.user_id = userid
+            self.session.add(tx)
+        self.session.commit()
+        try:
+            # It's possible for this to fail if the user uploads documents out of order (sells before buys)
+            # TODO: gracefully handle transaction histories where a user reports SELL txs with no basis.
+            self.run_basis(
+                userid
+            )  # TODO: determine if this is a performance bottleneck.
+        except Exception as e:
+            logging.warning("Failed to run basis ")
+            return flask.jsonify({"result": "failure"})
+        return flask.jsonify(
+            {
+                "hash": contents_md5_hash,
+                "result": "success",
+                "exchange": parser.get_exchange_name(),
+                "file_name": taxdoc_obj.file_name,
+                "preview": str(submitted_stuff[:20]),
+            }
+        )
 
     def run_basis(self, userid):
         """
