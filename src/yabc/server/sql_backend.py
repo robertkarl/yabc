@@ -253,7 +253,6 @@ class SqlBackend:
         @param submitted_file: a filelike object
         exchange and userid should be strings.
         """
-        submitted_stuff = submitted_file.read()
         text_mode_file = TextIOWrapper(submitted_file)
         submitted_file.seek(0)
         tx_file = TxFile(text_mode_file, None)
@@ -263,15 +262,6 @@ class SqlBackend:
             val = flask.jsonify({"result": "failure", "flags": parser.flags})
             return make_response(val, 400)
         parsed_txs = parser.txs
-        contents_md5_hash = hashlib.md5(submitted_stuff).hexdigest()
-        taxdoc_obj = taxdoc.TaxDoc(
-            exchange=parser.get_exchange_name(),
-            user_id=userid,
-            file_hash=contents_md5_hash,
-            contents=submitted_stuff,
-            file_name=submitted_file.filename,
-        )
-        self.session.add(taxdoc_obj)
         for tx in parsed_txs:
             tx.user_id = userid
             self.session.add(tx)
@@ -285,15 +275,7 @@ class SqlBackend:
         except Exception as e:
             logging.warning("Failed to run basis ")
             return flask.jsonify({"result": "failure"})
-        return flask.jsonify(
-            {
-                "hash": contents_md5_hash,
-                "result": "success",
-                "exchange": parser.get_exchange_name(),
-                "file_name": taxdoc_obj.file_name,
-                "preview": str(submitted_stuff[:20]),
-            }
-        )
+        return flask.jsonify({"result": "success"})
 
     def run_basis(self, userid):
         """
