@@ -29,6 +29,8 @@ class TransactionParser:
         self._success = False
 
     def get_exchange_name(self):
+        if not self._exchange:
+            return yabc.formats.formatbase.Format.exchange_name()
         return self._exchange.exchange_name()
 
     def succeeded(self):
@@ -46,8 +48,7 @@ class TransactionParser:
                 self._exchange = constructor
                 self._success = True
                 return values
-            except RuntimeError as e:
-                logging.info(e)
+            except Exception:
                 continue
         self._success = False
         self.flags.append("Couldn't find any transactions in file.")
