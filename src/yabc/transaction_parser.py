@@ -1,5 +1,4 @@
 import collections
-import logging
 from typing import Sequence
 
 import yabc

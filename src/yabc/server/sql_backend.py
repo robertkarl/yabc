@@ -2,7 +2,6 @@
 Track the sql alchemy session and provide methods for endpoints.
 """
 import datetime
-import hashlib
 import io
 import json
 import logging
@@ -21,7 +20,6 @@ from yabc import basis
 from yabc import coinpool
 from yabc import costbasisreport
 from yabc import formats
-from yabc import taxdoc
 from yabc import transaction
 from yabc import user
 from yabc.costbasisreport import CostBasisReport
