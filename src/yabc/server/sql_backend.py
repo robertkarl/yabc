@@ -138,7 +138,6 @@ class SqlBackend:
         self.session.commit()
         self.run_basis(userid)
 
-
     def transactions_clear_all(self, userid):
         """
         Clear all transactions and re-run basis.
@@ -269,9 +268,11 @@ class SqlBackend:
         """
         Deletes CBRs.
         """
-        count = self.session.query(transaction.Transaction).filter_by(
-            user_id=userid, source=exchange
-        ).delete()
+        count = (
+            self.session.query(transaction.Transaction)
+            .filter_by(user_id=userid, source=exchange)
+            .delete()
+        )
         if count != 0:
             self.session.query(CostBasisReport).filter_by(user_id=userid).delete()
             self.session.commit()

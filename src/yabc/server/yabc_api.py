@@ -109,7 +109,10 @@ def delete_by_exchange(exchange_name):
     except RuntimeError:
         return flask.make_response(("Failed to delete.", 500))
     return flask.jsonify(
-        {"count": deleted_rows, "result": "Deleted transactions for exchange {}".format(exchange_name)}
+        {
+            "count": deleted_rows,
+            "result": "Deleted transactions for exchange {}".format(exchange_name),
+        }
     )
 
 
