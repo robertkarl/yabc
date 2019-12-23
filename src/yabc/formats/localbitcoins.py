@@ -55,7 +55,7 @@ class LocalBitcoinsParser(Format):
                 date=date,
                 fees=fiat_fee,
                 quantity=btc_amount,
-                source=LocalBitcoinsParser.exchange_name(),
+                source=LocalBitcoinsParser.exchange_id_str(),
                 usd_subtotal=fiat,
             )
         except RuntimeError:

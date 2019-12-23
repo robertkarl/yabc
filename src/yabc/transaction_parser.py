@@ -29,8 +29,8 @@ class TransactionParser:
 
     def get_exchange_name(self):
         if not self._exchange:
-            return yabc.formats.formatbase.Format.exchange_name()
-        return self._exchange.exchange_name()
+            return yabc.formats.formatbase.Format.exchange_id_str()
+        return self._exchange.exchange_id_str()
 
     def succeeded(self):
         return self._success

@@ -13,9 +13,9 @@ class Format:
     _EXCHANGE_ID_STR = "unknown"
 
     @classmethod
-    def exchange_name(cls):
+    def exchange_id_str(cls):
         """
-        Human-friendly name of this exchange.
+        Machine-friendly string ID of this exchange.
         :return: str
         """
         return cls._EXCHANGE_ID_STR
