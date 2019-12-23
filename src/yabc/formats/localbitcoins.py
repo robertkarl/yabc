@@ -33,8 +33,8 @@ def _is_sell(trade_type: LocalBitcoinTradeTypes):
 
 
 class LocalBitcoinsParser(Format):
-    FORMAT_NAME = "localbitcoins"
-    EXCHANGE_HUMAN_READABLE_NAME = "localbitcoins"
+    _EXCHANGE_ID_STR = "localbitcoins"
+    EXCHANGE_HUMAN_READABLE_NAME = "LocalBitcoins.com"
 
     def attempt_read_transaction(self, line):
         try:

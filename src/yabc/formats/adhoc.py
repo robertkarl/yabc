@@ -51,6 +51,7 @@ class AdhocParser(Format):
 
     FORMAT_NAME = "adhoc CSV"
     EXCHANGE_HUMAN_READABLE_NAME = "adhoc"
+    _EXCHANGE_ID_STR = "adhoc"
 
     def validate_headers(self, curr):
         for header_name in _FIELD_NAMES:

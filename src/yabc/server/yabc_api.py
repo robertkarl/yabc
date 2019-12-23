@@ -104,12 +104,12 @@ def taxdocs():
 def delete_by_exchange(exchange_name):
     userid = get_userid()
     try:
-        sql_backend.get_db().tx_delete_by_exchange(userid, exchange_name)
+        deleted_rows = sql_backend.get_db().tx_delete_by_exchange(userid, exchange_name)
         sql_backend.close_db()
     except RuntimeError:
         return flask.make_response(("Failed to delete.", 500))
     return flask.jsonify(
-        {"result": "Deleted transactions for exchange {}".format(exchange_name)}
+        {"count": deleted_rows, "result": "Deleted transactions for exchange {}".format(exchange_name)}
     )
 
 

@@ -10,6 +10,7 @@ class Format:
 
     FORMAT_NAME = "Unknown exchange - CSV"
     EXCHANGE_HUMAN_READABLE_NAME = "Unknown exchange"
+    _EXCHANGE_ID_STR = "unknown"
 
     @classmethod
     def exchange_name(cls):
@@ -17,7 +18,7 @@ class Format:
         Human-friendly name of this exchange.
         :return: str
         """
-        return cls.EXCHANGE_HUMAN_READABLE_NAME
+        return cls._EXCHANGE_ID_STR
 
     def has_next(self):
         if not self._reports:
