@@ -26,6 +26,7 @@ class AdhocCsvTest(unittest.TestCase):
         """ Adhoc format load and check. """
         for tx in self.txs:
             self.assertEqual(tx.source, adhoc.AdhocParser.exchange_id_str())
+            self.assertEqual(tx.source, 'adhoc')
         gift_received = self.txs[0]
         self.assertEqual(gift_received.operation, transaction.Operation.GIFT_RECEIVED)
         self.assertEqual(gift_received.date, datetime.datetime(2018, 3, 4))
