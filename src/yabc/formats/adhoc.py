@@ -51,6 +51,7 @@ class AdhocParser(Format):
 
     FORMAT_NAME = "adhoc CSV"
     EXCHANGE_HUMAN_READABLE_NAME = "adhoc"
+    _EXCHANGE_ID_STR = "adhoc"
 
     def validate_headers(self, curr):
         for header_name in _FIELD_NAMES:
@@ -154,7 +155,7 @@ def _handle_spending(date, curr):
         symbol_received="USD",
         fees=fees,
         fee_symbol=fee_coin,
-        source=AdhocParser.exchange_name(),
+        source=AdhocParser.exchange_id_str(),
     )
 
 
@@ -174,7 +175,7 @@ def _handle_buy(date, curr):
         quantity_received=curr[_RECEIVED_AMOUNT],
         fees=fees,
         fee_symbol=feecoin,
-        source=AdhocParser.exchange_name(),
+        source=AdhocParser.exchange_id_str(),
     )
 
 
@@ -193,7 +194,7 @@ def _handle_gift_received(date, curr):
         # What was actually received
         quantity_received=curr[_RECEIVED_AMOUNT],
         symbol_received=curr[_RECEIVED_CURRENCY],
-        source=AdhocParser.exchange_name(),
+        source=AdhocParser.exchange_id_str(),
     )
 
 
@@ -205,7 +206,7 @@ def _handle_gift_sent(date, curr):
         quantity_traded=curr[_TRADED_AMOUNT],
         symbol_received="USD",
         quantity_received=0,
-        source=AdhocParser.exchange_name(),
+        source=AdhocParser.exchange_id_str(),
     )
 
 
@@ -225,7 +226,7 @@ def _handle_mining(date, curr):
         symbol_traded="USD",
         quantity_traded=mined_value,
         date=date,
-        source=AdhocParser.exchange_name(),
+        source=AdhocParser.exchange_id_str(),
     )
     return trans
 
@@ -254,7 +255,7 @@ def _make_adhoc_sell(date, curr):
             date=date,
             fees=fee,
             fee_symbol=fee_coin,
-            source=AdhocParser.exchange_name(),
+            source=AdhocParser.exchange_id_str(),
         )
 
 

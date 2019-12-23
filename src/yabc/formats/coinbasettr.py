@@ -70,7 +70,7 @@ class CoinbaseTTRParser(Format):
                 date=date,
                 fees=fiat_fee,
                 quantity=quantity,
-                source=self.exchange_name(),
+                source=self.exchange_id_str(),
                 usd_subtotal=fiat - fiat_fee,
             )
         except RuntimeError:

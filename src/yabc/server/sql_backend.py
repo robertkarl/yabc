@@ -2,7 +2,6 @@
 Track the sql alchemy session and provide methods for endpoints.
 """
 import datetime
-import hashlib
 import io
 import json
 import logging
@@ -21,7 +20,6 @@ from yabc import basis
 from yabc import coinpool
 from yabc import costbasisreport
 from yabc import formats
-from yabc import taxdoc
 from yabc import transaction
 from yabc import user
 from yabc.costbasisreport import CostBasisReport
@@ -140,16 +138,21 @@ class SqlBackend:
         self.session.commit()
         self.run_basis(userid)
 
-    def tx_delete_by_exchange(self, userid, exchange):
+    def tx_delete_by_exchange(self, userid, exchange, rerun_basis=True):
         """
-        Deletes CBRs and re-runs basis.
+        Deletes CBRs.
         """
-        self.session.query(transaction.Transaction).filter_by(
-            user_id=userid, source=exchange
-        ).delete()
-        self.session.query(CostBasisReport).filter_by(user_id=userid).delete()
-        self.session.commit()
-        self.run_basis(userid)
+        count = (
+            self.session.query(transaction.Transaction)
+            .filter_by(user_id=userid, source=exchange)
+            .delete()
+        )
+        if count != 0:
+            self.session.query(CostBasisReport).filter_by(user_id=userid).delete()
+            self.session.commit()
+        if rerun_basis:
+            self.run_basis(userid)
+        return count
 
     def transactions_clear_all(self, userid):
         """

@@ -21,11 +21,12 @@ from yabc.formats import Format
 
 HEADERS = "Date,Market,Type,Price,Amount,Total,Fee,Fee Coin".split(",")
 
-
 _BINANCE_TYPE_MAP = {
     "SELL": transaction.Operation.SELL,
     "BUY": transaction.Operation.BUY,
 }
+
+_BINANCE_EXCHANGE_ID_STR = "binance"
 
 
 def _transaction_from_binance_dict(
@@ -50,7 +51,7 @@ def _transaction_from_binance_dict(
 
     return transaction.Transaction(
         operation=operation,
-        source="binance",
+        source=_BINANCE_EXCHANGE_ID_STR,
         quantity_traded=quantity_traded,
         quantity_received=quantity_received,
         symbol_traded=symbol_traded,
@@ -62,8 +63,8 @@ def _transaction_from_binance_dict(
 
 
 class BinanceParser(Format):
-    FORMAT_NAME = "Binance"
     EXCHANGE_HUMAN_READABLE_NAME = "Binance"
+    _EXCHANGE_ID_STR = _BINANCE_EXCHANGE_ID_STR
 
     def parse(self):
         reader = DictReader(self._file)
