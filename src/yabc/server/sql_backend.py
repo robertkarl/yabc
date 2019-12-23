@@ -138,6 +138,22 @@ class SqlBackend:
         self.session.commit()
         self.run_basis(userid)
 
+    def tx_delete_by_exchange(self, userid, exchange, rerun_basis=True):
+        """
+        Deletes CBRs.
+        """
+        count = (
+            self.session.query(transaction.Transaction)
+            .filter_by(user_id=userid, source=exchange)
+            .delete()
+        )
+        if count != 0:
+            self.session.query(CostBasisReport).filter_by(user_id=userid).delete()
+            self.session.commit()
+        if rerun_basis:
+            self.run_basis(userid)
+        return count
+
     def transactions_clear_all(self, userid):
         """
         Clear all transactions and re-run basis.
@@ -263,22 +279,6 @@ class SqlBackend:
             logging.warning("Failed to run basis ")
             return flask.jsonify({"result": "failure"})
         return flask.jsonify({"result": "success"})
-
-    def tx_delete_by_exchange(self, userid, exchange, rerun_basis=True):
-        """
-        Deletes CBRs.
-        """
-        count = (
-            self.session.query(transaction.Transaction)
-            .filter_by(user_id=userid, source=exchange)
-            .delete()
-        )
-        if count != 0:
-            self.session.query(CostBasisReport).filter_by(user_id=userid).delete()
-            self.session.commit()
-        if rerun_basis:
-            self.run_basis(userid)
-        return count
 
     def run_basis(self, userid):
         """
