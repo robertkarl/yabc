@@ -38,6 +38,7 @@ _ALL_HEADERS = [
 class CoinbaseTTRParser(Format):
     FORMAT_NAME = "Coinbase (Tax Transaction Report Format)"
     EXCHANGE_HUMAN_READABLE_NAME = "Coinbase"
+    _EXCHANGE_ID_STR = "coinbase"
 
     def attempt_read_transaction(self, line):
         """
