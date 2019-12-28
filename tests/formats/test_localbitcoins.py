@@ -23,7 +23,7 @@ class LocalbitcoinsCsvTest(unittest.TestCase):
         self.assertEqual(buy_tx.quantity, decimal.Decimal("1.0"))
         self.assertEqual(buy_tx.operation, Operation.BUY)
         self.assertEqual(buy_tx.date.date(), datetime.date(2017, 1, 2))
-        self.assertEqual(buy_tx.source, 'localbitcoins')
+        self.assertEqual(buy_tx.source, "localbitcoins")
 
         sell = reports[1]
         self.assertEqual(sell.asset_name, "BTC")

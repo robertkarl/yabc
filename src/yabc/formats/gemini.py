@@ -1,10 +1,6 @@
-"""
-TODO: Accept Gemini .xlsx files. Do not require the user to convert to CSV.
-"""
-import csv
 import decimal
 
-import delorean
+import openpyxl
 
 from yabc import formats
 from yabc import transaction
@@ -14,24 +10,23 @@ _SOURCE_NAME = "gemini"
 _TIME_HEADER = "Time (UTC)"
 _TYPE_HEADER = "Type"
 
+_PAIR_INDEX = 3
+_TYPE_INDEX = 2
+_AMOUNT_INDEX = 7
+_USD_FEE = 8
 
-def _gem_int_from_dollar_string(s):
-    s = s.strip(" $()")
-    s = s.replace(",", "")
-    return decimal.Decimal(s)
+_ROWS = []
 
 
 def _quantity(tx_row):
     """
-    :return: a decimal.Decimal with the quantity of eth, btc, etc traded.
+    :return: a decimal.Decimal, str tuple with the quantity of eth, btc, etc traded.
     """
-    # Currency field looks like 'BTCUSD'
-    currency = tx_row["Symbol"].rstrip("USD")
-    if currency not in _CURRENCIES:
-        raise RuntimeError("Currency {} not supported!".format(currency))
-
-    column_name = "{} Amount {}".format(currency, currency)
-    return (decimal.Decimal(tx_row[column_name].strip("(").split(" ")[0]), currency)
+    supported = [(10, "BTC"), (13, "ETH"), (16, "ZEC"), (19, "BCH"), (22, "LTC")]
+    for index, currency_name in supported:
+        if tx_row[index].value:
+            return abs(decimal.Decimal(str(tx_row[index].value))), currency_name
+    raise RuntimeError("Could not parse any cryptocurrency from Gemini row")
 
 
 def _tx_from_gemini_row(tx_row):
@@ -41,18 +36,14 @@ def _tx_from_gemini_row(tx_row):
     :param tx_row: a dictionary with keys from a gemini transaction history spreadsheet.
     :return:  None if not a transaction needed for taxes. Otherwise a Transaction object.
     """
-    if _TYPE_HEADER not in tx_row:
-        raise RuntimeError("Not a valid gemini file.")
-    if tx_row[_TYPE_HEADER] not in ("Buy", "Sell"):
+    if tx_row[_TYPE_INDEX].value not in ("Buy", "Sell"):
         return None
-    date = delorean.parse(
-        "{} {}".format(tx_row["Date"], tx_row[_TIME_HEADER]), dayfirst=False
-    ).datetime
-    usd_subtotal = _gem_int_from_dollar_string(tx_row["USD Amount USD"])
-    fees = _gem_int_from_dollar_string(tx_row["Fee (USD) USD"])
+    date = tx_row[0].value
+    usd_subtotal = abs(decimal.Decimal(str(tx_row[_AMOUNT_INDEX].value)))
+    fees = abs(decimal.Decimal(str(tx_row[_USD_FEE].value)))
     quantity, currency = _quantity(tx_row)
     quantity = quantity
-    tp = _gemini_type_to_operation(tx_row["Type"])
+    tp = _gemini_type_to_operation(tx_row[_TYPE_INDEX].value)
     if tp == transaction.Operation.BUY:
         tx = transaction.Transaction(
             operation=tp,
@@ -86,34 +77,17 @@ def _read_txs_from_file(f):
 
     Note: we use the seek method on f.
     """
-    f.seek(0)
-    rawcsv = [i for i in csv.reader(f)]
-    if not rawcsv:
-        raise RuntimeError("not enough rows in gemini file {}".format(f))
-    fieldnames = rawcsv[0]
-    _valid_gemini_headers(fieldnames)
-    f.seek(0)
-    transactions = [i for i in csv.DictReader(f, fieldnames)][1:]
     ans = []
-    for row in transactions:
+    f.seek(0)
+    workbook = openpyxl.load_workbook(f)
+    sheet = workbook.get_active_sheet()
+    all_contents = list(sheet.rows)
+    contents = all_contents[1:]
+    for row in contents:
         item = _tx_from_gemini_row(row)
         if item is not None:
             ans.append(item)
     return ans
-
-
-def _valid_gemini_headers(fieldnames):
-    """
-    Make sure we have the required headers to be sure this is a gemini file.
-    """
-    required_fields = "Type,Date,Time (UTC),Symbol,BTC Amount BTC,USD Amount USD,Fee (USD) USD".split(
-        ","
-    )
-    for field in required_fields:
-        if field not in fieldnames:
-            raise RuntimeError(
-                "Not a valid gemini file. Requires header '{}'".format(field)
-            )
 
 
 class GeminiParser(formats.Format):
@@ -121,12 +95,20 @@ class GeminiParser(formats.Format):
     EXCHANGE_HUMAN_READABLE_NAME = "Gemini"
     _EXCHANGE_ID_STR = "gemini"
 
+    @staticmethod
+    def needs_binary():
+        return True
+
     def __init__(self, fname_or_file):
+        """
+        For gemini, which uses XLSX, the open file must be either in binary mode, or the name of a file for openpyxl.
+        :param fname_or_file:
+        """
         self.txs = []
         self.flags = []
         self._file = fname_or_file
         if isinstance(fname_or_file, str):
-            with open(fname_or_file) as f:
+            with open(fname_or_file, "br") as f:
                 self.txs = _read_txs_from_file(f)
         else:
             # it must be an open file

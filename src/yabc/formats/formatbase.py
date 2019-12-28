@@ -25,6 +25,10 @@ class Format:
             return False
         return True
 
+    @staticmethod
+    def needs_binary():
+        return False
+
     def cleanup(self):
         logging.info("cleaning up file {}".format(self._file))
         if self._file:

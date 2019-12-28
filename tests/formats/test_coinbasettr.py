@@ -27,7 +27,7 @@ class CoinbaseTTRCsvTest(unittest.TestCase):
             parser = coinbasettr.CoinbaseTTRParser(f)
             txs = [i for i in parser]
             for tx in txs:
-                self.assertEqual(tx.source, 'coinbase')
+                self.assertEqual(tx.source, "coinbase")
             self.assertEqual(len(txs), 8)
             buys = [i for i in txs if i.operation == transaction.Operation.BUY]
             sales = [i for i in txs if i.operation == transaction.Operation.SELL]
