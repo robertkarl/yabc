@@ -8,8 +8,7 @@ https://discuss.python.org/t/python-download-stats-for-march-2019/1424
 Usage statistics show that no single minor version X of 3.4.X has more than
 .39%
 
-python3.5 is gone because openpyxl doesn't support it.
-TODO: look into making this an optional dep, or using an older version of openpyxl
+python3.5+ is convenient to support because 16.04 ships with py3.5 
 """
 
 version = {}
@@ -22,14 +21,15 @@ import setuptools
 setuptools.setup(
     version=version,
     name="yabc",
-    python_requires=">=3.6,<3.9",
+    python_requires=">=3.5,<3.9",
     author="Seattle Blockchain Solutions",
     maintainer="Robert Karl",
     maintainer_email="robertkarljr@gmail.com",
     install_requires=[
         "delorean==1.0.0",
         "flask==1.1.1",
-        "openpyxl==3.0.2",
+        # version will differ for 3.8 (v3.0.2) vs 2.6.4 which supports py3.5
+        "openpyxl",
         "python-dateutil==2.8.0",  # TODO: remove, we can just use delorean
         "sqlalchemy==1.3.3",
     ],
