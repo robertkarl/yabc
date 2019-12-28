@@ -24,7 +24,8 @@ def main():
     parser.add_argument("filenames", nargs="+", metavar="filename")
     args = parser.parse_args()
     tx_files = [
-        yabc.transaction_parser.TxFile(open(fname), open(fname, 'br'), None) for fname in args.filenames
+        yabc.transaction_parser.TxFile(open(fname), open(fname, "br"), None)
+        for fname in args.filenames
     ]
     parser = yabc.transaction_parser.TransactionParser(tx_files)
     parser.parse()

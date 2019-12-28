@@ -24,11 +24,11 @@ setuptools.setup(
     maintainer="Robert Karl",
     maintainer_email="robertkarljr@gmail.com",
     install_requires=[
-        "flask==1.1.1",
-        "sqlalchemy==1.3.3",
         "delorean==1.0.0",
-        "openpyxl",
+        "flask==1.1.1",
+        "openpyxl==3.0.2",
         "python-dateutil==2.8.0",  # TODO: remove, we can just use delorean
+        "sqlalchemy==1.3.3",
     ],
     url="https://github.com/robertkarl/yabc",
     description="A tax estimator for cryptocurrencies.",

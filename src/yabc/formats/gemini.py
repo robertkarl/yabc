@@ -18,15 +18,9 @@ _USD_FEE = 8
 _ROWS = []
 
 
-def _gem_int_from_dollar_string(s):
-    s = s.strip(" $()")
-    s = s.replace(",", "")
-    return decimal.Decimal(s)
-
-
 def _quantity(tx_row):
     """
-    :return: a decimal.Decimal with the quantity of eth, btc, etc traded.
+    :return: a decimal.Decimal, str tuple with the quantity of eth, btc, etc traded.
     """
     supported = [(10, "BTC"), (13, "ETH"), (16, "ZEC"), (19, "BCH"), (22, "LTC")]
     for index, currency_name in supported:
