@@ -88,16 +88,15 @@ class BinanceMarket:
     """ Parse coin/coin market names from Binance cells. Slightly complicated
     by the fact that some of the symbols have 4 characters
     """
+
     def __init__(self, market):
-        possible_lengths = [3,4,5]
+        possible_lengths = [3, 4, 5]
         for curr_len in possible_lengths:
             if market[:curr_len] in _KNOWN_COINS:
                 self._first = market[:curr_len]
                 self._second = market[curr_len:]
                 return
-        raise RuntimeError(
-            "Could not parse transaction from market {}".format(market)
-        )
+        raise RuntimeError("Could not parse transaction from market {}".format(market))
 
     def first(self):
         return self._first
