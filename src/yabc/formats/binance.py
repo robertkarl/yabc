@@ -128,7 +128,7 @@ def _read_binance_txs_from_file(f):
     ans = []
     f.seek(0)
     workbook = openpyxl.load_workbook(f)
-    sheet = workbook.get_active_sheet()
+    sheet = workbook.active
     all_contents = list(sheet.rows)
     _raise_if_headers_bad(all_contents[0])
     contents = all_contents[1:]

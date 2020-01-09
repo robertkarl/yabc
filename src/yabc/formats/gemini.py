@@ -80,7 +80,7 @@ def _read_txs_from_file(f):
     ans = []
     f.seek(0)
     workbook = openpyxl.load_workbook(f)
-    sheet = workbook.get_active_sheet()
+    sheet = workbook.active
     all_contents = list(sheet.rows)
     contents = all_contents[1:]
     for row in contents:
