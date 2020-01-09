@@ -24,6 +24,20 @@ class BinanceCsvTest(unittest.TestCase):
         self.buy_btc_with_cash = reports[2]  # type: transaction.Transaction
         self.sell_btc = reports[3]  # type: transaction.Transaction
 
+    def test_text_cells_xlsx(self):
+        binance_parser = binance.BinanceParser(open("testdata/binance/binance.xlsx", 'br'))
+        txs = list(binance_parser)
+        self.assertEqual(len(txs), 1)
+        tx = txs[0] # type: transaction.Transaction
+        self.assertEqual(tx.date, datetime.datetime(2019,4,16, 4, 53, 2))
+        self.assertEqual(tx.symbol_received,  "ETH")
+        self.assertEqual(tx.symbol_traded,  "BTC")
+        self.assertEqual(tx.quantity_received, decimal.Decimal('.615'))
+        self.assertEqual(tx.quantity_traded, decimal.Decimal('0.01966462'))
+        self.assertEqual(tx.fees, decimal.Decimal('0.000615'))
+        self.assertEqual(tx.fee_symbol, 'ETH')
+
+
     def test_binance_sell(self):
         sell_to_eth = self.sell_to_eth
         self.assertEqual(sell_to_eth.operation, Transaction.Operation.SELL)
