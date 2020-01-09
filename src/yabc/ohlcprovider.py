@@ -19,7 +19,7 @@ def _make_date(date_str):
 jan_1 = datetime.datetime(2017, 1, 1).date()
 _ETH_DATA = {
     jan_1: _make_ohlc("8.5 8.6 8.0 8.1"),
-    datetime.datetime(2018, 5, 22).date(): _make_ohlc("700 701 644 648"),
+    _make_date("2018 5 22"): _make_ohlc("700 701 644 648"),
     _make_date("2019 4 16"): _make_ohlc("162 168 161 168"),
 }
 _BTC_DATA = {
@@ -28,6 +28,10 @@ _BTC_DATA = {
     _make_date("2019 4 16"): _make_ohlc("5066 5238 5055 5235"),
 }
 _PRICE_DATA = {"ETH": _ETH_DATA, "BTC": _BTC_DATA}
+
+
+class NoDataError(RuntimeError):
+    pass
 
 
 class OhlcProvider:
@@ -49,4 +53,4 @@ class OhlcProvider:
             val = _PRICE_DATA[symbol][dt]
             return val
         except KeyError:
-            raise RuntimeError("No price data found for {} on {}.".format(symbol, dt))
+            raise NoDataError("No price data found for {} on {}.".format(symbol, dt))

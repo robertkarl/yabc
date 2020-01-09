@@ -51,11 +51,43 @@ def _split_coin_to_add(coin_to_split, amount, trans):
     return to_add
 
 
-def _split_report(coin_to_split, amount, trans, ohlc_provider=None):
+def _fiat_value_for_trade(
+    tx: transaction.Transaction, ohlc: ohlcprovider.OhlcProvider, prefer_traded: bool
+):
+    """
+    Lookup the value of a coin/coin trade.
+
+    Suppose we want the value of a trade of a binance coin/coin pair where one
+    token has essentially zero value, or no history available.
+
+    The values of the buy and sell sides can be different, but if we don't have any
+    data about one leg, we can use the other to calculate the trade's value.
+
+    Get the value of a transaction in fiat, or else raise NoDataError.
+
+    :param prefer_traded: If True, prefer the symbol_traded leg.
+    """
+    traded = lambda: ohlc.get(tx.symbol_traded, tx.date).high * tx.quantity_traded
+    received = lambda: ohlc.get(tx.symbol_received, tx.date).high * tx.quantity_received
+    if prefer_traded:
+        lambdas = (traded, received)
+    else:
+        lambdas = (received, traded)
+    for fx in lambdas:
+        try:
+            return fx()
+        except ohlcprovider.NoDataError:
+            pass
+    # if we got here, we found no data.
+    raise ohlcprovider.NoDataError("Could not calculate value for trade {}".format(tx))
+
+
+def _split_report(coin_to_split, amount, trans, ohlc=None):
     # type:  (transaction.Transaction, Decimal, transaction.Transaction, ohlcprovider.OhlcProvider) -> CostBasisReport
     """
-    Given that we are splitting `coin_to_split`, sell`amount` of it and create
-    a CBR. The event triggering the CBR is `trans`, typically a sale of some kind.
+    Given that we are splitting `coin_to_split`, sell `amount` of it and create
+    a CostBasisReport. The event triggering the CBR is `trans`, typically a
+    sale of some kind.
 
 
     The cost basis logic. Note that all fees on buy and sell sides are
@@ -88,10 +120,7 @@ def _split_report(coin_to_split, amount, trans, ohlc_provider=None):
     received_asset = "USD"
     if not is_fiat(trans.symbol_received):
         assert trans.is_coin_to_coin()
-        fiat_received = (
-            ohlc_provider.get(trans.symbol_received, trans.date).high
-            * trans.quantity_received
-        )
+        fiat_received = _fiat_value_for_trade(trans, ohlc, prefer_traded=False)
         received_asset = trans.symbol_received
     frac_of_sale_tx = amount / trans.quantity_traded
     proceeds = (frac_of_sale_tx * fiat_received).quantize(Decimal(".01"))
@@ -196,7 +225,7 @@ def _get_coin_to_coin_input(trans, ohlc):
 
     TODO: determine the buy-side fees for a coin/coin trade.
     """
-    cost_basis = ohlc.get(trans.symbol_traded, trans.date).high * trans.quantity_traded
+    cost_basis = _fiat_value_for_trade(trans, ohlc, prefer_traded=True)
     return transaction.Transaction(
         transaction.Operation.TRADE_INPUT,
         symbol_received=trans.symbol_received,
@@ -232,8 +261,7 @@ def _build_sale_reports(pool, pool_index, trans, basis_information_absent, ohlc)
     if not is_fiat(trans.symbol_received):
         received_asset = trans.symbol_received
         proceeds = (
-            trans.quantity_received * ohlc.get(trans.symbol_received, trans.date).high
-            - fees_in_fiat
+            _fiat_value_for_trade(trans, ohlc, prefer_traded=False) - fees_in_fiat
         )
     if basis_information_absent:
         report = CostBasisReport(
@@ -272,11 +300,7 @@ def _build_sale_reports(pool, pool_index, trans, basis_information_absent, ohlc)
                 curr_basis_tx.quantity_received,
                 date_purchased=curr_basis_tx.date,
                 proceeds=portion_of_sale
-                * (
-                    trans.quantity_received
-                    * ohlc.get(trans.symbol_received, trans.date).high
-                    - sell_fees
-                ),
+                * (_fiat_value_for_trade(trans, ohlc, prefer_traded=False) - sell_fees),
                 date_sold=trans.date,
                 asset=trans.symbol_traded,
                 secondary_asset=received_asset,
