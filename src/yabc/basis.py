@@ -53,7 +53,7 @@ def _split_coin_to_add(coin_to_split, amount, trans):
 
 def _fiat_value_for_trade(
     tx: transaction.Transaction, ohlc: ohlcprovider.OhlcProvider, prefer_traded: bool
-):
+) -> decimal.Decimal:
     """
     Lookup the value of a coin/coin trade.
 
