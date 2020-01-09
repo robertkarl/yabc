@@ -15,7 +15,7 @@ from yabc.transaction import Transaction
 
 class BinanceCsvTest(unittest.TestCase):
     def setUp(self) -> None:
-        binance_parser = binance.BinanceParser(open("testdata/binance/binance.csv"))
+        binance_parser = binance.BinanceParser(open("testdata/binance/binance-yabc-sample.xlsx", 'br'))
         reports = list(binance_parser)
         self.txs = reports
         self.assertEqual(len(reports), 4)
