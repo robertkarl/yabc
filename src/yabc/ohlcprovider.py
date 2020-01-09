@@ -10,6 +10,8 @@ OhlcData = namedtuple("OhlcData", ("open", "high", "low", "close"))
 def _make_ohlc(ohlc_str):
     # type: (str) -> OhlcData
     return OhlcData(*[decimal.Decimal(i) for i in ohlc_str.split()])
+
+
 def _make_date(date_str):
     return datetime.datetime(*[int(i) for i in date_str.split()]).date()
 

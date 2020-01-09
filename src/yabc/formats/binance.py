@@ -8,47 +8,56 @@ yabc is not affiliated with the exchange or company Binance.
 import datetime
 import decimal
 from typing import Sequence
-import openpyxl
 
 import delorean
+import openpyxl
 
 from yabc import transaction
 from yabc.formats import FORMAT_CLASSES
 from yabc.formats import Format
 
-_HEADERS =('Date(UTC)', 'Market', 'Type', 'Price', 'Amount', 'Total', 'Fee', 'Fee Coin')
+_HEADERS = (
+    "Date(UTC)",
+    "Market",
+    "Type",
+    "Price",
+    "Amount",
+    "Total",
+    "Fee",
+    "Fee Coin",
+)
 
 _KNOWN_COINS = {
- 'ADA',
- 'ADX',
- 'AMB',
- 'AST',
- 'BCPT',
- 'BNB',
- 'BSV',
- 'BTC',
- 'DGD',
- 'ENG',
- 'EOS',
- 'ETC',
- 'ETH',
- 'GVT',
- 'ICX',
- 'IOTA',
- 'LTC',
- 'LUN',
- 'MOD',
- 'MTL',
- 'NANO',
- 'NEO',
- 'PPT',
- 'USDT',
- 'VEN',
- 'WTC',
- 'XLM',
- 'XMR',
- 'XRP',
-                }
+    "ADA",
+    "ADX",
+    "AMB",
+    "AST",
+    "BCPT",
+    "BNB",
+    "BSV",
+    "BTC",
+    "DGD",
+    "ENG",
+    "EOS",
+    "ETC",
+    "ETH",
+    "GVT",
+    "ICX",
+    "IOTA",
+    "LTC",
+    "LUN",
+    "MOD",
+    "MTL",
+    "NANO",
+    "NEO",
+    "PPT",
+    "USDT",
+    "VEN",
+    "WTC",
+    "XLM",
+    "XMR",
+    "XRP",
+}
 
 
 _BINANCE_TYPE_MAP = {
@@ -57,6 +66,7 @@ _BINANCE_TYPE_MAP = {
 }
 
 _BINANCE_EXCHANGE_ID_STR = "binance"
+
 
 class BinanceMarket:
     def __init__(self, market):
@@ -67,11 +77,16 @@ class BinanceMarket:
             self._first = market[:4]
             self._second = market[4:]
         else:
-            raise RuntimeError("could not parse transaction from market {}".format(market))
+            raise RuntimeError(
+                "could not parse transaction from market {}".format(market)
+            )
+
     def first(self):
         return self._first
+
     def second(self):
         return self._second
+
 
 def _transaction_from_binance_dict(
     date, market, operation, amount, total, fee, feecoin
@@ -106,10 +121,14 @@ def _transaction_from_binance_dict(
         fee_symbol=feecoin,
     )
 
+
 def _raise_if_headers_bad(row):
     for i, h in enumerate(_HEADERS):
         if not row[i].value == h:
-            raise RuntimeError("Not a valid Binance valid, header {} found".format(row[i].value))
+            raise RuntimeError(
+                "Not a valid Binance valid, header {} found".format(row[i].value)
+            )
+
 
 def _tx_from_binance_row(line):
     date = delorean.parse(line[0].value).datetime
@@ -121,7 +140,8 @@ def _tx_from_binance_row(line):
     fee = decimal.Decimal(line[6].value)
     fee_coin = line[7].value
     return _transaction_from_binance_dict(
-            date, market, operation, amount, total, fee, fee_coin)
+        date, market, operation, amount, total, fee, fee_coin
+    )
 
 
 def _read_binance_txs_from_file(f):
@@ -137,6 +157,7 @@ def _read_binance_txs_from_file(f):
         if item is not None:
             ans.append(item)
     return ans
+
 
 class BinanceParser(Format):
     EXCHANGE_HUMAN_READABLE_NAME = "Binance"
