@@ -30,33 +30,49 @@ _HEADERS = (
 _KNOWN_COINS = {
     "ADA",
     "ADX",
+    "ALGO",
     "AMB",
     "AST",
+    "ATOM",
+    "BAT",
+    "BCH",
     "BCPT",
     "BNB",
     "BSV",
     "BTC",
+    "DASH",
     "DGD",
+    "DOCK",
+    "DOGE",
     "ENG",
     "EOS",
     "ETC",
     "ETH",
+    "FTT",
     "GVT",
     "ICX",
     "IOTA",
+    "LINK",
     "LTC",
     "LUN",
+    "MATIC",
     "MOD",
     "MTL",
     "NANO",
     "NEO",
+    "ONT",
     "PPT",
+    "TOMO",
+    "TRX",
     "USDT",
     "VEN",
+    "VET",
+    "WAVES",
     "WTC",
     "XLM",
     "XMR",
     "XRP",
+    "XTZ",
 }
 
 
@@ -73,16 +89,15 @@ class BinanceMarket:
     by the fact that some of the symbols have 4 characters
     """
     def __init__(self, market):
-        if market[:3] in _KNOWN_COINS:
-            self._first = market[:3]
-            self._second = market[3:]
-        elif market[:4] in _KNOWN_COINS:
-            self._first = market[:4]
-            self._second = market[4:]
-        else:
-            raise RuntimeError(
-                "Could not parse transaction from market {}".format(market)
-            )
+        possible_lengths = [3,4,5]
+        for curr_len in possible_lengths:
+            if market[:curr_len] in _KNOWN_COINS:
+                self._first = market[:curr_len]
+                self._second = market[curr_len:]
+                return
+        raise RuntimeError(
+            "Could not parse transaction from market {}".format(market)
+        )
 
     def first(self):
         return self._first
