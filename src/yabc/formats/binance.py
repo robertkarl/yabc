@@ -69,6 +69,9 @@ _BINANCE_EXCHANGE_ID_STR = "binance"
 
 
 class BinanceMarket:
+    """ Parse coin/coin market names from Binance cells. Slightly complicated
+    by the fact that some of the symbols have 4 characters
+    """
     def __init__(self, market):
         if market[:3] in _KNOWN_COINS:
             self._first = market[:3]
@@ -78,7 +81,7 @@ class BinanceMarket:
             self._second = market[4:]
         else:
             raise RuntimeError(
-                "could not parse transaction from market {}".format(market)
+                "Could not parse transaction from market {}".format(market)
             )
 
     def first(self):
@@ -134,7 +137,6 @@ def _tx_from_binance_row(line):
     date = delorean.parse(line[0].value).datetime
     market = line[1].value
     operation = _BINANCE_TYPE_MAP[line[2].value]
-    price = decimal.Decimal(line[3].value)
     amount = decimal.Decimal(line[4].value)
     total = decimal.Decimal(line[5].value)
     fee = decimal.Decimal(line[6].value)
