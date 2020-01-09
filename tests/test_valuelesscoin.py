@@ -1,7 +1,8 @@
 import datetime
 import unittest
 
-from yabc import basis, coinpool
+from yabc import basis
+from yabc import coinpool
 from yabc import ohlcprovider
 from yabc import transaction
 from yabc import user  # noqa
@@ -13,21 +14,26 @@ SELL = Transaction.Operation.SELL
 
 class TransactionTest(unittest.TestCase):
     def setUp(self):
-        pass
-        self.history = [transaction.Transaction(operation=transaction.Operation.BUY,
-                                                quantity_traded=1000,
-                                                symbol_traded='USD',
-                                                quantity_received=1,
-                                                symbol_received='BTC',
-                                                date=datetime.datetime(2018,5,22)),]
-        self.history.append(transaction.Transaction(
-            operation=transaction.Operation.SELL,
-            symbol_received="IOTA",
-            symbol_traded="BTC",
-            quantity_received="10",
-            quantity_traded=".1",
-            date=datetime.date(2019, 4, 16),
-        ))
+        self.history = [
+            transaction.Transaction(
+                operation=transaction.Operation.BUY,
+                quantity_traded=1000,
+                symbol_traded="USD",
+                quantity_received=1,
+                symbol_received="BTC",
+                date=datetime.datetime(2018, 5, 22),
+            )
+        ]
+        self.history.append(
+            transaction.Transaction(
+                operation=transaction.Operation.SELL,
+                symbol_received="IOTA",
+                symbol_traded="BTC",
+                quantity_received="10",
+                quantity_traded=".1",
+                date=datetime.date(2019, 4, 16),
+            )
+        )
         bp = basis.BasisProcessor(method=coinpool.PoolMethod.FIFO, txs=self.history)
         reports = bp.process()
         flags = bp.flags()
@@ -47,7 +53,9 @@ class TransactionTest(unittest.TestCase):
             date=datetime.date(2019, 4, 16),
         )
         with self.assertRaises(ohlcprovider.NoDataError):
-            basis._fiat_value_for_trade(tx, ohlcprovider.OhlcProvider(), prefer_traded=True)
+            basis._fiat_value_for_trade(
+                tx, ohlcprovider.OhlcProvider(), prefer_traded=True
+            )
 
     def test_valueless_lookup(self):
         """

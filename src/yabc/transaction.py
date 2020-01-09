@@ -147,7 +147,9 @@ class Transaction(yabc.Base):
             if isinstance(date, datetime.datetime):
                 self.date = date.replace(tzinfo=None)
             elif isinstance(date, datetime.date):
-                self.date = datetime.datetime.combine(date, datetime.datetime.min.time())
+                self.date = datetime.datetime.combine(
+                    date, datetime.datetime.min.time()
+                )
             else:
                 raise RuntimeError("not a valid date for a transaction")
 
