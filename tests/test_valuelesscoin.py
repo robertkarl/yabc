@@ -34,6 +34,7 @@ class TransactionTest(unittest.TestCase):
                 date=datetime.date(2019, 4, 16),
             )
         )
+    def test_sell_of_valueless_coin(self):
         bp = basis.BasisProcessor(method=coinpool.PoolMethod.FIFO, txs=self.history)
         reports = bp.process()
         flags = bp.flags()
@@ -42,6 +43,9 @@ class TransactionTest(unittest.TestCase):
         self.assertEqual(reports[0].proceeds, 524)
         self.assertEqual(reports[0].long_term, False)
         self.assertEqual(reports[0].basis, 100)
+        self.assertEqual(len(flags), 0)
+        self.assertEqual(len(stuff.get('IOTA')), 1)
+        self.assertEqual(len(stuff.get('BTC')), 1)
 
     def test_raise_on_no_data(self):
         tx = transaction.Transaction(
