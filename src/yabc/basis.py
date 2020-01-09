@@ -350,6 +350,9 @@ def _process_all(method, txs, ohlc_source=None):
     """
     assert method in coinpool.PoolMethod
     pool = coinpool.CoinPool(method)
+    for tx in txs:
+        if not isinstance(tx, transaction.Transaction):
+            raise RuntimeError("Need transactions in txs")
     to_process = sorted(txs, key=lambda trans: trans.date)
     irs_reports = []
     flags = []

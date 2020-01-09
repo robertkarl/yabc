@@ -143,8 +143,14 @@ class Transaction(yabc.Base):
         self.quantity = Decimal(quantity)
         self.operation = operation
         self.date = date
-        if date and isinstance(date, datetime.datetime):
-            self.date = date.replace(tzinfo=None)
+        if date:
+            if isinstance(date, datetime.datetime):
+                self.date = date.replace(tzinfo=None)
+            elif isinstance(date, datetime.date):
+                self.date = datetime.datetime.combine(date, datetime.datetime.min.time())
+            else:
+                raise RuntimeError("not a valid date for a transaction")
+
         self.usd_subtotal = Decimal(usd_subtotal)
         self.source = source
         self.asset_name = asset_name
