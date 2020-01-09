@@ -15,7 +15,19 @@ class TransactionTest(unittest.TestCase):
     def setUp(self):
         pass
 
-    def test_fees_no_proceeds(self):
+    def test_raise_on_no_data(self):
+        tx = transaction.Transaction(
+            operation=transaction.Operation.BUY,
+            symbol_received="IOTANOTACOIN",
+            symbol_traded="BTCNONEXISTENT",
+            quantity_received="10",
+            quantity_traded=".0001",
+            date=datetime.date(2019, 4, 16),
+        )
+        with self.assertRaises(ohlcprovider.NoDataError):
+            basis._fiat_value_for_trade(tx, ohlcprovider.OhlcProvider(), prefer_traded=True)
+
+    def test_valueless_lookup(self):
         """
         Test valueless coin looks up value from bitcoin
         """
