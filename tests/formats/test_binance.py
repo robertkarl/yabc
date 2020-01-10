@@ -41,6 +41,15 @@ class BinanceCsvTest(unittest.TestCase):
         self.assertEqual(tx.fees, decimal.Decimal("0.000615"))
         self.assertEqual(tx.fee_symbol, "ETH")
 
+    def test_ambiguous_date(self):
+        binance_parser = binance.BinanceParser(
+            open("testdata/binance/binance-ambiguous-date.xlsx", "br")
+        )
+        txs = list(binance_parser)
+        self.assertEqual(len(txs), 1)
+        tx = txs[0]  # type: transaction.Transaction
+        self.assertEqual(tx.date, datetime.datetime(2019, 3, 1, 4, 53, 2))
+
     def test_binance_sell(self):
         sell_to_eth = self.sell_to_eth
         self.assertEqual(sell_to_eth.operation, Transaction.Operation.SELL)
