@@ -2,6 +2,7 @@
 Track the sql alchemy session and provide methods for endpoints.
 """
 import datetime
+import decimal
 import io
 import json
 import logging
@@ -200,7 +201,8 @@ class SqlBackend:
                 "quantity_received",
                 "quantity_traded",
             ):
-                tx_dict[numeric_key] = str(tx_dict[numeric_key])
+                quantize = decimal.Decimal('.00000001')
+                tx_dict[numeric_key] = str(tx_dict[numeric_key].quantize(quantize)).rstrip('0')
             tx_dict["operation"] = tx_dict["operation"].value
         for item in ans:
             item["date"] = str(item["date"])
