@@ -201,8 +201,10 @@ class SqlBackend:
                 "quantity_received",
                 "quantity_traded",
             ):
-                quantize = decimal.Decimal('.00000001')
-                tx_dict[numeric_key] = str(tx_dict[numeric_key].quantize(quantize)).rstrip('0')
+                quantize = decimal.Decimal(".00000001")
+                tx_dict[numeric_key] = (
+                    str(tx_dict[numeric_key].quantize(quantize)).rstrip("0").rstrip(".")
+                )
             tx_dict["operation"] = tx_dict["operation"].value
         for item in ans:
             item["date"] = str(item["date"])
