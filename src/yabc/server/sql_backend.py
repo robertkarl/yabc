@@ -278,7 +278,7 @@ class SqlBackend:
                 userid
             )  # TODO: determine if this is a performance bottleneck.
         except Exception as e:
-            logging.warning("Failed to run basis ")
+            logging.warning("Failed to run basis {}".format(e))
             return flask.jsonify({"result": "failure"})
         return flask.jsonify({"result": "success"})
 

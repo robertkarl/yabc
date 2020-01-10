@@ -148,7 +148,7 @@ def _raise_if_headers_bad(row):
 
 
 def _tx_from_binance_row(line):
-    date = delorean.parse(line[0].value).datetime
+    date = delorean.parse(line[0].value, dayfirst=False).datetime
     market = line[1].value
     operation = _BINANCE_TYPE_MAP[line[2].value]
     amount = decimal.Decimal(line[4].value)

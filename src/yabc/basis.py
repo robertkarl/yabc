@@ -257,7 +257,10 @@ def _build_sale_reports(pool, pool_index, trans, basis_information_absent, ohlc)
     proceeds = trans.quantity_received
     fees_in_fiat = trans.fees
     if not is_fiat(trans.fee_symbol):
-        fees_in_fiat = ohlc.get(trans.fee_symbol, trans.date).high * trans.fees
+        try:
+            fees_in_fiat = ohlc.get(trans.fee_symbol, trans.date).high * trans.fees
+        except ohlcprovider.NoDataError:
+            fees_in_fiat = decimal.Decimal('0')
     if not is_fiat(trans.symbol_received):
         received_asset = trans.symbol_received
         proceeds = (
@@ -293,7 +296,10 @@ def _build_sale_reports(pool, pool_index, trans, basis_information_absent, ohlc)
             if is_fiat(trans.fee_symbol):
                 sell_fees = trans.fees
             else:
-                sell_fees = ohlc.get(trans.fee_symbol, trans.date).high * trans.fees
+                try:
+                    sell_fees = ohlc.get(trans.fee_symbol, trans.date).high * trans.fees
+                except ohlcprovider.NoDataError:
+                    sell_fees = decimal.Decimal('0')
             report = CostBasisReport(
                 curr_basis_tx.user_id,
                 curr_basis_tx.quantity_traded + curr_basis_tx.fees,
