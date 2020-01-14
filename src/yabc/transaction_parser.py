@@ -50,7 +50,17 @@ class TransactionParser:
                 self._exchange = constructor
                 self._success = True
                 return values
-            except Exception:
+            except Exception as e:
+                import logging
+
+                if isinstance(e, AssertionError):
+                    logging.info(
+                        "Assert triggered while loading {}".format(constructor)
+                    )
+                else:
+                    logging.info(
+                        "parsing failed for {} error is {}".format(constructor, e)
+                    )
                 continue
         self._success = False
         self.flags.append("Couldn't find any transactions in file.")

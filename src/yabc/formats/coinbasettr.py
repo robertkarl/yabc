@@ -64,7 +64,9 @@ class CoinbaseTTRParser(Format):
             fiat_fee = fiat - (spot_price * quantity)
             if tx_type == transaction.Operation.SELL:
                 fiat_fee *= -1
-            assert fiat_fee >= 0
+            if fiat_fee < 0:
+                # This can happen for small transactions
+                fiat_fee = decimal.Decimal(0)
             return transaction.Transaction(
                 operation=tx_type,
                 asset_name=asset_name,

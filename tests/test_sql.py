@@ -20,9 +20,9 @@ class SqlTest(unittest.TestCase):
         }
         self.db.user_create("ralph-2")
         self.db.add_tx(1, json.dumps(coinbase_json_buy))
-        self.db.tx_update(userid=1, txid=1, values={"quantity": 2})
+        self.db.tx_update(userid=1, txid=1, values={"quantity_traded": 2})
         stuff = json.loads(self.db.tx_list(userid=1))
-        self.assertEqual(stuff[0]["quantity"], "2")
+        self.assertEqual(stuff[0]["quantity_traded"], "$2.00")
 
 
 if __name__ == "__main__":

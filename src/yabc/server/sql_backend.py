@@ -7,6 +7,7 @@ import io
 import json
 import logging
 from io import TextIOWrapper
+from typing import Sequence
 
 import click
 import flask
@@ -190,21 +191,29 @@ class SqlBackend:
             .order_by(transaction.Transaction.date.asc())
         )
         ans = []
-        for tx in txs.all():
+        all_txs = txs.all()  # type: Sequence[transaction.Transaction]
+        for tx in all_txs:
             tx_dict = dict(tx.__dict__)
-            tx_dict.pop("_sa_instance_state")
+            for discarded_key in ["_sa_instance_state", "usd_subtotal", "quantity"]:
+                tx_dict.pop(discarded_key)
             ans.append(tx_dict)
-            for numeric_key in (
-                "usd_subtotal",
-                "fees",
-                "quantity",
-                "quantity_received",
-                "quantity_traded",
-            ):
-                quantize = decimal.Decimal(".00000001")
-                tx_dict[numeric_key] = (
-                    str(tx_dict[numeric_key].quantize(quantize)).rstrip("0").rstrip(".")
-                )
+            dollars_quantize = decimal.Decimal(".01")
+            crypto_quantize = decimal.Decimal(".00000001")
+            for value, key in [
+                (tx.symbol_received, "quantity_received"),
+                (tx.symbol_traded, "quantity_traded"),
+                (tx.fee_symbol, "fees"),
+            ]:
+                if transaction.is_fiat(value):
+                    tx_dict[key] = "${}".format(
+                        str(tx_dict[key].quantize(dollars_quantize))
+                    )
+                else:
+                    tx_dict[key] = (
+                        str(tx_dict[key].quantize(crypto_quantize))
+                        .rstrip("0")
+                        .rstrip(".")
+                    )
             tx_dict["operation"] = tx_dict["operation"].value
         for item in ans:
             item["date"] = str(item["date"])
