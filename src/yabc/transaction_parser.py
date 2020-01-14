@@ -1,4 +1,5 @@
 import collections
+import logging
 from typing import Sequence
 
 import yabc
@@ -51,7 +52,6 @@ class TransactionParser:
                 self._success = True
                 return values
             except Exception as e:
-                import logging
 
                 if isinstance(e, AssertionError):
                     logging.info(
