@@ -20,7 +20,14 @@ _FIAT_TRANSACTED_HEADER = "amount"
 _STATUS_HEADER = "status"
 _ADDRESS_HEADER = "address"
 
-_REQUIRED_HEADERS = [_TIMESTAMP_HEADER, _TRANSACTION_TYPE_HEADER, _FIAT_TRANSACTED_HEADER, _ADDRESS_HEADER, _STATUS_HEADER]
+_REQUIRED_HEADERS = [
+    _TIMESTAMP_HEADER,
+    _TRANSACTION_TYPE_HEADER,
+    _FIAT_TRANSACTED_HEADER,
+    _ADDRESS_HEADER,
+    _STATUS_HEADER,
+]
+
 
 class BitMEXParser(Format):
     EXCHANGE_HUMAN_READABLE_NAME = "BitMEX"
@@ -43,7 +50,7 @@ class BitMEXParser(Format):
                 quantity_received=quantity_received,
                 quantity_traded=0,
                 symbol_traded=symbol_traded,
-                symbol_received='USD',
+                symbol_received="USD",
                 date=date,
                 fees=decimal.Decimal(0),
                 source=self._EXCHANGE_ID_STR,

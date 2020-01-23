@@ -15,7 +15,7 @@ def add_supported_exchanges():
     """
     from . import adhoc  # noqa
     from . import binance  # noqa
-    from . import bitmex # noqa
+    from . import bitmex  # noqa
     from . import bybit  # noqa
     from . import coinbase  # noqa
     from . import coinbasettr  # noqa

@@ -13,6 +13,7 @@ from sqlalchemy import orm
 
 import yabc
 from yabc import transaction
+from yabc.formats import bitmex
 from yabc.transaction import PreciseDecimalString
 
 
@@ -132,6 +133,14 @@ class CostBasisReport(yabc.Base):
 
         For example, .06 BTC to USD
         """
+        if (
+            hasattr(self, "triggering_transaction")
+            and self.triggering_transaction
+            and self.triggering_transaction.source
+            == bitmex.BitMEXParser.exchange_id_str()
+        ):
+            return "{}".format(self.triggering_transaction.symbol_traded)
+
         return "{:.6f} {} {}".format(
             self.quantity,
             self.asset_name,

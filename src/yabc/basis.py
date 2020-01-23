@@ -2,7 +2,6 @@
 Calculate the cost basis.
 """
 import csv
-from yabc.formats import bitmex
 import decimal
 import io
 from decimal import Decimal
@@ -12,6 +11,7 @@ from yabc import coinpool
 from yabc import ohlcprovider
 from yabc import transaction
 from yabc.costbasisreport import CostBasisReport
+from yabc.formats import bitmex
 from yabc.transaction import Transaction
 from yabc.transaction import is_fiat
 
@@ -240,6 +240,7 @@ def _get_coin_to_coin_input(trans, ohlc):
         source=trans.source,
         triggering_transaction=trans,
     )
+
 
 def _build_no_basis_report(trans: transaction.Transaction):
     report = CostBasisReport(
