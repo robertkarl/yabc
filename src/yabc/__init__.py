@@ -3,6 +3,7 @@ from sqlalchemy.ext.declarative import declarative_base
 
 from . import server
 from . import version
+from . import formats
 
 Base = declarative_base(sqlalchemy.schema.ThreadLocalMetaData())
 
