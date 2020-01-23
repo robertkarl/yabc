@@ -10,6 +10,8 @@ _SOURCE_NAME = "gemini"
 _TIME_HEADER = "Time (UTC)"
 _TYPE_HEADER = "Type"
 
+_GEM_HEADERS = ["Date", _TIME_HEADER, _TYPE_HEADER, "Symbol", "Specification"]
+
 _PAIR_INDEX = 3
 _TYPE_INDEX = 2
 _AMOUNT_INDEX = 7
@@ -71,6 +73,13 @@ def _tx_from_gemini_row(tx_row):
     return tx
 
 
+def _validate_header(row):
+    sheet_headers = [i.value for i in row]
+    for header in _GEM_HEADERS:
+        if header not in sheet_headers:
+            raise ValueError("Gemini required headers not found '{}'".format(header))
+
+
 def _read_txs_from_file(f):
     """
     Validate headers and read buy/sell transactions from the open file-like object 'f'.
@@ -82,6 +91,7 @@ def _read_txs_from_file(f):
     workbook = openpyxl.load_workbook(f)
     sheet = workbook.active
     all_contents = list(sheet.rows)
+    _validate_header(all_contents[0])
     contents = all_contents[1:]
     for row in contents:
         item = _tx_from_gemini_row(row)

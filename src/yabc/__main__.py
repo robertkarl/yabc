@@ -21,6 +21,7 @@ from yabc.costbasisreport import ReportBatch
 
 def main():
     parser = argparse.ArgumentParser()
+    yabc.formats.add_supported_exchanges()
     parser.add_argument("filenames", nargs="+", metavar="filename")
     args = parser.parse_args()
     tx_files = [
