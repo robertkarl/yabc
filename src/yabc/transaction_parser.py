@@ -52,7 +52,6 @@ class TransactionParser:
                 self._success = True
                 return values
             except Exception as e:
-
                 if isinstance(e, AssertionError):
                     logging.info(
                         "Assert triggered while loading {}".format(constructor)

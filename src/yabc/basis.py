@@ -11,6 +11,7 @@ from yabc import coinpool
 from yabc import ohlcprovider
 from yabc import transaction
 from yabc.costbasisreport import CostBasisReport
+from yabc.formats import bitmex
 from yabc.transaction import Transaction
 from yabc.transaction import is_fiat
 
@@ -241,6 +242,20 @@ def _get_coin_to_coin_input(trans, ohlc):
     )
 
 
+def _build_no_basis_report(trans: transaction.Transaction):
+    report = CostBasisReport(
+        trans.user_id,
+        decimal.Decimal(0),
+        trans.quantity_traded,
+        trans.date,
+        proceeds=trans.quantity_received,
+        date_sold=trans.date,
+        asset=trans.symbol_traded,
+        triggering_transaction=trans,
+    )
+    return [report]
+
+
 def _build_sale_reports(pool, pool_index, trans, basis_information_absent, ohlc):
     # type:  (coinpool.CoinPool, int, transaction.Transaction, bool, ohlcprovider.OhlcProvider) -> Sequence[CostBasisReport]
     """
@@ -256,6 +271,8 @@ def _build_sale_reports(pool, pool_index, trans, basis_information_absent, ohlc)
     received_asset = "USD"
     proceeds = trans.quantity_received
     fees_in_fiat = trans.fees
+    if trans.source == bitmex.BitMEXParser.exchange_id_str():
+        return _build_no_basis_report(trans)
     if not is_fiat(trans.fee_symbol):
         try:
             fees_in_fiat = ohlc.get(trans.fee_symbol, trans.date).high * trans.fees
