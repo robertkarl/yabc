@@ -73,10 +73,10 @@ def _tx_from_gemini_row(tx_row):
     return tx
 
 def _validate_header(row):
-    for necessary_header in _GEM_HEADERS:
-        if necessary_header not in row:
-            raise ValueError("Gemini headers not found; not a gemini file")
-
+    sheet_headers = [i.value for i in row]
+    for header in _GEM_HEADERS:
+        if header not in sheet_headers:
+            raise ValueError("Gemini required headers not found; found {}".format(cell.value))
 
 def _read_txs_from_file(f):
     """

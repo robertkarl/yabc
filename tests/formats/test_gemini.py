@@ -8,7 +8,7 @@ from yabc import transaction
 from yabc.formats import gemini
 
 
-class GeminiCsvTest(unittest.TestCase):
+class GeminiXlsxTest(unittest.TestCase):
     def test_load_from_csv(self):
         txs = list(gemini.GeminiParser("./testdata/gemini/gemini.xlsx"))
         self.assertEqual(len(txs), 6)
