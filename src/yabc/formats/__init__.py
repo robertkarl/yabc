@@ -19,3 +19,4 @@ def add_supported_exchanges():
     from . import gemini  # noqa
     from . import localbitcoins  # noqa
     from . import coinbasettr  # noqa
+    from . import bybit  # noqa

@@ -10,6 +10,8 @@ _SOURCE_NAME = "gemini"
 _TIME_HEADER = "Time (UTC)"
 _TYPE_HEADER = "Type"
 
+_GEM_HEADERS = ["Date", _TIME_HEADER, _TYPE_HEADER, "Symbol", "Specification"]
+
 _PAIR_INDEX = 3
 _TYPE_INDEX = 2
 _AMOUNT_INDEX = 7
@@ -70,6 +72,11 @@ def _tx_from_gemini_row(tx_row):
         raise RuntimeError("Unknown transaction type from gemini file.")
     return tx
 
+def _validate_header(row):
+    for necessary_header in _GEM_HEADERS:
+        if necessary_header not in row:
+            raise ValueError("Gemini headers not found; not a gemini file")
+
 
 def _read_txs_from_file(f):
     """
@@ -82,6 +89,7 @@ def _read_txs_from_file(f):
     workbook = openpyxl.load_workbook(f)
     sheet = workbook.active
     all_contents = list(sheet.rows)
+    _validate_header(all_contents[0])
     contents = all_contents[1:]
     for row in contents:
         item = _tx_from_gemini_row(row)
