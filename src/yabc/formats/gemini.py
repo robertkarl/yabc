@@ -72,11 +72,13 @@ def _tx_from_gemini_row(tx_row):
         raise RuntimeError("Unknown transaction type from gemini file.")
     return tx
 
+
 def _validate_header(row):
     sheet_headers = [i.value for i in row]
     for header in _GEM_HEADERS:
         if header not in sheet_headers:
-            raise ValueError("Gemini required headers not found; found {}".format(cell.value))
+            raise ValueError("Gemini required headers not found '{}'".format(header))
+
 
 def _read_txs_from_file(f):
     """

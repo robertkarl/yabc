@@ -3,61 +3,54 @@ yabc is not affiliated with the exchange or company bybit.
 
 Format notes: Real Sell trades have 'BUY' type and an order type (limit, market)
 """
-import csv
-import datetime
 import decimal
 from typing import Sequence
 
 import delorean
 import openpyxl
 from openpyxl.cell import Cell
-from yabc.transaction import Operation
 
 from yabc import transaction
 from yabc.formats import FORMAT_CLASSES
 from yabc.formats import Format
+from yabc.transaction import Operation
 
-_KNOWN_COINS = {
-    "BTC",
-    "EOS",
-    "ETH",
-    "XRP",
-}
+_KNOWN_COINS = {"BTC", "EOS", "ETH", "XRP"}
 
-_BYBIT_HEADERS = ['Symbol',
-                  'Side',
-                  'Exec Type',
-                  'Exec Qty',
-                  'Exec Price',
-                  'Exec Value',
-                  'Fee Rate',
-                  'Fee',
-                  'Order Price',
-                  'Leaves Qty',
-                  'Order Type',
-                  'Transaction ID',
-                  'Order#',
-                  'Time(UTC)']
+_BYBIT_HEADERS = [
+    "Symbol",
+    "Side",
+    "Exec Type",
+    "Exec Qty",
+    "Exec Price",
+    "Exec Value",
+    "Fee Rate",
+    "Fee",
+    "Order Price",
+    "Leaves Qty",
+    "Order Type",
+    "Transaction ID",
+    "Order#",
+    "Time(UTC)",
+]
 
 
-_TYPE_MAP = {
-    "Sell": transaction.Operation.SELL,
-    "Buy": transaction.Operation.BUY,
-}
+_TYPE_MAP = {"Sell": transaction.Operation.SELL, "Buy": transaction.Operation.BUY}
 
 _EXCHANGE_ID_STR = "bybit"
 
 
 def _transaction_from_dict(
-        market, operation, usd, _, crypto_quantity, fee_in_crypto, date):
+    market, operation, usd, _, crypto_quantity, fee_in_crypto, date
+):
     # The following fields are accurate if the tx is a BUY and not coin/coin.
     if operation == Operation.BUY:
-        symbol_traded = 'USD'
+        symbol_traded = "USD"
         symbol_received = market
         quantity_traded = usd
         quantity_received = crypto_quantity
     elif operation == Operation.SELL:
-        symbol_received = 'USD'
+        symbol_received = "USD"
         symbol_traded = market
         quantity_received = usd
         quantity_traded = crypto_quantity
@@ -94,17 +87,16 @@ def _tx_from_bybit_row(line: Sequence[Cell]):
         return None
     usd = decimal.Decimal(line[3].value)
     price_in_fiat = decimal.Decimal(line[4].value)
-    min_btc_quantity = decimal.Decimal('.00000001')
+    min_btc_quantity = decimal.Decimal(".00000001")
     crypto_quantity = decimal.Decimal(line[5].value).quantize(min_btc_quantity)
     fee_in_crypto = decimal.Decimal(line[7].value).quantize(min_btc_quantity)
     date = delorean.parse(line[13].value, dayfirst=False).datetime
     order_type = line[10].value
     if not order_type:
-        return None # Ignore if not market or limit.
+        return None  # Ignore if not market or limit.
     return _transaction_from_dict(
         market, operation, usd, price_in_fiat, crypto_quantity, fee_in_crypto, date
     )
-
 
 
 class BybitParser(Format):
