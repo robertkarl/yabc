@@ -33,22 +33,15 @@ _HEADERS = [
 
 
 _KNOWN_COINS = {
-    "ADA",
-    "ADX",
     "ALGO",
-    "AMB",
-    "AST",
     "ATOM",
     "BAT",
     "BCH",
-    "BCPT",
-    "BNB",
-    "BSV",
-    "CVC",
     "BTC",
+    "CVC",
+    "DAI",
     "DASH",
     "DNT",
-    "ENG",
     "EOS",
     "ETC",
     "ETH",
@@ -57,22 +50,27 @@ _KNOWN_COINS = {
     "ICX",
     "IOTA",
     "LINK",
+    "LOOM",
     "LTC",
     "LUN",
-    "LOOM",
     "MANA",
     "MOD",
     "MTL",
     "NANO",
     "NEO",
     "ONT",
+    "OXT",
     "PPT",
+    "REP",
     "TOMO",
     "TRX",
+    "USDC",
     "USDT",
     "XLM",
     "XRP",
     "XTZ",
+    "ZEC",
+    "ZRX",
 }
 
 
@@ -115,25 +113,29 @@ def _make_transaction(
     leg2: FinancialQuantity,
     fee: FinancialQuantity,
 ):
-    # The following fields are accurate if the tx is a BUY and not coin/coin.
     is_coin_to_coin = not leg1.is_fiat() and not leg2.is_fiat()
-    if operation == transaction.Operation.BUY and is_coin_to_coin:
-        operation = transaction.Operation.SELL
+    if operation == transaction.Operation.BUY:
         # Swap all of these, and the operation
-        tmp = leg1
-        leg1 = leg2
-        leg2 = tmp
+        rcvd = leg1
+        traded = leg2
+    elif operation == transaction.Operation.SELL:
+        traded = leg1
+        rcvd = leg2
+    else:
+        raise RuntimeError("Invalid transaction type found in Coinbase Pro parser")
+    if is_coin_to_coin and operation == transaction.Operation.BUY:
+        operation = transaction.Operation.SELL
 
     return transaction.Transaction(
         operation=operation,
-        source=_EXCHANGE_ID_STR,
-        quantity_traded=quantity_traded,
-        quantity_received=quantity_received,
-        symbol_traded=symbol_traded,
-        symbol_received=symbol_received,
+        source=CoinbaseProParser.exchange_id_str(),
+        quantity_traded=traded.quantity,
+        quantity_received=rcvd.quantity,
+        symbol_traded=traded.unit,
+        symbol_received=rcvd.unit,
         date=date,
-        fees=fee,
-        fee_symbol=feecoin,
+        fees=fee.quantity,
+        fee_symbol=fee.unit,
     )
 
 
