@@ -1,16 +1,8 @@
-# Copyright (c) Seattle Blockchain Solutions. All rights reserved.
-# Licensed under the MIT License. See LICENSE in the project root for license information.
-"""
-Imports binance exchange data into yabc's exchange-independent format.
-
-yabc is not affiliated with the exchange or company Binance.
-"""
+import csv
 import datetime
 import decimal
-from typing import Sequence
 
 import delorean
-import openpyxl
 
 from yabc import transaction
 from yabc.formats import FORMAT_CLASSES
@@ -21,17 +13,21 @@ _SIZE_HEADER = "size"
 _SIZE_UNITS_HEADER = "size unit"
 _FEE_HEADER = "fee"
 _UNITS_HEADER = "price/fee/total unit"
+_MARKET_HEADER = "product"
+_ORDER_TYPE_HEADER = "side"
+_TOTAL_HEADER = "total"
+
 _HEADERS = [
     "portfolio",
     "trade id",
-    "product",
-    "side",
+    _MARKET_HEADER,
+    _ORDER_TYPE_HEADER,
     _DATE_HEADER,
     _SIZE_HEADER,
     _SIZE_UNITS_HEADER,
     "price",
     "fee",
-    "total",
+    _TOTAL_HEADER,
     _UNITS_HEADER,
 ]
 
@@ -97,30 +93,40 @@ class CoinbaseProMarket:
         return self._second
 
 
-def _transaction_from_binance_dict(
-    date, market, operation, amount, total, fee, feecoin
-):
-    # type: (datetime.datetime, str, transaction.Operation, decimal.Decimal, decimal.Decimal, decimal.Decimal, str)-> Sequence
+class FinancialQuantity:
+    def __init__(self, quantity, unit):
+        assert type(unit) == str
+        assert type(quantity) == decimal.Decimal
+        self.quantity = quantity
+        self.unit = unit
 
+    def is_fiat(self):
+        return transaction.is_fiat(self.unit)
+
+    def __repr__(self):
+        return "<{} {}>".format(self.quantity, self.unit)
+
+
+def _make_transaction(
+    date: datetime.datetime,
+    market: CoinbaseProMarket,
+    operation: transaction.Operation,
+    leg1: FinancialQuantity,
+    leg2: FinancialQuantity,
+    fee: FinancialQuantity,
+):
     # The following fields are accurate if the tx is a BUY and not coin/coin.
-    bm = CoinbaseProMarket(market)
-    symbol_traded = bm.first()
-    symbol_received = bm.second()
-    quantity_traded = amount
-    quantity_received = total
-    is_coin_to_coin = not transaction.is_fiat(
-        symbol_received
-    ) and not transaction.is_fiat(symbol_traded)
-    if operation == transaction.Operation.BUY:
-        if is_coin_to_coin:
-            operation = transaction.Operation.SELL
+    is_coin_to_coin = not leg1.is_fiat() and not leg2.is_fiat()
+    if operation == transaction.Operation.BUY and is_coin_to_coin:
+        operation = transaction.Operation.SELL
         # Swap all of these, and the operation
-        symbol_received, symbol_traded = (symbol_traded, symbol_received)
-        quantity_traded, quantity_received = quantity_received, quantity_traded
+        tmp = leg1
+        leg1 = leg2
+        leg2 = tmp
 
     return transaction.Transaction(
         operation=operation,
-        source=_BINANCE_EXCHANGE_ID_STR,
+        source=_EXCHANGE_ID_STR,
         quantity_traded=quantity_traded,
         quantity_received=quantity_received,
         symbol_traded=symbol_traded,
@@ -138,43 +144,40 @@ def _raise_if_headers_bad(row):
 
 
 def _tx_from_row(line):
-    date = delorean.parse(line[0].value, dayfirst=False).datetime
-    market = line[1].value
-    operation = _TYPE_MAP[line[2].value]
-    amount = decimal.Decimal(line[4].value)
-    total = decimal.Decimal(line[5].value)
-    fee = decimal.Decimal(line[6].value)
-    fee_coin = line[7].value
-    return _transaction_from_binance_dict(
-        date, market, operation, amount, total, fee, fee_coin
+    date = delorean.parse(line[_DATE_HEADER], dayfirst=False).datetime
+    market = CoinbaseProMarket(line[_MARKET_HEADER])
+    operation = _TYPE_MAP[line[_ORDER_TYPE_HEADER]]
+    leg1 = FinancialQuantity(
+        abs(decimal.Decimal(line[_SIZE_HEADER])), line[_SIZE_UNITS_HEADER]
     )
+    leg2 = FinancialQuantity(
+        abs(decimal.Decimal(line[_TOTAL_HEADER])), line[_UNITS_HEADER]
+    )
+    fee = FinancialQuantity(decimal.Decimal(line[_FEE_HEADER]), line[_UNITS_HEADER])
+    return _make_transaction(date, market, operation, leg1, leg2, fee)
 
 
-def _read_binance_txs_from_file(f):
+def _read_txs_from_file(f):
     ans = []
     f.seek(0)
-    workbook = openpyxl.load_workbook(f)
-    sheet = workbook.active
-    all_contents = list(sheet.rows)
-    _raise_if_headers_bad(all_contents[0])
-    contents = all_contents[1:]
+    contents = csv.DictReader(f)
+    checked_headers = False
     for row in contents:
-        item = _tx_from_binance_row(row)
+        if not checked_headers:
+            _raise_if_headers_bad(row)
+            checked_headers = True
+        item = _tx_from_row(row)
         if item is not None:
             ans.append(item)
     return ans
 
 
-class BinanceParser(Format):
-    EXCHANGE_HUMAN_READABLE_NAME = "Binance"
-    _EXCHANGE_ID_STR = _BINANCE_EXCHANGE_ID_STR
-
-    @staticmethod
-    def needs_binary():
-        return True
+class CoinbaseProParser(Format):
+    EXCHANGE_HUMAN_READABLE_NAME = "Coinbase Pro/Prime"
+    _EXCHANGE_ID_STR = "coinbasepro"
 
     def parse(self):
-        self._reports = _read_binance_txs_from_file(self._file)
+        self._reports = _read_txs_from_file(self._file)
 
     def __init__(self, file=None, filename: str = None):
         self._file = file
@@ -192,4 +195,4 @@ class BinanceParser(Format):
         return self
 
 
-FORMAT_CLASSES.append(BinanceParser)
+FORMAT_CLASSES.append(CoinbaseProParser)
