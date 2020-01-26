@@ -16,16 +16,25 @@ from yabc import transaction
 from yabc.formats import FORMAT_CLASSES
 from yabc.formats import Format
 
-_HEADERS = (
-    "Date(UTC)",
-    "Market",
-    "Type",
-    "Price",
-    "Amount",
-    "Total",
-    "Fee",
-    "Fee Coin",
-)
+_DATE_HEADER = "created at"
+_SIZE_HEADER = "size"
+_SIZE_UNITS_HEADER = "size unit"
+_FEE_HEADER = "fee"
+_UNITS_HEADER = "price/fee/total unit"
+_HEADERS = [
+    "portfolio",
+    "trade id",
+    "product",
+    "side",
+    _DATE_HEADER,
+    _SIZE_HEADER,
+    _SIZE_UNITS_HEADER,
+    "price",
+    "fee",
+    "total",
+    _UNITS_HEADER,
+]
+
 
 _KNOWN_COINS = {
     "ADA",
@@ -39,11 +48,10 @@ _KNOWN_COINS = {
     "BCPT",
     "BNB",
     "BSV",
+    "CVC",
     "BTC",
     "DASH",
-    "DGD",
-    "DOCK",
-    "DOGE",
+    "DNT",
     "ENG",
     "EOS",
     "ETC",
@@ -55,7 +63,8 @@ _KNOWN_COINS = {
     "LINK",
     "LTC",
     "LUN",
-    "MATIC",
+    "LOOM",
+    "MANA",
     "MOD",
     "MTL",
     "NANO",
@@ -65,38 +74,21 @@ _KNOWN_COINS = {
     "TOMO",
     "TRX",
     "USDT",
-    "VEN",
-    "VET",
-    "WAVES",
-    "WTC",
     "XLM",
-    "XMR",
     "XRP",
     "XTZ",
 }
 
 
-_BINANCE_TYPE_MAP = {
-    "SELL": transaction.Operation.SELL,
-    "BUY": transaction.Operation.BUY,
-}
-
-_BINANCE_EXCHANGE_ID_STR = "binance"
+_TYPE_MAP = {"SELL": transaction.Operation.SELL, "BUY": transaction.Operation.BUY}
 
 
-class BinanceMarket:
-    """ Parse coin/coin market names from Binance cells. Slightly complicated
-    by the fact that some of the symbols have 4 characters
+class CoinbaseProMarket:
+    """ BTC-USD for example
     """
 
-    def __init__(self, market):
-        possible_lengths = [3, 4, 5]
-        for curr_len in possible_lengths:
-            if market[:curr_len] in _KNOWN_COINS:
-                self._first = market[:curr_len]
-                self._second = market[curr_len:]
-                return
-        raise RuntimeError("Could not parse transaction from market {}".format(market))
+    def __init__(self, market_name: str):
+        self._first, self._second = market_name.split("-")
 
     def first(self):
         return self._first
@@ -111,7 +103,7 @@ def _transaction_from_binance_dict(
     # type: (datetime.datetime, str, transaction.Operation, decimal.Decimal, decimal.Decimal, decimal.Decimal, str)-> Sequence
 
     # The following fields are accurate if the tx is a BUY and not coin/coin.
-    bm = BinanceMarket(market)
+    bm = CoinbaseProMarket(market)
     symbol_traded = bm.first()
     symbol_received = bm.second()
     quantity_traded = amount
@@ -140,17 +132,15 @@ def _transaction_from_binance_dict(
 
 
 def _raise_if_headers_bad(row):
-    for i, h in enumerate(_HEADERS):
-        if not row[i].value == h:
-            raise RuntimeError(
-                "Not a valid Binance file, header {} found".format(row[i].value)
-            )
+    for header in _HEADERS:
+        if header not in row:
+            raise RuntimeError("Not a valid Coinbase Pro/Prime file.")
 
 
-def _tx_from_binance_row(line):
+def _tx_from_row(line):
     date = delorean.parse(line[0].value, dayfirst=False).datetime
     market = line[1].value
-    operation = _BINANCE_TYPE_MAP[line[2].value]
+    operation = _TYPE_MAP[line[2].value]
     amount = decimal.Decimal(line[4].value)
     total = decimal.Decimal(line[5].value)
     fee = decimal.Decimal(line[6].value)
