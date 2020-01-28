@@ -80,7 +80,7 @@ def _fiat_value_for_trade(
         except ohlcprovider.NoDataError:
             pass
     # if we got here, we found no data.
-    return decimal.Decimal(0) # TODO: consider raising.
+    return decimal.Decimal(0)  # TODO: consider raising.
 
 
 def _split_report(coin_to_split, amount, trans, ohlc=None):
