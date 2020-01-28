@@ -48,7 +48,7 @@ class TransactionTest(unittest.TestCase):
         self.assertEqual(len(stuff.get("IOTA")), 1)
         self.assertEqual(len(stuff.get("BTC")), 1)
 
-    def test_raise_on_no_data(self):
+    def test_no_data(self):
         tx = transaction.Transaction(
             operation=transaction.Operation.BUY,
             symbol_received="IOTANOTACOIN",
@@ -57,10 +57,12 @@ class TransactionTest(unittest.TestCase):
             quantity_traded=".0001",
             date=datetime.date(2019, 4, 16),
         )
-        with self.assertRaises(ohlcprovider.NoDataError):
+        self.assertEqual(
             basis._fiat_value_for_trade(
                 tx, ohlcprovider.OhlcProvider(), prefer_traded=True
-            )
+            ),
+            0,
+        )
 
     def test_valueless_lookup(self):
         """
