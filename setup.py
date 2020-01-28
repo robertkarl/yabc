@@ -22,7 +22,7 @@ setuptools.setup(
     version=version,
     name="yabc",
     python_requires=">=3.5,<3.9",
-    author="Seattle Blockchain Solutions",
+    author="Robert Karl",
     maintainer="Robert Karl",
     maintainer_email="robertkarljr@gmail.com",
     install_requires=[
