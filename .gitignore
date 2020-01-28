@@ -1,4 +1,5 @@
 build/
+.~lock*
 .eggs
 *.swp
 *.pyc

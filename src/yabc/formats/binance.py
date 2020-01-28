@@ -143,7 +143,7 @@ def _raise_if_headers_bad(row):
     for i, h in enumerate(_HEADERS):
         if not row[i].value == h:
             raise RuntimeError(
-                "Not a valid Binance valid, header {} found".format(row[i].value)
+                "Not a valid Binance file, header {} found".format(row[i].value)
             )
 
 
