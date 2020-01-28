@@ -242,13 +242,13 @@ def _get_coin_to_coin_input(trans, ohlc):
     )
 
 
-def _build_no_basis_report(trans: transaction.Transaction):
+def _build_no_basis_report(trans: transaction.Transaction, ohlc: ohlcprovider.OhlcProvider):
     report = CostBasisReport(
         trans.user_id,
         decimal.Decimal(0),
         trans.quantity_traded,
         trans.date,
-        proceeds=trans.quantity_received,
+        proceeds=trans.quantity_received * ohlc.get('BTC', trans.date).high,
         date_sold=trans.date,
         asset=trans.symbol_traded,
         triggering_transaction=trans,
@@ -272,7 +272,7 @@ def _build_sale_reports(pool, pool_index, trans, basis_information_absent, ohlc)
     proceeds = trans.quantity_received
     fees_in_fiat = trans.fees
     if trans.source == bitmex.BitMEXParser.exchange_id_str():
-        return _build_no_basis_report(trans)
+        return _build_no_basis_report(trans, ohlc)
     if not is_fiat(trans.fee_symbol):
         try:
             fees_in_fiat = ohlc.get(trans.fee_symbol, trans.date).high * trans.fees
