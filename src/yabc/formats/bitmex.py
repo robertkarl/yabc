@@ -45,7 +45,7 @@ class BitMEXParser(Format):
             self._last_date = date
             symbol_traded = "BitMEX {}".format(line[_ADDRESS_HEADER])
             # realized profit is measured in satoshis
-            quantity_received = decimal.Decimal(line[_FIAT_TRANSACTED_HEADER]) * 1e8
+            quantity_received = decimal.Decimal(line[_FIAT_TRANSACTED_HEADER]) / decimal.Decimal(1e6)
             return transaction.Transaction(
                 operation=kind,
                 quantity_received=quantity_received,
