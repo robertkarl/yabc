@@ -238,6 +238,7 @@ class SqlBackend:
             sqlalchemy.distinct(basis.CostBasisReport.date_sold)
         ).filter_by(user_id=userid)
         years = set([i[0].year for i in sale_dates])
+        years.discard(2020)
         years = sorted(years)
         result = []
         for ty in years:
