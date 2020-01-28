@@ -2,8 +2,6 @@
 Bybit perpetual PnL.
 """
 
-import csv
-import datetime
 import decimal
 
 import delorean
@@ -13,15 +11,14 @@ from yabc import transaction
 from yabc.formats import FORMAT_CLASSES
 from yabc.formats import Format
 
+_TIMESTAMP_INDEX = 0
 _TYPE_INDEX = 2
 _AMOUNT_INDEX = 3
 _ADDRESS_INDEX = 4
 
-_REQUIRED_HEADERS = [
-    "Time(UTC)"
-]
+_REQUIRED_HEADERS = ["Time(UTC)", "Coin", "Type", "Amount"]
 
-_PNL_CELL_CONTENTS = 'Realized P&L'
+_TYPE_CELL_CONTENTS = "Realized P&L"
 
 
 class BybitPNLParser(Format):
@@ -32,42 +29,44 @@ class BybitPNLParser(Format):
     def needs_binary():
         return True
 
+    def _check_headers(self):
+        vals = [cell.value for cell in self._rows[0]]
+        for header in _REQUIRED_HEADERS:
+            if header not in vals:
+                raise ValueError("Required header '{}' not found".format(header))
+
     def read_transaction(self, line):
         """
         Return None if the row is not taxable.
         """
         try:
-            kind = transaction.Operation.SELL
-            date = delorean.parse(line[_TIMESTAMP_HEADER], dayfirst=False).datetime
-            if date == self._last_date:
-                date += self._trade_time_delta
-            self._last_date = date
-            symbol_traded = "Bybit {}".format(line[_ADDRESS_HEADER])
-            # realized profit is measured in microBTC. ie. a realized profit of 1e6 is 1BTC
-            quantity_received = decimal.Decimal(line[_FIAT_TRANSACTED_HEADER]) / decimal.Decimal(1e6)
+            if line[_TYPE_INDEX].value != _TYPE_CELL_CONTENTS:
+                return None
+            amt = decimal.Decimal(line[_AMOUNT_INDEX].value)
+            date = delorean.parse(line[_TIMESTAMP_INDEX].value, dayfirst=False).datetime
+            # realized profit is measured in BTC
             return transaction.Transaction(
-                operation=kind,
-                quantity_received=quantity_received,
+                operation=transaction.Operation.PERPETUAL_PNL,
+                quantity_received=amt,
                 quantity_traded=0,
-                symbol_traded=symbol_traded,
+                symbol_traded="USD",
                 symbol_received="BTC",
                 date=date,
                 fees=decimal.Decimal(0),
                 source=self._EXCHANGE_ID_STR,
             )
         except RuntimeError:
-            raise RuntimeError("Could not parse BitMEX data.")
+            raise RuntimeError("Could not parse bybit data.")
         except KeyError as e:
-            raise RuntimeError("Unknown key in BitMEX file: {}".format(e))
+            raise RuntimeError("Unknown key in bybit file: {}".format(e))
 
     def __init__(self, open_file):
-        self._last_date = None
-        self._trade_time_delta = datetime.timedelta(seconds=1)
         open_file.seek(0)
-        self._reader = openpyxl.load_workbook(open_file)
-        self._file = open_file
+        workbook = openpyxl.load_workbook(open_file)
+        self._rows = list(workbook.active.rows)
+        self._check_headers()
         self.txs = []
-        for line in self._reader:
+        for line in self._rows[1:]:
             tx = self.read_transaction(line)
             if tx is not None:
                 self.txs.append(tx)
@@ -87,4 +86,4 @@ class BybitPNLParser(Format):
             pass
 
 
-FORMAT_CLASSES.append(BitMEXParser)
+FORMAT_CLASSES.append(BybitPNLParser)

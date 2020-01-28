@@ -43,14 +43,15 @@ class BitMEXParser(Format):
             if date == self._last_date:
                 date += self._trade_time_delta
             self._last_date = date
-            symbol_traded = "BitMEX {}".format(line[_ADDRESS_HEADER])
             # realized profit is measured in microBTC. ie. a realized profit of 1e6 is 1BTC
-            quantity_received = decimal.Decimal(line[_FIAT_TRANSACTED_HEADER]) / decimal.Decimal(1e6)
+            quantity_received = decimal.Decimal(
+                line[_FIAT_TRANSACTED_HEADER]
+            ) / decimal.Decimal(1e8)
             return transaction.Transaction(
-                operation=kind,
+                operation=transaction.Operation.PERPETUAL_PNL,
                 quantity_received=quantity_received,
                 quantity_traded=0,
-                symbol_traded=symbol_traded,
+                symbol_traded="USD",
                 symbol_received="BTC",
                 date=date,
                 fees=decimal.Decimal(0),
