@@ -13,7 +13,6 @@ from sqlalchemy import orm
 
 import yabc
 from yabc import transaction
-from yabc.formats import bitmex
 from yabc.transaction import PreciseDecimalString
 
 
@@ -83,7 +82,6 @@ class CostBasisReport(yabc.Base):
         triggering_transaction=None,
         secondary_asset=None,
     ):
-        # type: (int, decimal.Decimal, decimal.Decimal, datetime.datetime, decimal.Decimal, datetime.datetime, str, decimal.Decimal, transaction.Transaction) -> None
         """
         Note that when pulling items from a SQL alchemy ORM query, this constructor isn't called.
         """
@@ -123,6 +121,8 @@ class CostBasisReport(yabc.Base):
         return self._round_as_needed(self.proceeds - self.basis)
 
     def _round_as_needed(self, amount: decimal.Decimal):
+        if not isinstance(amount, decimal.Decimal):
+            raise ValueError("need a decimal, not {} ".format(type(amount)))
         if self._round_to_dollar:
             return amount.quantize(1)
         return amount.quantize(Decimal(".01"))
@@ -133,14 +133,6 @@ class CostBasisReport(yabc.Base):
 
         For example, .06 BTC to USD
         """
-        if (
-            hasattr(self, "triggering_transaction")
-            and self.triggering_transaction
-            and self.triggering_transaction.source
-            == bitmex.BitMEXParser.exchange_id_str()
-        ):
-            return "{}".format(self.triggering_transaction.symbol_traded)
-
         return "{:.6f} {} {}".format(
             self.quantity,
             self.asset_name,
@@ -176,6 +168,8 @@ class CostBasisReport(yabc.Base):
     @orm.reconstructor
     def init_on_load(self):
         self._round_to_dollar = True
+        if not hasattr(self, "triggering_transaction"):
+            self.triggering_transaction = None
 
 
 class ReportBatch:

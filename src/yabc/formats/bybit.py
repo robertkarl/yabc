@@ -49,7 +49,7 @@ class BybitPNLParser(Format):
                 operation=transaction.Operation.PERPETUAL_PNL,
                 quantity_received=amt,
                 quantity_traded=0,
-                symbol_traded="USD",
+                symbol_traded=line[_ADDRESS_INDEX],
                 symbol_received="BTC",
                 date=date,
                 fees=decimal.Decimal(0),

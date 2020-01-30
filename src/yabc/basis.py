@@ -244,18 +244,24 @@ def _get_coin_to_coin_input(trans, ohlc):
 def _build_no_basis_report(
     trans: transaction.Transaction, ohlc: ohlcprovider.OhlcProvider
 ):
+    proceeds = trans.quantity_received * ohlc.get("BTC", trans.date).high
+    basis = 0
+    if abs(proceeds) < 1:
+        return []
+    if  proceeds < 0:
+        basis = proceeds
+        proceeds = 0
     report = CostBasisReport(
         trans.user_id,
-        decimal.Decimal(0),
-        trans.quantity_received,
-        trans.date,
-        proceeds=trans.quantity_received * ohlc.get("BTC", trans.date).high,
+        basis=decimal.Decimal(basis),
+        quantity=trans.quantity_received,
+        date_purchased=trans.date,
+        proceeds=decimal.Decimal(proceeds),
         date_sold=trans.date,
-        asset="{} perpetual".format(trans.source),
+        asset="{} {} perpetual".format(trans.source, trans.symbol_traded),
+        secondary_asset='BTC',
         triggering_transaction=trans,
     )
-    if report.proceeds <= 0:
-        return []
     return [report]
 
 
