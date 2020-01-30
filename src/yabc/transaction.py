@@ -98,6 +98,7 @@ class Transaction(yabc.Base):
         GIFT_SENT = "GiftSent"
         MINING = "Mining"
         SPENDING = "Spending"
+        PERPETUAL_PNL = "PerpetualPNL"
         # The following aren't stored in the DB, put typically only used in basis calculations as temporary values.
         TRADE_INPUT = "TradeInput"
         SPLIT = "Split"
@@ -258,7 +259,11 @@ class Transaction(yabc.Base):
         return False
 
     def is_taxable_output(self):
-        return self.operation in {Operation.SPENDING, Operation.SELL}
+        return self.operation in {
+            Operation.SPENDING,
+            Operation.SELL,
+            Operation.PERPETUAL_PNL,
+        }
 
     def __repr__(self):
         return "<TX {date} {operation} {rcvd} {rcvd_symbol} for {traded} {traded_symbol}, from exchange {source}. Fee {fee} {feecoin}>".format(

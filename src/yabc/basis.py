@@ -11,7 +11,6 @@ from yabc import coinpool
 from yabc import ohlcprovider
 from yabc import transaction
 from yabc.costbasisreport import CostBasisReport
-from yabc.formats import bitmex
 from yabc.transaction import Transaction
 from yabc.transaction import is_fiat
 
@@ -242,15 +241,25 @@ def _get_coin_to_coin_input(trans, ohlc):
     )
 
 
-def _build_no_basis_report(trans: transaction.Transaction, ohlc: ohlcprovider.OhlcProvider):
+def _build_no_basis_report(
+    trans: transaction.Transaction, ohlc: ohlcprovider.OhlcProvider
+):
+    proceeds = trans.quantity_received * ohlc.get("BTC", trans.date).high
+    basis = 0
+    if abs(proceeds) < 1:
+        return []
+    if proceeds < 0:
+        basis = proceeds
+        proceeds = 0
     report = CostBasisReport(
         trans.user_id,
-        decimal.Decimal(0),
-        trans.quantity_traded,
-        trans.date,
-        proceeds=trans.quantity_received * ohlc.get('BTC', trans.date).high,
+        basis=decimal.Decimal(basis),
+        quantity=trans.quantity_received,
+        date_purchased=trans.date,
+        proceeds=decimal.Decimal(proceeds),
         date_sold=trans.date,
-        asset=trans.symbol_traded,
+        asset="{} {} perpetual".format(trans.source, trans.symbol_traded),
+        secondary_asset="BTC",
         triggering_transaction=trans,
     )
     return [report]
@@ -271,7 +280,7 @@ def _build_sale_reports(pool, pool_index, trans, basis_information_absent, ohlc)
     received_asset = "USD"
     proceeds = trans.quantity_received
     fees_in_fiat = trans.fees
-    if trans.source == bitmex.BitMEXParser.exchange_id_str():
+    if trans.operation == transaction.Operation.PERPETUAL_PNL:
         return _build_no_basis_report(trans, ohlc)
     if not is_fiat(trans.fee_symbol):
         try:
