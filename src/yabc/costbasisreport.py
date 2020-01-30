@@ -12,7 +12,6 @@ from sqlalchemy import Integer
 from sqlalchemy import orm
 
 import yabc
-from yabc import transaction
 from yabc.transaction import PreciseDecimalString
 
 

@@ -248,7 +248,7 @@ def _build_no_basis_report(
     basis = 0
     if abs(proceeds) < 1:
         return []
-    if  proceeds < 0:
+    if proceeds < 0:
         basis = proceeds
         proceeds = 0
     report = CostBasisReport(
@@ -259,7 +259,7 @@ def _build_no_basis_report(
         proceeds=decimal.Decimal(proceeds),
         date_sold=trans.date,
         asset="{} {} perpetual".format(trans.source, trans.symbol_traded),
-        secondary_asset='BTC',
+        secondary_asset="BTC",
         triggering_transaction=trans,
     )
     return [report]
