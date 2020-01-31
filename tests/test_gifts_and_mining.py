@@ -1,7 +1,7 @@
 """
 Test that we can parse and consume data from various non-trading txs in our own adhoc format.
 """
-#  Copyright (c) 2019. Seattle Blockchain Solutions. All rights reserved.
+#  Copyright (c) 2019. Robert Karl. All rights reserved.
 #  Licensed under the MIT License. See LICENSE in the project root for license information.
 
 import datetime

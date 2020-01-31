@@ -25,7 +25,6 @@ from yabc import formats
 from yabc import transaction
 from yabc import user
 from yabc.costbasisreport import CostBasisReport
-from yabc.formats import bitmex
 from yabc.formats import coinbase
 from yabc.transaction_parser import TransactionParser
 from yabc.transaction_parser import TxFile
@@ -211,7 +210,7 @@ class SqlBackend:
                     )
                 elif (
                     tx_dict[key] == 0
-                    and tx.source == bitmex.BitMEXParser.exchange_id_str()
+                    and tx.operation == transaction.Operation.PERPETUAL_PNL
                 ):
                     tx_dict[key] = "-"
                 else:

@@ -42,14 +42,14 @@ class BybitPNLParser(Format):
         try:
             if line[_TYPE_INDEX].value != _TYPE_CELL_CONTENTS:
                 return None
-            amt = decimal.Decimal(line[_AMOUNT_INDEX].value)
+            amt = decimal.Decimal(str(line[_AMOUNT_INDEX].value))
             date = delorean.parse(line[_TIMESTAMP_INDEX].value, dayfirst=False).datetime
             # realized profit is measured in BTC
             return transaction.Transaction(
                 operation=transaction.Operation.PERPETUAL_PNL,
                 quantity_received=amt,
                 quantity_traded=0,
-                symbol_traded=line[_ADDRESS_INDEX],
+                symbol_traded=line[_ADDRESS_INDEX].value,
                 symbol_received="BTC",
                 date=date,
                 fees=decimal.Decimal(0),

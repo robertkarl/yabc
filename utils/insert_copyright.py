@@ -1,10 +1,10 @@
-# Copyright (c) Seattle Blockchain Solutions. All rights reserved.
+# Copyright (c) Robert Karl. All rights reserved.
 # Licensed under the MIT License. See LICENSE in the project root for license information.
 import argparse
 import os
 import tempfile
 
-copyright = """# Copyright (c) Seattle Blockchain Solutions. All rights reserved.
+copyright = """# Copyright (c) Robert Karl. All rights reserved.
 # Licensed under the MIT License. See LICENSE in the project root for license information.
 """
 
