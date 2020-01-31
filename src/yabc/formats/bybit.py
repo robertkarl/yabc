@@ -61,6 +61,7 @@ class BybitPNLParser(Format):
             raise RuntimeError("Unknown key in bybit file: {}".format(e))
 
     def __init__(self, open_file):
+        self._file = open_file
         open_file.seek(0)
         workbook = openpyxl.load_workbook(open_file)
         self._rows = list(workbook.active.rows)
