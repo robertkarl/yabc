@@ -196,7 +196,7 @@ class ReportBatch:
     >>> r2 = CostBasisReport.make_random_report()
     >>> r2.gain_or_loss = decimal.Decimal('1.5')
     >>> batch = ReportBatch([r1, r2], True)
-    >>> batch.totals()['gain_or_loss']
+    >>> batch.totals()['gain_or_loss'] # TODO: This should probably be 4; make the CostBasisReport pass the rounding info down.
     Decimal('3.0')
     >>> batch_no_rounding = ReportBatch([r1, r2], False)
     >>> batch_no_rounding.totals()['gain_or_loss']
