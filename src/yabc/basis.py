@@ -249,7 +249,7 @@ def _build_no_basis_report(
     if abs(proceeds) < 1:
         return []
     if proceeds < 0:
-        basis = proceeds
+        basis = abs(proceeds)
         proceeds = 0
     report = CostBasisReport(
         trans.user_id,
