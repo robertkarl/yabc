@@ -1,4 +1,4 @@
-#  Copyright (c) 2019. Seattle Blockchain Solutions. All rights reserved.
+#  Copyright (c) 2019. Robert Karl. All rights reserved.
 #  Licensed under the MIT License. See LICENSE in the project root for license information.
 import datetime
 import decimal
@@ -24,8 +24,10 @@ _ETH_DATA = {
 }
 _BTC_DATA = {
     jan_1: _make_ohlc("1000 1008.6 990 1000"),
+    _make_date("2019 3 2"): _make_ohlc("3855 3874 3832 3864"),
     _make_date("2018 5 22"): _make_ohlc("8420 8423 8005 8042"),
     _make_date("2019 4 16"): _make_ohlc("5066 5238 5055 5235"),
+    _make_date("2019 10 10"): _make_ohlc("8585 8625 8471 8586"),
 }
 _PRICE_DATA = {"ETH": _ETH_DATA, "BTC": _BTC_DATA}
 
