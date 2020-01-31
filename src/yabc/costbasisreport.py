@@ -92,7 +92,11 @@ class CostBasisReport(yabc.Base):
         assert isinstance(date_purchased, datetime.datetime)
         assert isinstance(asset, str)
         if basis < 0 or proceeds < 0:
-            raise ValueError("Basis and proceeds must both be non-negative. asset is {}".format(asset))
+            raise ValueError(
+                "Basis and proceeds must both be non-negative. asset is {}".format(
+                    asset
+                )
+            )
         if basis < 0:
             raise ValueError("Basis must be non-negative. asset is {}".format(asset))
         self._round_to_dollar = True
