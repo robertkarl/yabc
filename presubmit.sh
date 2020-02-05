@@ -15,3 +15,6 @@ fi
 autoflake -r -i --remove-all-unused-imports $DIRS
 isort -rc $DIRS
 black $DIRS
+
+echo
+echo TESTS SUCCEEDED
