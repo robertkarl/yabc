@@ -1,3 +1,4 @@
+import datetime
 import decimal
 
 import openpyxl
@@ -27,7 +28,13 @@ def _quantity(tx_row):
     supported = [(10, "BTC"), (13, "ETH"), (16, "ZEC"), (19, "BCH"), (22, "LTC")]
     for index, currency_name in supported:
         if tx_row[index].value:
-            return abs(decimal.Decimal(str(tx_row[index].value))), currency_name
+            val = tx_row[index].value
+            if isinstance(val, datetime.datetime):
+                # For some reason, for cells that have type 'n', it's possible to end up with a date here.
+                # Could be an issue with openpyxl
+                start = datetime.datetime(1900, 1, 1)
+                val = (val - start).days + 1
+            return abs(decimal.Decimal(str(val))), currency_name
     raise RuntimeError("Could not parse any cryptocurrency from Gemini row")
 
 
