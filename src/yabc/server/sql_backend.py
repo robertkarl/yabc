@@ -28,7 +28,6 @@ from yabc.costbasisreport import CostBasisReport
 from yabc.formats import coinbase
 from yabc.transaction_parser import TransactionParser
 from yabc.transaction_parser import TxFile
-from yabc.user import User
 
 formats.add_supported_exchanges()
 
