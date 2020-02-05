@@ -211,8 +211,7 @@ class Transaction(yabc.Base):
             # Do not modify the object further if we've already restored fields.
             return
 
-        if not self.fee_symbol:
-            self.fee_symbol = "USD"
+        self.fee_symbol = "USD"  # Not possible to have others, until binance or other coin/coin markets are added.
         if self.is_simple_input():
             self.symbol_received = self.asset_name
             self.quantity_received = self.quantity
