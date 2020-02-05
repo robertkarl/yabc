@@ -224,45 +224,6 @@ class SqlBackend:
             item["date"] = str(item["date"])
         return json.dumps(ans)
 
-    def taxyear_list(self, userid, url_prefix, suffix):
-        """
-        Basic statistics and download links for each taxyear the given user has data for.
-
-        @param userid
-        @param url_prefix (str): for each row, a link for downloading is displayed.
-        @param suffix (str): file suffix for the downloaded file.
-        """
-        user = self.session.query(User).filter_by(id=userid).first()
-        sale_dates = self.session.query(
-            sqlalchemy.distinct(basis.CostBasisReport.date_sold)
-        ).filter_by(user_id=userid)
-        years = set([i[0].year for i in sale_dates])
-        years.discard(2020)
-        years = sorted(years)
-        result = []
-        for ty in years:
-            year_info = {"year": ty}
-            reports = list(self.reports_in_taxyear(userid, ty))
-            dollar_keys = ["taxable_income", "shortterm", "longterm"]
-            year_info["taxable_income"] = int(sum([i.gain_or_loss for i in reports]))
-            year_info["shortterm"] = int(
-                sum([i.gain_or_loss for i in reports if not i.long_term])
-            )
-            year_info["longterm"] = int(
-                sum([i.gain_or_loss for i in reports if i.long_term])
-            )
-            for key in dollar_keys:
-                if year_info[key] >= 0:
-                    year_info[key] = "${:,}".format(year_info[key])
-                else:
-                    year_info[key] = "-${:,}".format(-year_info[key])
-            year_info["url8949"] = "{}/{}".format(url_prefix, ty)
-            year_info["url8949_label"] = "{}-{}-8949.{}".format(
-                user.username, ty, suffix
-            )
-            result.append(year_info)
-        return flask.jsonify(result)
-
     def import_transaction_document(self, userid, submitted_file):
         """
         Add the tx doc for this user.
