@@ -12,7 +12,7 @@ from yabc.formats import coinbasettr
 
 class CoinbaseTTRCsvTest(unittest.TestCase):
     def setUp(self) -> None:
-        self.filename = "testdata/coinbase/TaxTransactionsReport.csv"
+        self.filename = "testdata/coinbase/UsTaxTransactionsReport.csv"
 
     def test_load_coinbasettr(self):
         """ Test that loading does not raise
