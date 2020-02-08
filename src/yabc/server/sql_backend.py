@@ -284,7 +284,7 @@ class SqlBackend:
         for i in basis_reports:
             self.session.add(i)
         self.session.commit()
-        return "success"
+        return bp
 
     def reports_in_taxyear(self, userid, taxyear):
         start, end = self.get_tax_year_bounds(userid, taxyear)
