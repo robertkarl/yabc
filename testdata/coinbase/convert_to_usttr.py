@@ -1,3 +1,9 @@
+"""
+Script used to convert values from the old Coinbase output format
+to the new (as of February 2020) format.
+
+Used by RK at least once. ymmv
+"""
 import csv
 import sys
 fields="Timestamp,Transaction Type,Asset,Quantity Transacted,USD Spot Price at Transaction,USD Amount Transacted (Inclusive of Coinbase Fees),Address,Notes".split(',')
