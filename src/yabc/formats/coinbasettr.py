@@ -16,21 +16,22 @@ from yabc import transaction
 from yabc.formats import FORMAT_CLASSES
 from yabc.formats import Format
 
-_TIMESTAMP_HEADER = "Timestamp"
-_TRANSACTION_TYPE_HEADER = "Transaction Type"
-_FIAT_TRANSACTED_HEADER = "USD Amount Transacted (Inclusive of Coinbase Fees)"
-_QUANTITY_TRANSACTED_HEADER = "Quantity Transacted"
-_SPOT_PRICE_HEADER = "USD Spot Price at Transaction"
-_ASSET_HEADER = "Asset"
+TIMESTAMP_HEADER = "Timestamp"
+TRANSACTION_TYPE_HEADER = "Transaction Type"
+ASSET_HEADER = "Asset"
+QUANTITY_TRANSACTED_HEADER = "Quantity Transacted"
+USD_SPOT_PRICE_HEADER = "USD Spot Price at Transaction"
+SUBTOTAL_HEADER = "Subtotal"
+TOTAL_HEADER = "Total (Inclusive of fees)"
 
 _ALL_HEADERS = [
-    _TIMESTAMP_HEADER,
-    _TRANSACTION_TYPE_HEADER,
-    _ASSET_HEADER,
-    _QUANTITY_TRANSACTED_HEADER,
-    _SPOT_PRICE_HEADER,
-    _FIAT_TRANSACTED_HEADER,
-    "Address",
+    TIMESTAMP_HEADER,
+    TRANSACTION_TYPE_HEADER,
+    ASSET_HEADER,
+    QUANTITY_TRANSACTED_HEADER,
+    USD_SPOT_PRICE_HEADER,
+    SUBTOTAL_HEADER,
+    TOTAL_HEADER,
     "Notes",
 ]
 
@@ -45,7 +46,7 @@ class CoinbaseTTRParser(Format):
         Return None if the row is not taxable.
         """
         try:
-            kind = line[_TRANSACTION_TYPE_HEADER]
+            kind = line[TRANSACTION_TYPE_HEADER]
             if kind == "Buy":
                 tx_type = transaction.Transaction.Operation.BUY
             elif kind == "Sell":
@@ -58,9 +59,9 @@ class CoinbaseTTRParser(Format):
             self._last_date = date
 
             asset_name = line["Asset"]
-            quantity = decimal.Decimal(line[_QUANTITY_TRANSACTED_HEADER])
-            fiat = decimal.Decimal(line[_FIAT_TRANSACTED_HEADER])
-            spot_price = decimal.Decimal(line[_SPOT_PRICE_HEADER])
+            quantity = decimal.Decimal(line[QUANTITY_TRANSACTED_HEADER])
+            fiat = decimal.Decimal(line[TOTAL_HEADER].rstrip(' USD').replace(',', ''))
+            spot_price = decimal.Decimal(line[USD_SPOT_PRICE_HEADER])
             fiat_fee = fiat - (spot_price * quantity)
             if tx_type == transaction.Operation.SELL:
                 fiat_fee *= -1
@@ -76,6 +77,8 @@ class CoinbaseTTRParser(Format):
                 source=self.exchange_id_str(),
                 usd_subtotal=fiat - fiat_fee,
             )
+        except decimal.DecimalException as e:
+            raise RuntimeError("Could not parse Coinbase TTR decimal.")
         except RuntimeError:
             raise RuntimeError("Could not parse Coinbase TTR data.")
         except KeyError as e:

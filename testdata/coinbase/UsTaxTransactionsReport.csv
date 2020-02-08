@@ -1,0 +1,24 @@
+"You can use this transaction report to inform your likely tax obligations. For US customers, Sells, Converts, and Rewards Income, and Coinbase Earn transactions are taxable events. For final tax obligations, please consult your tax advisor."
+
+
+
+Transactions
+User
+
+Timestamp,Transaction Type,Asset,Quantity Transacted,USD Spot Price at Transaction,Subtotal,Total (inclusive of fees),Notes
+10/06/2015,Buy,BTC,1,247.26,0 USD,249.73 USD,
+10/07/2015,Buy,BTC,3,245.47,0 USD,743.77 USD,
+10/12/2015,Buy,BTC,4,248.89,0 USD,1005.52 USD,
+10/12/2015,Receive,BTC,0.001,248.07,,,
+10/12/2015,Send,BTC,0.001,247.76,,,
+10/12/2015,Receive,BTC,0.003,248.02,,,
+10/12/2015,Send,BTC,0.003,247.39,,,
+10/12/2015,Receive,BTC,0.00694214,246.79,,,
+11/26/2015,Sell,BTC,8,342.11,0 USD,2700 USD,
+05/24/2017,Buy,ETH,1.21855962,199.33,0 USD,246.52 USD,
+05/31/2017,Buy,ETH,9.66415249,230.59,0 USD,2261.61 USD,
+05/31/2017,Buy,ETH,6,229.59,0 USD,1398.08 USD,
+06/12/2017,Send,ETH,0.10048038,371.66,,,
+06/12/2017,Send,ETH,0.10047163,383.49,,,
+06/12/2017,Send,ETH,16.6817601,395.81,,,
+02/01/2018,Buy,LTC,7.82768791,125.88,0 USD,1000 USD,
