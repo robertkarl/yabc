@@ -64,8 +64,11 @@ def run_basis():
     """
     userid = get_userid()
     backend = sql_backend.get_db()
-    result = backend.run_basis(userid)
-    return result
+    bp = backend.run_basis(userid)
+    if not bp.flags():
+        return "success"
+    else:
+        return "flags raised"
 
 
 @yabc_api.route("/yabc/v1/download_8949/<taxyear>", methods=["GET"])
