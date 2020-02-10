@@ -97,7 +97,12 @@ class CoinbaseTTRParser(Format):
             self._file = open(filename, "r")
             self._reader = csv.DictReader(self._file, fieldnames=_ALL_HEADERS)
         self.txs = []
+        header_checked = False
         for line in self._reader:
+            if not header_checked:
+                if 'Coinbase' not in line[0]:
+                    raise RuntimeError("Not a Coinbase TTR")
+                header_checked = True
             tx = self.attempt_read_transaction(line)
             if tx is not None:
                 self.txs.append(tx)
