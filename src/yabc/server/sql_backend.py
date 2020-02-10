@@ -235,7 +235,7 @@ class SqlBackend:
         """
         text_mode_file = TextIOWrapper(submitted_file)
         submitted_file.seek(0)
-        tx_file = TxFile(text_mode_file, None)
+        tx_file = TxFile(text_mode_file, None, None)
         parser = TransactionParser([tx_file])
         parser.parse()
         if not parser.succeeded():

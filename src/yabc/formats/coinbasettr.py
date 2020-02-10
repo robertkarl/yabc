@@ -53,14 +53,14 @@ class CoinbaseTTRParser(Format):
                 tx_type = transaction.Transaction.Operation.SELL
             else:
                 return None
-            date = delorean.parse(line["Timestamp"], dayfirst=False).datetime
+            date = delorean.parse(line[TIMESTAMP_HEADER], dayfirst=False).datetime
             if date == self._last_date:
                 date += self._trade_time_delta
             self._last_date = date
 
             asset_name = line["Asset"]
             quantity = decimal.Decimal(line[QUANTITY_TRANSACTED_HEADER])
-            fiat = decimal.Decimal(line[TOTAL_HEADER].rstrip(' USD').replace(',', ''))
+            fiat = decimal.Decimal(line[TOTAL_HEADER].rstrip(" USD").replace(",", ""))
             spot_price = decimal.Decimal(line[USD_SPOT_PRICE_HEADER])
             fiat_fee = fiat - (spot_price * quantity)
             if tx_type == transaction.Operation.SELL:
@@ -97,7 +97,13 @@ class CoinbaseTTRParser(Format):
             self._file = open(filename, "r")
             self._reader = csv.DictReader(self._file, fieldnames=_ALL_HEADERS)
         self.txs = []
+        header_checked = False
         for line in self._reader:
+            if not header_checked:
+                if "Coinbase" not in line[TIMESTAMP_HEADER]:
+                    # The first line has a disclaimer which contains the word Coinbase
+                    raise RuntimeError("Not a Coinbase TTR")
+                header_checked = True
             tx = self.attempt_read_transaction(line)
             if tx is not None:
                 self.txs.append(tx)

@@ -10,7 +10,7 @@ cryptocurrency traders in the US.
 
 yabc is the tax calculator behind [https://velvetax.com/](https://velvetax.com/).
 ```
-$ python -m yabc testdata/gemini/sample_gemini.csv ./testdata/coinbase/sample_coinbase.csv
+$ python -m yabc testdata/gemini/sample_gemini.xlsx ./testdata/coinbase/sample_coinbase.csv
 13 transactions to be reported
 
 <Sold 0.76 BTC on 2008-04-21 01:12:00 for $236. Exchange: coinbase. Profit:$-155.
