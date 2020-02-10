@@ -100,7 +100,8 @@ class CoinbaseTTRParser(Format):
         header_checked = False
         for line in self._reader:
             if not header_checked:
-                if 'Coinbase' not in line[0]:
+                if 'Coinbase' not in line['Timestamp']:
+                    # The first line has a disclaimer which contains the word Coinbase
                     raise RuntimeError("Not a Coinbase TTR")
                 header_checked = True
             tx = self.attempt_read_transaction(line)
