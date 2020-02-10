@@ -20,7 +20,7 @@ def is_authorized(userid):
     if env == "development":
         # Anything goes in development.
         return True
-    if 'user' not in flask.g or not flask.g.user:
+    if "user" not in flask.g or not flask.g.user:
         return False
     assert isinstance(flask.g.user, user.User)
     if flask.g.user.id == userid:
