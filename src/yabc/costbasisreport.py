@@ -15,7 +15,14 @@ from sqlalchemy import orm
 import yabc
 from yabc.transaction import PreciseDecimalString
 
-CSV_ROWS = ['Description of Property', 'Date Acquired', 'Date Sold', 'Proceeds', 'Cost Basis', 'Gain (or loss)']
+CSV_ROWS = [
+    "Description of Property",
+    "Date Acquired",
+    "Date Sold",
+    "Proceeds",
+    "Cost Basis",
+    "Gain (or loss)",
+]
 
 
 class CostBasisReport(yabc.Base):
@@ -36,13 +43,18 @@ class CostBasisReport(yabc.Base):
         ...
     ValueError: Basis and proceeds must both be non-negative. asset is BTC
     """
+
     def persist_to_csv_writer(self, writer: csv.DictWriter):
-        writer.writerow({CSV_ROWS[0]: self.asset_name,
-                         CSV_ROWS[1]: str(self.date_purchased),
-                         CSV_ROWS[2]: str(self.date_sold),
-                         CSV_ROWS[3]: str(self.proceeds),
-                         CSV_ROWS[4]: str(self.basis),
-                         CSV_ROWS[5]: str(self.get_gain_or_loss())})
+        writer.writerow(
+            {
+                CSV_ROWS[0]: self.asset_name,
+                CSV_ROWS[1]: str(self.date_purchased),
+                CSV_ROWS[2]: str(self.date_sold),
+                CSV_ROWS[3]: str(self.proceeds),
+                CSV_ROWS[4]: str(self.basis),
+                CSV_ROWS[5]: str(self.get_gain_or_loss()),
+            }
+        )
 
     _fields = [
         "id",
