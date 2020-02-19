@@ -95,7 +95,7 @@ class SqlBackend:
         self.session = Session()
 
     def get_session(self):
-        # type: (None) -> sqlalchemy.orm.Session
+        # type: () -> sqlalchemy.orm.Session
         return self.session
 
     def create_tables(self):
