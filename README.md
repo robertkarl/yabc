@@ -12,6 +12,7 @@ yabc is the tax calculator behind [https://velvetax.com/](https://velvetax.com/)
 
 ```
 $ python -m yabc testdata/gemini/sample_gemini.xlsx ./testdata/coinbase/sample_coinbase.csv
+14 transactions to be reported
 <CostBasisReport: Sold 0.76 BTC on 2008-04-21 01:12:00 for $236. Exchange: coinbase. Profit:$-155.
 	<TX 2008-04-21 01:12:00 SELL 1993.93 USD for 6.26 BTC, from exchange coinbase. Fee 48.44 USD>>
 <CostBasisReport: Sold 1 BTC on 2008-04-21 01:12:00 for $311. Exchange: coinbase. Profit:$29.
@@ -94,5 +95,4 @@ provided with no warranty. Please see the LICENSE file for more details.
 yabc is not associated with any of the mentioned exchanges or companies
 including but not limited to binance, coinbase, or gemini. Any trademarks are
 property of their respective owners.
-14 transactions to be reported
 
