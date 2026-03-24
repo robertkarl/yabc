@@ -4,7 +4,7 @@
 import datetime
 import unittest
 
-import transaction_utils
+from tests import transaction_utils
 from yabc import basis
 from yabc import coinpool
 from yabc.transaction import Operation

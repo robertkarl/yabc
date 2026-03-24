@@ -22,12 +22,11 @@ class GeminiXlsxTest(unittest.TestCase):
         for zec_tx in txs[4:6]:
             self.assertEqual(zec_tx.asset_name, "ZEC")
 
-        self.assertEqual(
-            btc_buy.date, datetime.datetime(2015, 10, 16, 6, 27, 56, 139998)
-        )
-        self.assertEqual(
-            btc_sell.date, datetime.datetime(2015, 10, 16, 6, 27, 56, 139998)
-        )
+        # Microseconds vary across openpyxl versions due to float precision;
+        # compare to the second.
+        expected_date = datetime.datetime(2015, 10, 16, 6, 27, 56)
+        self.assertEqual(btc_buy.date.replace(microsecond=0), expected_date)
+        self.assertEqual(btc_sell.date.replace(microsecond=0), expected_date)
 
         self.assertTrue(btc_buy.operation == transaction.Operation.BUY)
         self.assertTrue(btc_sell.operation == transaction.Operation.SELL)

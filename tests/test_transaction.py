@@ -6,7 +6,7 @@ from decimal import Decimal
 import sqlalchemy
 from sqlalchemy.orm import sessionmaker
 
-import transaction_utils
+from tests import transaction_utils
 from yabc import Base
 from yabc import basis
 from yabc import coinpool
