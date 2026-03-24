@@ -1,8 +1,8 @@
 import datetime
 import unittest
 
-from transaction_utils import make_buy
-from transaction_utils import make_transaction
+from tests.transaction_utils import make_buy
+from tests.transaction_utils import make_transaction
 from yabc import coinpool
 from yabc.basis import BasisProcessor
 from yabc.transaction import Operation
